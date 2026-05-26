@@ -1,0 +1,8 @@
+{
+  "tls_1.0_supported": "no",
+  "tls_1.1_supported": "no",
+  "tls_1.2_supported": "yes",
+  "tls_1.3_supported": "yes",
+  "tls_1.2_cipher": "ECDHE-ECDSA-CHACHA20-POLY1305",
+  "tls_1.3_cipher": "TLS_AES_256_GCM_SHA384"
+}
