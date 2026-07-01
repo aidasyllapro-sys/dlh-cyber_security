@@ -1,0 +1,12 @@
+.htaccess           [32m (Status: 200)[0m [Size: 385]
+_                   [36m (Status: 301)[0m [Size: 0][34m [--> http://web0x04.hbtn/tour-to-the-beautiful-city-of-mpg_city-in-mpg_country/][0m
+admin               [36m (Status: 302)[0m [Size: 0][34m [--> http://web0x04.hbtn/wp-admin/][0m
+create              [36m (Status: 301)[0m [Size: 169][34m [--> http://web0x04.hbtn/create/][0m
+favicon.ico         [32m (Status: 200)[0m [Size: 1150]
+page1               [36m (Status: 301)[0m [Size: 0][34m [--> http://web0x04.hbtn/][0m
+payment_gateway     [36m (Status: 301)[0m [Size: 169][34m [--> http://web0x04.hbtn/payment_gateway/][0m
+robots.txt          [32m (Status: 200)[0m [Size: 257]
+sitemap.xml         [32m (Status: 200)[0m [Size: 6860]
+wp-admin            [36m (Status: 301)[0m [Size: 169][34m [--> http://web0x04.hbtn/wp-admin/][0m
+wp-content          [36m (Status: 301)[0m [Size: 169][34m [--> http://web0x04.hbtn/wp-content/][0m
+wp-includes         [36m (Status: 301)[0m [Size: 169][34m [--> http://web0x04.hbtn/wp-includes/][0m
