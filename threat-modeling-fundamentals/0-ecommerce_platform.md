@@ -1,21 +1,16 @@
-Threat Modeling — E-commerce Platform
-
-Author: Mizouni Oumaima
-Project: Threat Modeling Fundamentals
-System: E-commerce platform (React frontend / Node.js API / PostgreSQL / Stripe)
+1-healthcare_mobile_app.md
+# Threat Modeling - Healthcare Mobile App
 
 
 1. System Overview
+### Features
 
-ComponentRoleAuth RequiredReact frontendClient-side UI, product browsing, cartNoNode.js API backendBusiness logic, order processingMixedPostgreSQL databasePersistent storage (products, users, orders)N/A (internal)StripePayment processing (external service)N/A (third-party)
+- View medical records
+- Schedule appointments
+- Message healthcare providers
+- Receive prescription refills
 
-Flows in scope:
 
-
-Browse products → unauthenticated
-Add to cart → unauthenticated
-Checkout & pay → authenticated
-View order history → authenticated
 
 2. Architecture & Trust Boundary Diagram
 
