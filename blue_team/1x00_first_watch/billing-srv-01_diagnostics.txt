@@ -1,0 +1,129 @@
+================================================================================
+         MEDDEFENSE HEALTH SYSTEMS -- IT OPERATIONS
+         Server Diagnostics Report
+         Host: billing-srv-01 (10.10.2.15)
+         Captured by: Desktop Support (ticket #4471)
+         Date: [Current - 2 days]
+         Reason: "Recurring performance degradation -- CPU saturation"
+================================================================================
+
+------------------------------------------------------------------------
+SYSTEM INFORMATION
+------------------------------------------------------------------------
+Hostname:     billing-srv-01
+OS:           Ubuntu 18.04.6 LTS (Bionic Beaver)
+Kernel:       4.15.0-213-generic
+Uptime:       12 days, 3 hours, 47 minutes
+Last reboot:  [12 days ago] -- manual restart by sysadmin (ticket #4398)
+
+------------------------------------------------------------------------
+TOP OUTPUT (Snapshot at 14:22:07)
+------------------------------------------------------------------------
+
+top - 14:22:07 up 12 days,  3:47,  2 users,  load average: 4.87, 4.92, 4.88
+Tasks: 187 total,   2 running, 185 sleeping,   0 stopped,   0 zombie
+%Cpu(s): 96.3 us,  1.2 sy,  0.0 ni,  1.8 id,  0.0 wa,  0.4 si,  0.3 st
+MiB Mem :  7963.4 total,   412.8 free,  6104.2 used,  1446.4 buff/cache
+MiB Swap:  2048.0 total,  1847.3 free,   200.7 used.  1583.2 avail Mem
+
+  PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND
+ 8834 www-data  20   0  458392  24816   3204 R  94.2   3.1  16421:33 ./kworker -o stratum+tcp://pool.monero.org:4443 --threads 4 --donate-level 0
+ 1102 root      20   0  456284 671804  12340 S   2.1   8.4    142:18 /usr/sbin/apache2 -k start
+ 1455 mysql     20   0 2458920 1003284 18480 S   1.3  12.6     98:44 /usr/sbin/mysqld --basedir=/usr --datadir=/var/lib/mysql
+  892 root      20   0   72304   6124   5412 S   0.3   0.1      8:22 /usr/sbin/sshd -D
+ 1198 root      20   0  185272   3788   3224 S   0.0   0.0      0:44 /usr/sbin/cron -f
+    1 root      20   0  225444   9428   6676 S   0.0   0.1      2:15 /sbin/init
+  478 root      20   0   47760   6788   5908 S   0.0   0.1      0:03 /lib/systemd/systemd-udevd
+  612 syslog    20   0  263036   4460   3644 S   0.0   0.1      1:12 /usr/sbin/rsyslogd -n -iNONE
+
+------------------------------------------------------------------------
+NETSTAT OUTPUT (Active Internet Connections)
+------------------------------------------------------------------------
+
+Proto  Recv-Q Send-Q  Local Address          Foreign Address        State       PID/Program
+tcp         0      0  10.10.2.15:45892       185.243.115.89:4443    ESTABLISHED 8834/./kworker
+tcp         0      0  10.10.2.15:45901       91.121.87.10:8080      ESTABLISHED 8834/./kworker
+tcp         0      0  10.10.2.15:46012       104.238.140.32:3333    ESTABLISHED 8834/./kworker
+tcp         0      0  10.10.2.15:80          0.0.0.0:*              LISTEN      1102/apache2
+tcp         0      0  10.10.2.15:22          0.0.0.0:*              LISTEN      892/sshd
+tcp         0      0  10.10.2.15:3306        0.0.0.0:*              LISTEN      1455/mysqld
+tcp         0      0  10.10.2.15:22          10.10.1.50:52341       ESTABLISHED 892/sshd
+
+------------------------------------------------------------------------
+PROCESS DETAILS -- PID 8834
+------------------------------------------------------------------------
+
+$ ls -la /proc/8834/exe
+lrwxrwxrwx 1 www-data www-data 0 [date] /proc/8834/exe -> /var/www/html/.cache/kworker
+
+$ ls -la /var/www/html/.cache/
+total 2148
+drwxr-xr-x 2 www-data www-data    4096 [date - 14 days] .
+drwxr-xr-x 5 www-data www-data    4096 [date - 14 days] ..
+-rwxr-xr-x 1 www-data www-data 2191024 [date - 14 days] kworker
+-rw-r--r-- 1 www-data www-data     284 [date - 14 days] config.json
+
+$ cat /var/www/html/.cache/config.json
+{
+    "pools": [
+        {"url": "stratum+tcp://pool.monero.org:4443", "user": "48Bv3...REDACTED...Kj2", "pass": "x"},
+        {"url": "stratum+tcp://91.121.87.10:8080", "user": "48Bv3...REDACTED...Kj2", "pass": "x"},
+        {"url": "stratum+tcp://104.238.140.32:3333", "user": "48Bv3...REDACTED...Kj2", "pass": "x"}
+    ],
+    "cpu-priority": 5,
+    "threads": 4,
+    "donate-level": 0,
+    "background": true
+}
+
+$ stat /var/www/html/.cache/kworker
+  File: /var/www/html/.cache/kworker
+  Size: 2191024     Blocks: 4288       IO Block: 4096   regular file
+Access: (0755/-rwxr-xr-x)  Uid: (   33/www-data)   Gid: (   33/www-data)
+Access: [date - 14 days]
+Modify: [date - 14 days]
+Change: [date - 14 days]
+
+------------------------------------------------------------------------
+SYSADMIN NOTES (from ticket #4471)
+------------------------------------------------------------------------
+
+Ticket opened by: Tom Reeves (Sysadmin)
+Subject: billing-srv-01 -- recurring CPU saturation
+
+"Third time this month. CPU pegged at 100%. Finance team reports billing
+app is slow. Restarted Apache and the MySQL service, improved for about
+2 hours then degraded again. Server is 4 years old with 8GB RAM and 4
+vCPUs. Probably undersized for the billing workload. Recommend migration
+to a new VM with 16GB RAM and 8 vCPUs."
+
+"Also the server is still on Ubuntu 18.04 which goes EOL soon. Migration
+would solve both problems."
+
+Resolution: Pending -- awaiting budget approval for new VM.
+
+------------------------------------------------------------------------
+ADDITIONAL CONTEXT (From Marcus's notes file)
+------------------------------------------------------------------------
+
+Marcus's note on billing-srv-01:
+"Tom keeps restarting the server. The problem comes back. This is NOT a
+capacity issue. Look at the process list -- what is 'kworker' running as
+www-data? Real kworker processes are kernel threads, they show as [kworker]
+in brackets and run as root. This one is in /var/www/html/.cache and runs
+as www-data. Something got in through Apache.
+
+Check if Apache had an unpatched vuln around the time this started.
+The billing app runs on Apache 2.4.29 -- there are known RCE vulns
+for that version.
+
+This server was rebuilt after the January ransomware. If the same
+vulnerability wasn't patched during the rebuild, the server got
+reinfected. Different payload this time (miner instead of ransomware)
+but same entry point.
+
+I need to escalate this but I don't have time. Sticky note on monitor."
+
+========================================================================
+                       END OF DIAGNOSTICS REPORT
+========================================================================
