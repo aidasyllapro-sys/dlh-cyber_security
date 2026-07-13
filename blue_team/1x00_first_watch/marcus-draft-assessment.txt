@@ -1,0 +1,245 @@
+================================================================================
+            MEDDEFENSE HEALTH SYSTEMS
+            Security Assessment -- DRAFT v0.3
+            Author: Marcus Webb, Security Analyst
+            Date: [3 months ago]
+            Status: INCOMPLETE -- NOT FOR DISTRIBUTION
+================================================================================
+
+NOTE: This document was found in a sealed envelope in the desk drawer of
+the previous security analyst. It appears to be an unfinished assessment
+that was never submitted or shared.
+
+========================================================================
+SECTION 1: FINDINGS (Documented)
+========================================================================
+
+FINDING M-01: NETWORK SEGMENTATION -- CRITICAL
+The MedDefense network is entirely flat. All devices, from clinical
+workstations to servers to medical IoT devices, share a single broadcast
+domain (10.10.0.0/16). No VLANs are configured. No internal firewalls
+exist between zones. An attacker who compromises any single device on
+the network can reach every other device without restriction.
+
+This is the single most dangerous finding. It amplifies every other
+vulnerability. A compromised workstation can reach the EHR database.
+A compromised IoT monitor can reach the domain controller. The January
+ransomware on billing-srv-01 could have spread to every system in the
+organization. It did not, purely by luck -- the ransomware variant used
+was not network-propagating. Next time we may not be so lucky.
+
+Risk: CRITICAL
+Recommendation: Implement network segmentation with dedicated VLANs for
+servers, workstations, medical devices and guest/IoT. Deploy internal
+firewall rules between segments. Estimated effort: 3-6 months.
+Estimated cost: $25,000-40,000 (switches support VLANs already, cost
+is primarily labor and FortiGate licensing for internal segmentation).
+
+------------------------------------------------------------------------
+
+FINDING M-02: BACKUP ISOLATION -- CRITICAL
+The backup NAS (NAS-01) is located in the same server room and on the
+same network as the production servers it backs up. There is no offsite
+or cloud replication. In a ransomware scenario with lateral movement
+capability, both production and backup would be encrypted simultaneously.
+
+Recovery would depend on the monthly offsite tape rotation, which means
+up to 30 days of data loss for most systems. For the EHR, this is
+clinically unacceptable.
+
+Risk: CRITICAL
+Recommendation: Implement cloud backup replication (AWS S3 or Azure Blob
+with immutable storage). Cost: approximately $14,400/year based on quote
+received. This was already denied once. Escalate to CEO.
+
+------------------------------------------------------------------------
+
+FINDING M-03: MEDICAL IoT EXPOSURE -- HIGH
+Approximately 200 connected medical devices (Philips monitors, BD Alaris
+pumps, nurse call system, badge readers) are on the same network as
+general workstations and servers. These devices run proprietary firmware
+that is rarely updated and often contains known vulnerabilities. Many
+have web management interfaces accessible with default credentials.
+
+The BD Alaris infusion pumps (firmware 12.1.2) have a known vulnerability
+(BD Security Bulletin) that the vendor recommends mitigating through
+network isolation. This has not been done.
+
+If an attacker reaches these devices, the consequences go beyond data
+theft. Infusion pump manipulation could affect medication dosing.
+
+Risk: HIGH (potentially CRITICAL given patient safety implications)
+Recommendation: Isolate medical devices on a dedicated VLAN. Restrict
+access to clinical workstations and the PACS server only. Block all
+internet access for medical devices. This is partially addressed by
+Finding M-01 but is called out separately due to patient safety.
+
+------------------------------------------------------------------------
+
+FINDING M-04: ABSENCE OF MONITORING AND DETECTION -- HIGH
+MedDefense has zero detective capability for security events. No SIEM,
+no IDS/IPS, no log centralization, no automated alerting. Security
+events are only discovered when they cause visible operational impact
+(e.g., ransomware encrypting files, server performance degradation).
+
+The billing-srv-01 crypto-miner is a case study: the malicious process
+ran for at least 2 weeks before anyone noticed, and even then only
+because of performance complaints. Without the performance impact, it
+could have run indefinitely.
+
+Firewall logs, authentication logs, application logs and system logs
+all exist but are stored locally on each device with no centralized
+collection, no retention policy and no review process.
+
+Risk: HIGH
+Recommendation: Deploy a SIEM solution (Wazuh is open-source and capable).
+Start with critical servers and the firewall. Phase 2: workstations and
+network devices. Estimated effort: 2-4 weeks for initial deployment.
+
+------------------------------------------------------------------------
+
+FINDING M-05: NO MFA ON ANY SYSTEM -- HIGH
+Multi-factor authentication is not deployed anywhere in the MedDefense
+environment. All access, including VPN, EHR, Active Directory admin
+accounts and the patient portal admin panel, relies on username/password
+alone.
+
+Given the password policy (8 characters, 90-day rotation), credential
+compromise is a matter of when, not if.
+
+Risk: HIGH
+Recommendation: Deploy MFA on VPN first (highest exposure), then admin
+accounts, then EHR. Microsoft provides Entra ID MFA with the existing
+O365 E3 licenses. Cost: $0 additional for VPN and admin. EHR MFA
+requires vendor support (MedTech Solutions) -- timeline unknown.
+
+------------------------------------------------------------------------
+
+FINDING M-06: WESTSIDE CLINIC SECURITY -- HIGH
+Westside operates with a consumer-grade router (Netgear Nighthawk), no
+firewall, no managed switches, no physical security for IT equipment
+and a server closet that does not lock. The site-to-site VPN runs on
+the consumer router, meaning Westside's security posture directly
+affects Central's risk exposure.
+
+Risk: HIGH
+Recommendation: Replace consumer router with a managed firewall (FortiGate
+60F or similar, ~$1,500). Install a lock on the server closet. Review
+VPN ACLs to restrict Westside's access to only required resources.
+
+------------------------------------------------------------------------
+
+FINDING M-07: SHARED CREDENTIALS IN RADIOLOGY -- MEDIUM
+The Radiology department uses a shared account ("raduser/radiology1") to
+access the PACS workstation. Multiple staff members use the same credentials.
+This eliminates individual accountability and makes it impossible to track
+who accessed what patient imaging data.
+
+I reported this to Sarah Park. She said the Radiology department pushed
+back: "We need fast access between patients. Individual logins are too
+slow." No resolution.
+
+Risk: MEDIUM (would be HIGH except PACS access is limited to on-site)
+Recommendation: Implement smart card or proximity badge authentication
+for PACS workstations. Fast login without shared credentials.
+
+------------------------------------------------------------------------
+
+FINDING M-08: PRINT SERVER END OF LIFE -- LOW
+print-srv-01 runs Windows Server 2012 R2, which reached end of support
+in October 2023. It no longer receives security patches.
+
+Realistically, the print server is low value as a target and only
+accessible from the internal network. The risk is more about compliance
+than active exploitation.
+
+Risk: LOW
+Recommendation: Migrate print services to a supported OS during the
+next maintenance window. Low priority relative to other findings.
+
+========================================================================
+SECTION 2: FINDINGS (NOT YET DOCUMENTED)
+========================================================================
+
+Things I identified but ran out of time to write up properly:
+
+- Patient portal (web-srv-01) SSL certificate: using TLS 1.0 alongside
+  1.2. TLS 1.0 should be disabled.
+
+- No data loss prevention (DLP) controls. Sensitive data (patient records,
+  financial data) can be exfiltrated via email, USB or cloud upload with
+  no detection or prevention.
+
+- USB ports are unrestricted on all workstations. No GPO disabling USB
+  storage. Combined with no DLP, this is a significant data exfiltration
+  vector.
+
+- The building management system at HQ is managed by the landlord.
+  MedDefense has no visibility into the network security of that shared
+  infrastructure. The site-to-site VPN terminates on whatever the
+  building provides.
+
+- No formal change management process. Configuration changes on servers
+  and network devices are made ad-hoc without documentation, testing or
+  approval. The broken cron job that caused the 3-week backup gap was a
+  change made without testing.
+
+========================================================================
+SECTION 3: NEXT STEPS -- EXTERNAL THREAT LANDSCAPE
+========================================================================
+
+Internal posture assessment is one half of the equation. The other half:
+who is actively targeting organizations like MedDefense?
+
+Healthcare sector is under sustained attack. The sector reported more
+breaches to HHS in 2023 than any prior year. Ransomware groups
+specifically target hospitals because:
+  1. Patient care creates urgency to pay (lives at stake)
+  2. Legacy systems and medical devices create easy entry points
+  3. PHI has high value on black markets ($250-1000 per record)
+  4. Many healthcare orgs have weak security budgets
+
+I started tracking threat intelligence feeds and building a threat actor
+profile for MedDefense but ran out of time.
+
+Key questions for the next phase:
+
+- Which threat actor categories are most relevant to a regional hospital
+  group? (Nation-state? Unlikely. Ransomware-as-a-service groups? Almost
+  certainly. Insiders? Given the shared credentials issue, yes.
+  Hacktivists? Low probability but nonzero.)
+
+- What are their typical TTPs? The MITRE ATT&CK framework for healthcare
+  should be the starting point. Map the most common initial access
+  techniques (T1190 Exploit Public-Facing Application, T1566 Phishing,
+  T1078 Valid Accounts) against our specific exposure.
+
+- How do our specific gaps map to their known attack patterns? The flat
+  network (M-01) + no MFA (M-05) + no monitoring (M-04) is almost exactly
+  the combination that enabled the attack on [redacted hospital] last year.
+
+- Can we apply STRIDE threat modeling to the MedDefense architecture to
+  anticipate where attackers would target? The EHR system, the VPN, the
+  patient portal and the medical IoT devices are the obvious high-value
+  targets.
+
+I started pulling data from CISA healthcare advisories, the HHS 405(d)
+threat briefs and the HC3 (Health Sector Cybersecurity Coordination Center)
+analyst notes. This needs to become a formal Threat Landscape Report. My
+replacement should pick this up.
+
+Files I started collecting (on my laptop -- need to transfer to shared
+drive before I leave):
+  - CISA Alert AA23-263A: Healthcare Ransomware Trends
+  - HC3 Threat Brief: Ransomware-as-a-Service targeting Healthcare
+  - HHS 405(d) HICP: Main Threats to Healthcare
+  - MITRE ATT&CK Healthcare Sector Coverage Analysis
+
+I did not transfer these files. They are probably still on my laptop
+which IT should have in the equipment return inventory.
+
+========================================================================
+END OF DRAFT -- DOCUMENT INCOMPLETE
+Marcus Webb
+[3 months ago]
+========================================================================
