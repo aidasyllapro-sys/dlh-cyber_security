@@ -1,0 +1,265 @@
+================================================================================
+                    MEDDEFENSE HEALTH SYSTEMS
+                    Internal Documentation Package
+                    Compiled for: New Security Analyst
+                    Date: [Current]
+================================================================================
+
+------------------------------------------------------------------------
+DOCUMENT 1: HR ONBOARDING GUIDE (EXCERPT)
+------------------------------------------------------------------------
+
+Welcome to MedDefense Health Systems! We are proud to serve our community
+through three locations:
+
+MEDDEFENSE CENTRAL HOSPITAL
+  350-bed acute care facility, downtown location
+  Departments: Emergency, Surgery, Cardiology, Radiology, Oncology,
+  Pediatrics, Maternity, Pharmacy, Laboratory, Administration
+  Approximate staff: 1,400 (clinical + support)
+  Building: 6 floors + basement level (mechanical/server room)
+  Parking: underground garage (staff) + surface lot (visitors)
+
+WESTSIDE CLINIC
+  Outpatient facility, suburban location (12 min drive from Central)
+  Services: Primary care, diagnostic imaging (X-ray, ultrasound -- no MRI),
+  blood work, minor procedures, physical therapy
+  Approximate staff: 180
+  Building: 2-story medical office complex, shared parking with adjacent
+  retail plaza
+  Note: Westside shares some IT services with Central but has its own
+  local server closet for "basic needs" (Sarah Park's words)
+
+CORPORATE HQ
+  Administrative offices in Greenfield Business Park (15 min from Central)
+  Departments: Finance, HR, Legal, Marketing, Executive Leadership, IT
+  Approximate staff: 220
+  Building: leased office space, 3rd floor of a 5-story commercial building
+  IT department is located here (12 staff total)
+
+Total employees organization-wide: approximately 2,000
+
+------------------------------------------------------------------------
+DOCUMENT 2: IT ASSET LIST (Exported from ServiceDesk -- PARTIAL)
+------------------------------------------------------------------------
+
+NOTE FROM SARAH PARK (IT DIRECTOR):
+"This is what we have in the ticketing system. It's not complete. Some
+things were added by the previous IT manager, some by Marcus, some by
+my team. Anything marked [UNVERIFIED] hasn't been physically confirmed
+in over a year."
+
+SERVERS -- MEDDEFENSE CENTRAL
+  ehr-srv-01        | Ubuntu 20.04 LTS    | EHR Application Server
+  ehr-db-01         | Ubuntu 20.04 LTS    | EHR Database (PostgreSQL)
+  pacs-srv-01       | Windows Server 2016  | PACS Imaging Server
+  billing-srv-01    | Ubuntu 18.04 LTS    | Billing/Claims Processing
+  ad-dc-01          | Windows Server 2019  | Primary Domain Controller
+  ad-dc-02          | Windows Server 2019  | Secondary Domain Controller
+  file-srv-01       | Windows Server 2016  | Department File Shares
+  print-srv-01      | Windows Server 2012R2| Print Server [UNVERIFIED]
+  backup-srv-01     | Ubuntu 22.04 LTS    | Backup Server (Veeam agent)
+  web-srv-01        | Ubuntu 20.04 LTS    | Public Website + Patient Portal
+
+SERVERS -- WESTSIDE CLINIC
+  ws-srv-01         | Windows Server 2016  | Local file server + scheduling
+  [Marcus's note: "There might be another server in the closet at Westside.
+   Mike Torres mentioned it but I never confirmed. Check."]
+
+SERVERS -- CORPORATE HQ
+  No on-premise servers. HQ staff use cloud services and connect to
+  Central's infrastructure via site-to-site VPN.
+
+NETWORK EQUIPMENT (PARTIAL)
+  Central: Cisco core switch (model unknown), 2x Cisco access switches
+           per floor, 1x Fortinet FortiGate 100F firewall
+  Westside: 1x unmanaged switch (brand unknown), 1x consumer-grade router
+            [Marcus's note: "This is NOT acceptable for a medical facility"]
+  HQ: managed by building landlord, MedDefense has its own VLAN
+  WiFi: Ubiquiti UniFi APs at Central (12 units), unknown at Westside
+
+ENDPOINTS
+  Central: ~320 Windows 10 workstations, ~60 thin clients in clinical areas
+  Westside: ~45 Windows 10 workstations
+  HQ: ~120 Windows 10/11 workstations, ~30 laptops (remote-capable)
+  Tablets: ~25 iPads used by physicians for rounds (managed? unclear)
+  [Marcus's note: "Nobody has a complete count of endpoints. The numbers
+   above are from the last AD report but that was 8 months ago."]
+
+MEDICAL DEVICES (IoT)
+  Connected patient monitors: ~80 units across Central (Philips IntelliVue)
+  Infusion pumps: ~120 units (BD Alaris), network-connected for dosage updates
+  MRI scanner: 1x Siemens MAGNETOM (Radiology dept, Central)
+    [Marcus's note: "CRITICAL -- runs Windows XP. See separate file."]
+  CT scanner: 1x GE Revolution (Central) -- unknown OS
+  Nurse call system: IP-based, integrated with phone system
+  Badge/access system: HID Global, connected to AD for some doors
+
+------------------------------------------------------------------------
+DOCUMENT 3: MARCUS WEBB'S NOTES (Found on shared drive: S:\Security\Notes)
+------------------------------------------------------------------------
+
+File: security_observations.txt
+Last modified: [3 months ago]
+
+=== QUICK NOTES -- DO NOT SHARE ===
+
+Things I need to document properly but haven't had time:
+
+NETWORK:
+- Flat network at Central. Medical devices, workstations, servers all on
+  the same broadcast domain (10.10.0.0/16). This is insane. I brought it
+  up with Sarah. She said segmentation is "planned for next fiscal year."
+  That was 4 months ago.
+- Westside clinic has NO firewall. Traffic goes through a consumer router
+  (Netgear Nighthawk -- yes, really) directly to an ISP connection. The
+  site-to-site VPN to Central runs on this router.
+- Guest WiFi at Central DOES exist (separate SSID) but I'm not convinced
+  it's actually isolated. Need to verify.
+- HQ VPN seems properly configured but I haven't audited the ACLs.
+
+SERVERS:
+- billing-srv-01 keeps having performance issues. IT just restarts it.
+  Something is wrong. Sticky note on my monitor as reminder.
+- print-srv-01 is running Server 2012 R2. End of support was Oct 2023.
+  Nobody seems to care.
+- backup-srv-01: Veeam runs nightly backups to a local NAS. The NAS is
+  in the same server room, on the same network, same rack. If we get
+  ransomware, we lose both. I mentioned offsite/cloud backup to James.
+  Budget was denied.
+- ehr-db-01: PostgreSQL is accessible from the entire 10.10.0.0/16 range.
+  Should be restricted to ehr-srv-01 only.
+
+AUTHENTICATION:
+- Password policy: 8 chars minimum, 90-day rotation, complexity enabled.
+  Not terrible but not great. No MFA anywhere except James's personal
+  account (he set it up himself).
+- Shared accounts: the radiology department uses a shared login for the
+  PACS workstation ("raduser / radiology1"). I reported this. Nothing
+  happened.
+- SSH: password auth is still enabled on all Linux servers. Should be
+  key-only. I started migrating but only got to ehr-srv-01 before...
+  well, before I ran out of time.
+
+PHYSICAL:
+- Server room badge access is the same generic badge everyone gets. See
+  my email to Sarah from [5 months ago]. Response: "on the roadmap."
+- No cameras in server room corridor. There are cameras in the parking
+  garage and the ER entrance but nowhere near IT infrastructure.
+- Westside has basically zero physical security for IT equipment. The
+  "server closet" doesn't lock.
+
+COMPLIANCE:
+- HIPAA Security Rule compliance has never been formally assessed. James
+  is aware and concerned. Legal says "we're compliant" but has no evidence.
+- No formal incident response plan exists. When the ransomware hit
+  billing-srv-01 in January, the response was ad-hoc. James, Sarah and
+  I basically improvised for 4 days.
+- No business continuity plan. No disaster recovery plan. If Central
+  loses power beyond what the UPS can handle (about 20 minutes), there
+  is no documented procedure for clinical operations.
+
+WHAT I HAVEN'T GOTTEN TO:
+- Formal vulnerability assessment of all servers
+- Endpoint security evaluation (antivirus is Sophos but I don't know
+  if it's current on all machines)
+- Cloud service inventory (O365 is the main one but I suspect individual
+  departments use others)
+- Threat landscape analysis -- who targets hospitals and how? Started
+  researching but didn't finish.
+- The IoT devices. God, the IoT devices. Those Philips monitors are on
+  the same network as everything else. The infusion pumps too. If someone
+  gets on the network they can reach the pumps. I try not to think about
+  it.
+
+=== END NOTES ===
+
+------------------------------------------------------------------------
+DOCUMENT 4: IT SERVICE CONTRACTS SUMMARY (From Finance)
+------------------------------------------------------------------------
+
+VENDOR                  | SERVICE                | ANNUAL COST | RENEWAL
+Sophos                  | Endpoint Protection    | $18,000     | Jan
+Veeam                   | Backup Software        | $8,500      | Mar
+Fortinet                | FortiGate support      | $4,200      | Jun
+Microsoft               | O365 E3 (org-wide)     | $432,000    | Sep
+Ubiquiti                | UniFi controller lic.  | $0 (free)   | N/A
+Greenfield Bldg Mgmt    | HQ network/internet    | incl. lease | N/A
+ClearView Security      | Guard service (Central)| $96,000     | Dec
+  Notes: 1 guard, main entrance, Mon-Fri 7AM-7PM. No weekend/night.
+  No guard at Westside or HQ.
+MedTech Solutions        | EHR maintenance        | $145,000    | Jul
+  Notes: Includes software updates, not hardware. SLA: 4hr response
+  for critical issues, 24hr for standard.
+
+------------------------------------------------------------------------
+DOCUMENT 5: NETWORK DIAGRAM (Marcus's draft -- incomplete)
+------------------------------------------------------------------------
+
+    [INTERNET]
+        |
+   [FortiGate 100F]---[DMZ: web-srv-01]
+        |
+   [Core Switch]
+        |
+   +----+----+----+----+
+   |    |    |    |    |
+  Flr1 Flr2 Flr3 Flr4 Servers
+   |                    |
+  APs                 ehr-srv-01
+  Workstations        ehr-db-01
+  Thin clients        pacs-srv-01
+  Med devices         billing-srv-01
+  Monitors            ad-dc-01/02
+  Pumps               file-srv-01
+                      print-srv-01
+                      backup-srv-01 --> [NAS]
+
+  NOTE: Everything on 10.10.0.0/16
+  No VLANs configured
+  Marcus: "This diagram is simplified. Real topology
+  is messier. I'll update when I have time."
+
+  [Westside Clinic] ---- IPSec VPN ----> [FortiGate]
+  (via Netgear consumer router)
+
+  [Corporate HQ] ---- Site-to-site VPN ----> [FortiGate]
+  (via building-managed network)
+
+------------------------------------------------------------------------
+DOCUMENT 6: ORG CHART (Relevant to Security)
+------------------------------------------------------------------------
+
+  CEO: Dr. Patricia Morales
+    |
+    +-- CFO: Robert Kim
+    |
+    +-- COO: Angela Torres
+    |     |
+    |     +-- Clinical Directors (per department)
+    |
+    +-- General Counsel: David Park
+    |
+    +-- CISO (vacant -- James Chen is Deputy CISO, acting)
+          |
+          +-- James Chen, Deputy CISO
+          |     |
+          |     +-- Security Analyst: [YOU] (replacing Marcus Webb)
+          |
+          +-- Sarah Park, IT Director
+                |
+                +-- 3x System Administrators
+                +-- 2x Network Technicians
+                +-- 1x Database Administrator
+                +-- 2x Helpdesk Analysts (incl. Mike Torres, lead)
+                +-- 2x Desktop Support Technicians
+                +-- 1x IT Intern (position currently vacant)
+
+  NOTE: James reports to the vacant CISO position. In practice he
+  reports directly to CEO. Sarah Park (IT Director) and James Chen
+  (Deputy CISO) are peers. James has authority over security policy
+  but no authority over IT operations. This creates friction.
+
+========================================================================
+                    END OF DOCUMENTATION PACKAGE
+========================================================================
