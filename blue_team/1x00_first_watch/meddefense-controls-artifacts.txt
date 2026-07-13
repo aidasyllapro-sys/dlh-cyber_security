@@ -1,0 +1,348 @@
+================================================================================
+            MEDDEFENSE HEALTH SYSTEMS
+            Security Controls -- Source Artifacts
+            Compiled for: Security Posture Assessment
+================================================================================
+
+========================================================================
+ARTIFACT 1: FIREWALL CONFIGURATION EXTRACT (FortiGate 100F)
+========================================================================
+
+Source: Sarah Park (exported from FortiGate management console)
+Note from Sarah: "This is a partial export. The full config is 2000+ lines.
+I pulled the relevant policy rules."
+
+config firewall policy
+
+    edit 1
+        set name "Allow-Web-Inbound"
+        set srcintf "wan1"
+        set dstintf "dmz"
+        set srcaddr "all"
+        set dstaddr "web-srv-01"
+        set action accept
+        set service "HTTP" "HTTPS"
+        set logtraffic all
+        set status enable
+    next
+
+    edit 2
+        set name "Allow-VPN-Westside"
+        set srcintf "vpn-westside"
+        set dstintf "internal"
+        set srcaddr "westside-subnet"
+        set dstaddr "server-subnet"
+        set action accept
+        set service "ALL"
+        set logtraffic utm
+        set status enable
+    next
+
+    edit 3
+        set name "Allow-VPN-HQ"
+        set srcintf "vpn-hq"
+        set dstintf "internal"
+        set srcaddr "hq-subnet"
+        set dstaddr "server-subnet"
+        set action accept
+        set service "ALL"
+        set logtraffic utm
+        set status enable
+    next
+
+    edit 4
+        set name "Allow-Internal-Outbound"
+        set srcintf "internal"
+        set dstintf "wan1"
+        set srcaddr "all"
+        set dstaddr "all"
+        set action accept
+        set service "ALL"
+        set nat enable
+        set logtraffic utm
+        set status enable
+    next
+
+    edit 5
+        set name "Deny-All"
+        set srcintf "any"
+        set dstintf "any"
+        set srcaddr "all"
+        set dstaddr "all"
+        set action deny
+        set logtraffic all
+        set status enable
+    next
+
+end
+
+Note from Marcus (found in his notes):
+"Rules 2 and 3 allow ALL services from VPN. This is too permissive.
+If Westside's consumer router gets compromised, the attacker has full
+access to the server subnet. Needs to be locked down to specific ports."
+
+"Rule 4 allows ALL outbound. No egress filtering. The crypto-miner on
+billing-srv-01 is happily talking to mining pools because nothing stops
+outbound traffic to arbitrary ports."
+
+========================================================================
+ARTIFACT 2: SSH CONFIGURATION (/etc/ssh/sshd_config -- ehr-srv-01)
+========================================================================
+
+Source: Tom Reeves (Sysadmin), exported via: cat /etc/ssh/sshd_config
+
+# Authentication
+PermitRootLogin no
+PubkeyAuthentication yes
+PasswordAuthentication no
+PermitEmptyPasswords no
+ChallengeResponseAuthentication no
+UsePAM yes
+
+# Security
+MaxAuthTries 3
+LoginGraceTime 60
+ClientAliveInterval 300
+ClientAliveCountMax 2
+
+# Logging
+SyslogFacility AUTH
+LogLevel VERBOSE
+
+# Other
+X11Forwarding no
+AllowTcpForwarding no
+Protocol 2
+
+Note from Tom: "This is only ehr-srv-01. Marcus migrated this one to
+key-only auth before he left. The other Linux servers still have
+PasswordAuthentication set to 'yes'. I haven't had time to change them."
+
+========================================================================
+ARTIFACT 3: PASSWORD POLICY (Internal Document -- Word file)
+========================================================================
+
+Source: HR Department shared drive
+
+             MEDDEFENSE HEALTH SYSTEMS
+             Information Security Policy: Password Requirements
+             Version: 1.2 | Approved: [2 years ago] | Author: IT Department
+
+1. SCOPE
+   This policy applies to all MedDefense employees, contractors and
+   vendors who access MedDefense information systems.
+
+2. PASSWORD REQUIREMENTS
+   - Minimum length: 8 characters
+   - Complexity: must contain at least one uppercase letter, one
+     lowercase letter, one number and one special character
+   - Rotation: passwords must be changed every 90 days
+   - History: the system remembers the last 5 passwords
+   - Lockout: accounts lock after 5 failed attempts for 30 minutes
+
+3. SHARED ACCOUNTS
+   Shared accounts are discouraged but may be used when individual
+   accounts are not technically feasible. Shared account passwords
+   must be changed when any user with access leaves the organization.
+
+4. MULTI-FACTOR AUTHENTICATION
+   MFA is recommended for remote access but is not currently required.
+
+5. ENFORCEMENT
+   Password requirements are enforced through Active Directory Group
+   Policy for Windows systems. Linux systems are configured individually.
+
+   Approved by: Sarah Park, IT Director
+   Last reviewed: [18 months ago]
+
+========================================================================
+ARTIFACT 4: SOPHOS ANTIVIRUS STATUS REPORT
+========================================================================
+
+Source: Sarah Park (exported from Sophos Central console)
+
+Sophos Endpoint Protection -- Deployment Summary
+Generated: [Current - 1 week]
+
+COVERAGE:
+  Total managed devices:          387
+  Devices with current signatures: 341 (88.1%)
+  Devices with outdated signatures: 31 (8.0%)
+    - Last updated > 7 days ago:   22
+    - Last updated > 30 days ago:   9
+  Devices not reporting:            15 (3.9%)
+    - Offline > 14 days:            8
+    - Offline > 30 days:            7
+
+PLATFORM BREAKDOWN:
+  Windows 10/11 workstations:     372  (covered)
+  Windows servers:                 15  (NOT covered -- server protection
+                                        license not purchased)
+  Linux servers:                    0  (NOT covered -- not supported by
+                                        current Sophos tier)
+  macOS devices:                    0
+  Mobile devices:                   0  (no MDM deployed)
+
+RECENT DETECTIONS (Last 30 days):
+  Date        | Device              | Threat              | Action
+  [20 days]   | WS-RECEPT-01       | Adware.Generic      | Quarantined
+  [15 days]   | WS-FIN-12          | PUA.CryptoMiner     | Blocked
+  [8 days]    | WS-ADMIN-03        | Phish.URL           | Blocked
+  [3 days]    | WS-NURSE-3F-07     | Trojan.GenericKD    | Quarantined
+
+NOTES:
+  - Server protection was requested by Marcus Webb 4 months ago.
+    Budget was not approved.
+  - The 15 non-reporting devices include 7 that may be decommissioned
+    or lost. IT has not reconciled the asset list.
+  - iPads used by physicians are not in scope (no MDM/EMM solution).
+
+========================================================================
+ARTIFACT 5: BACKUP CONFIGURATION
+========================================================================
+
+Source: Tom Reeves (Sysadmin)
+
+BACKUP SYSTEM: Veeam Backup & Replication (Community Edition)
+
+SCHEDULE:
+  Job: "Nightly-Full"
+  Frequency: Daily at 02:00 AM
+  Type: Full backup (all VMs on the VMware cluster at Central)
+  Destination: NAS-01 (Synology DS1621+, 24TB RAID5)
+  Location: NAS-01 is in the server room at Central, same rack row
+  Retention: 14 days (older backups auto-deleted)
+
+WHAT IS BACKED UP:
+  - ehr-srv-01 (EHR application)
+  - ehr-db-01 (EHR database)
+  - billing-srv-01 (billing)
+  - ad-dc-01 (domain controller)
+  - file-srv-01 (file shares)
+  - web-srv-01 (website/portal)
+
+WHAT IS NOT BACKED UP:
+  - pacs-srv-01 (PACS imaging -- "too large, would fill the NAS")
+  - ad-dc-02 (secondary DC -- "redundant with ad-dc-01")
+  - print-srv-01 ("nobody asked for it")
+  - Westside Clinic server (ws-srv-01) -- "not in scope"
+  - Medical device configurations
+  - O365 data (email, SharePoint, OneDrive) -- "Microsoft handles it"
+
+RECOVERY TESTING:
+  Last tested: [8 months ago] -- partial restore of file-srv-01
+  Result: "Successful but took 6 hours for a single server"
+  Full DR test: Never performed
+
+OFFSITE/CLOUD BACKUP:
+  None. Marcus requested cloud backup replication to AWS S3.
+  Quote received: $14,400/year. Budget denied by CFO.
+
+Note from Tom: "The NAS is on the same network and in the same room as
+the servers. If we lose the room (fire, flood, ransomware that spreads
+laterally), we lose both. I know this is a problem. Budget is the issue."
+
+========================================================================
+ARTIFACT 6: PHYSICAL SECURITY CONTRACT (ClearView Security)
+========================================================================
+
+Source: Finance department
+
+SERVICE AGREEMENT SUMMARY:
+
+Provider: ClearView Security Services
+Contract period: [Annual, current]
+Service location: MedDefense Central Hospital -- Main Entrance ONLY
+
+Services provided:
+  - 1 uniformed security guard
+  - Hours: Monday through Friday, 07:00 to 19:00
+  - Position: Main entrance lobby, visitor sign-in desk
+  - Duties: Visitor registration, badge verification, incident reporting
+  - The guard does NOT patrol floors, restricted areas or parking
+
+NOT included in contract:
+  - Weekend or night coverage
+  - Westside Clinic (no security personnel)
+  - Corporate HQ (building security managed by Greenfield Bldg Mgmt)
+  - Camera monitoring (cameras exist but are "self-monitored" by whoever
+    is at the security desk; footage stored on a local DVR for 30 days)
+
+CAMERA SYSTEM (from Tom Reeves's notes):
+  MedDefense Central:
+    - 4 cameras: main entrance (2), ER entrance (1), parking garage
+      entrance (1)
+    - DVR storage: 30 days, then overwritten
+    - No cameras in server room area, network closets or administrative
+      wing
+    - Cameras are analog (not IP-based), connected to a standalone DVR
+      in the security desk
+  Westside Clinic:
+    - 1 camera: front entrance only
+    - Records to a local SD card. Capacity: ~48 hours before overwrite.
+  Corporate HQ:
+    - Building-managed cameras in lobby and elevator. MedDefense has no
+      access to footage.
+
+========================================================================
+ARTIFACT 7: TRAINING RECORDS (HR Department)
+========================================================================
+
+Source: HR shared drive -- Training_Log.xlsx (summary)
+
+SECURITY AWARENESS TRAINING:
+
+Program: "CyberSafe Basics" (third-party online module, 45 minutes)
+Frequency: Annual (mandatory for all staff)
+Last conducted: [10 months ago]
+
+Completion rates:
+  Corporate HQ:        94% (207/220)
+  MedDefense Central:  71% (994/1400) -- clinical staff had low completion
+  Westside Clinic:     58% (104/180)
+
+Content covered:
+  - Password hygiene
+  - Phishing email recognition
+  - Physical security awareness (tailgating, clean desk)
+  - Reporting suspicious activity
+
+No phishing simulation campaigns have been conducted.
+No role-specific training (e.g., for IT staff, executives or clinical).
+No training on handling protected health information (PHI) digitally.
+
+Note from James Chen (in email to HR, 2 months ago):
+"58% completion at Westside is unacceptable. We need to enforce this.
+Also, the training content is generic -- it doesn't cover healthcare-
+specific scenarios like PHI handling or medical device security."
+Response from HR: "We'll add it to the next cycle."
+
+========================================================================
+ARTIFACT 8: LOG MANAGEMENT (from Tom Reeves, verbal summary)
+========================================================================
+
+"What do we do with logs? Well...
+
+- The FortiGate stores its own logs locally. 30 days retention. We don't
+  forward them anywhere.
+- Windows servers send events to the Event Viewer. We check manually if
+  something breaks.
+- Linux servers write to /var/log. Standard syslog. No centralization.
+- Apache logs on web-srv-01 and billing-srv-01 rotate weekly via logrotate.
+  We keep 4 weeks.
+- The EHR application has its own audit log. The vendor manages that.
+  We can request exports but it takes 48 hours.
+- Active Directory logs critical events but we have no alerting.
+  The only time we look at AD logs is when something breaks.
+
+Marcus kept talking about a SIEM. Something called 'Wazuh.' He started
+researching it but never got to install anything. I think he had some
+notes on it somewhere."
+
+No centralized log management system exists.
+No automated alerting on security events.
+No log integrity protection (no hashing, no write-once storage).
+
+========================================================================
+                    END OF CONTROLS ARTIFACTS
+========================================================================
