@@ -1,0 +1,218 @@
+================================================================================
+            MEDDEFENSE HEALTH SYSTEMS
+            Network Scan Summary
+            Scanned by: Sarah Park (IT Director) at Deputy CISO request
+            Tool: Nmap 7.94 (service detection + OS fingerprinting)
+            Date: [Current - 3 days]
+            Scope: 10.10.0.0/16 (all MedDefense internal subnets)
+================================================================================
+
+NOTE FROM SARAH PARK:
+"James asked me to run this for the new analyst. I scanned the full
+internal range. This is a summary of what responded. I removed
+duplicate entries and grouped by subnet. There might be devices that
+were powered off during the scan."
+
+========================================================================
+SUBNET: 10.10.1.0/24 -- CENTRAL HOSPITAL (Floor workstations + APs)
+========================================================================
+
+IP            Hostname              OS Detection         Open Ports
+------------- --------------------- -------------------- ----------------------
+10.10.1.10    WS-RECEPT-01         Windows 10 (19045)   135,139,445,3389
+10.10.1.11    WS-RECEPT-02         Windows 10 (19045)   135,139,445,3389
+10.10.1.20    WS-NURSE-1F-01       Windows 10 (19045)   135,139,445
+10.10.1.21    WS-NURSE-1F-02       Windows 10 (19045)   135,139,445
+10.10.1.22    WS-NURSE-1F-03       Windows 10 (19045)   135,139,445
+10.10.1.30    WS-NURSE-2F-01       Windows 10 (19045)   135,139,445
+10.10.1.31    WS-NURSE-2F-02       Windows 10 (19045)   135,139,445
+10.10.1.40    WS-NURSE-3F-01       Windows 10 (19045)   135,139,445
+10.10.1.41    WS-NURSE-3F-02       Windows 10 (19045)   135,139,445
+10.10.1.42    WS-NURSE-3F-03       Windows 10 (19045)   135,139,445
+10.10.1.50    WS-ADMIN-01          Windows 10 (19045)   135,139,445,3389
+10.10.1.51    WS-ADMIN-02          Windows 10 (19045)   135,139,445,3389
+10.10.1.52    WS-ADMIN-03          Windows 10 (19045)   135,139,445,3389
+10.10.1.60    WS-PHARM-01          Windows 10 (19045)   135,139,445
+10.10.1.61    WS-PHARM-02          Windows 10 (19045)   135,139,445
+10.10.1.70    WS-RAD-01            Windows XP SP3       135,139,445
+              (MRI control wkst)   ** END OF LIFE **
+10.10.1.71    WS-RAD-02            Windows 10 (19045)   135,139,445
+10.10.1.80    WS-LAB-01            Windows 10 (19045)   135,139,445
+10.10.1.81    WS-LAB-02            Windows 10 (19045)   135,139,445
+10.10.1.100   TC-ER-01             Linux (thin client)  22
+10.10.1.101   TC-ER-02             Linux (thin client)  22
+10.10.1.102   TC-ER-03             Linux (thin client)  22
+10.10.1.103   TC-ER-04             Linux (thin client)  22
+10.10.1.200   AP-1F-01             Ubiquiti UniFi       22,443
+10.10.1.201   AP-1F-02             Ubiquiti UniFi       22,443
+10.10.1.202   AP-2F-01             Ubiquiti UniFi       22,443
+10.10.1.203   AP-2F-02             Ubiquiti UniFi       22,443
+10.10.1.204   AP-3F-01             Ubiquiti UniFi       22,443
+10.10.1.205   AP-3F-02             Ubiquiti UniFi       22,443
+10.10.1.206   AP-4F-01             Ubiquiti UniFi       22,443
+10.10.1.207   AP-LOBBY             Ubiquiti UniFi       22,443
+10.10.1.208   AP-CAFE              Ubiquiti UniFi       22,443
+10.10.1.209   AP-GARAGE            Ubiquiti UniFi       22,443
+10.10.1.210   AP-BSMT              Ubiquiti UniFi       22,443
+10.10.1.211   AP-ER                Ubiquiti UniFi       22,443
+
+[Approximately 290 additional Windows workstations detected in this
+subnet but omitted for brevity. Pattern: WS-[DEPT]-[FLOOR]-[NUM],
+all Windows 10, standard ports 135,139,445. Some with 3389 (RDP).]
+
+========================================================================
+SUBNET: 10.10.2.0/24 -- CENTRAL HOSPITAL (Servers)
+========================================================================
+
+IP            Hostname              OS Detection         Open Ports
+------------- --------------------- -------------------- ----------------------
+10.10.2.10    ehr-srv-01           Ubuntu 20.04         22,443,8080
+10.10.2.11    ehr-db-01            Ubuntu 20.04         22,5432
+10.10.2.12    pacs-srv-01          Windows Server 2016  135,445,4242,11112
+10.10.2.15    billing-srv-01       Ubuntu 18.04         22,80,3306
+10.10.2.20    ad-dc-01             Windows Server 2019  53,88,135,389,445,636
+10.10.2.21    ad-dc-02             Windows Server 2019  53,88,135,389,445,636
+10.10.2.30    file-srv-01          Windows Server 2016  135,139,445
+10.10.2.31    print-srv-01         Windows Server 2012  135,139,445,9100
+10.10.2.40    backup-srv-01        Ubuntu 22.04         22
+10.10.2.41    NAS-01               Synology DSM 7       5000,5001,22
+10.10.2.50    web-srv-01           Ubuntu 20.04         22,80,443
+
+10.10.2.99    UNKNOWN-01           Linux 4.x            22,8888,9090
+              (No hostname in DNS)
+              ** NOT IN ANY DOCUMENTATION **
+              Sarah's note: "I have no idea what this is. Could be
+              Marcus's or the intern's. It responds to SSH and has
+              two web services running."
+
+========================================================================
+SUBNET: 10.10.3.0/24 -- CENTRAL HOSPITAL (Medical Devices)
+========================================================================
+
+NOTE: All devices in this subnet are on the same physical network as
+10.10.1.0/24 and 10.10.2.0/24. The "subnet" is an addressing convention
+only -- there is no VLAN or firewall separation.
+
+IP            Hostname/ID           OS/Firmware          Open Ports
+------------- --------------------- -------------------- ----------------------
+10.10.3.10    MON-ICU-01           Philips IntelliVue   80,443,2575
+10.10.3.11    MON-ICU-02           Philips IntelliVue   80,443,2575
+10.10.3.12    MON-ICU-03           Philips IntelliVue   80,443,2575
+10.10.3.13    MON-ICU-04           Philips IntelliVue   80,443,2575
+10.10.3.14    MON-ICU-05           Philips IntelliVue   80,443,2575
+10.10.3.15    MON-ICU-06           Philips IntelliVue   80,443,2575
+10.10.3.20    MON-ER-01            Philips IntelliVue   80,443,2575
+10.10.3.21    MON-ER-02            Philips IntelliVue   80,443,2575
+10.10.3.22    MON-ER-03            Philips IntelliVue   80,443,2575
+10.10.3.23    MON-ER-04            Philips IntelliVue   80,443,2575
+10.10.3.30    MON-3F-01            Philips IntelliVue   80,443,2575
+10.10.3.31    MON-3F-02            Philips IntelliVue   80,443,2575
+10.10.3.32    MON-3F-03            Philips IntelliVue   80,443,2575
+10.10.3.40    PUMP-ICU-01          BD Alaris fw 12.1.2  80,443
+10.10.3.41    PUMP-ICU-02          BD Alaris fw 12.1.2  80,443
+10.10.3.42    PUMP-ICU-03          BD Alaris fw 12.1.2  80,443
+10.10.3.43    PUMP-ER-01           BD Alaris fw 12.1.2  80,443
+10.10.3.44    PUMP-ER-02           BD Alaris fw 12.1.2  80,443
+10.10.3.45    PUMP-3F-01           BD Alaris fw 12.1.2  80,443
+10.10.3.46    PUMP-3F-02           BD Alaris fw 12.1.2  80,443
+10.10.3.47    MON-VITALS-3F-01     Unknown vendor       80
+              (Connected vital signs monitor -- noted during walk-through)
+10.10.3.50    NURSE-CALL-01        IP-based system      80,5060
+10.10.3.51    NURSE-CALL-02        IP-based system      80,5060
+10.10.3.60    BADGE-READER-MAIN    HID Global           80,443
+10.10.3.61    BADGE-READER-SVR     HID Global           80,443
+10.10.3.62    BADGE-READER-ER      HID Global           80,443
+
+[Approximately 65 additional Philips monitors and 110 additional BD Alaris
+pumps detected but omitted for brevity. All show identical port profiles.]
+
+========================================================================
+SUBNET: 10.10.10.0/24 -- WESTSIDE CLINIC
+========================================================================
+
+NOTE: This subnet is reached via IPSec VPN from the Netgear router
+at Westside to the FortiGate at Central.
+
+IP            Hostname              OS Detection         Open Ports
+------------- --------------------- -------------------- ----------------------
+10.10.10.1    (Netgear router)     Netgear firmware     80,443,22
+10.10.10.10   ws-srv-01            Windows Server 2016  135,139,445,3389
+10.10.10.20   WS-WC-01             Windows 10           135,139,445
+10.10.10.21   WS-WC-02             Windows 10           135,139,445
+...
+10.10.10.55   WS-WC-36             Windows 10           135,139,445
+
+10.10.10.100  WS-WC-XRAY          Unknown              80,4242
+              (X-ray workstation -- vendor-specific system)
+
+10.10.10.200  (Unknown device)     Linux 5.x            22,80,3000
+              ** NOT IN ANY DOCUMENTATION **
+              Sarah's note: "Another mystery device. Someone at Westside
+              plugged something in. Port 3000 is often Grafana or Node.js.
+              Could be a monitoring tool someone set up unofficially."
+
+========================================================================
+SUBNET: 10.10.20.0/24 -- CORPORATE HQ
+========================================================================
+
+NOTE: This subnet is reached via site-to-site VPN from the building
+network to the FortiGate at Central.
+
+IP            Hostname              OS Detection         Open Ports
+------------- --------------------- -------------------- ----------------------
+10.10.20.10   WS-HQ-01             Windows 11           135,139,445
+10.10.20.11   WS-HQ-02             Windows 11           135,139,445
+...
+10.10.20.130  WS-HQ-121            Windows 10           135,139,445
+
+[Approximately 120 workstations. Mix of Windows 10 and 11. No servers.]
+
+10.10.20.200  LAPTOP-HQ-01         Windows 11           135,445
+10.10.20.201  LAPTOP-HQ-02         Windows 11           135,445
+...
+[Approximately 25 laptops detected during scan. These are intermittent --
+likely mobile workers who were on-site during the scan window.]
+
+========================================================================
+SCAN ANOMALIES AND NOTES
+========================================================================
+
+1. UNDOCUMENTED DEVICES:
+   - 10.10.2.99 (Central servers subnet) -- unknown Linux device with
+     web services. Not in any IT documentation.
+   - 10.10.10.200 (Westside) -- unknown Linux device with port 3000.
+     Not in any IT documentation.
+
+2. FLAT NETWORK CONFIRMATION:
+   During scanning, all subnets were reachable from the scan host
+   (Sarah's workstation at HQ, 10.10.20.10) without any access
+   restrictions. This confirms Marcus's observation: no network
+   segmentation is enforced. A device on any subnet can reach any
+   other device on any other subnet.
+
+3. END-OF-LIFE SYSTEMS:
+   - 10.10.1.70 (WS-RAD-01): Windows XP SP3 -- the MRI workstation
+   - 10.10.2.31 (print-srv-01): Windows Server 2012 R2 -- EOL Oct 2023
+   - 10.10.2.15 (billing-srv-01): Ubuntu 18.04 -- standard support
+     ended June 2023, ESM available but not activated
+
+4. EXPOSED SERVICES:
+   - MySQL on billing-srv-01 (10.10.2.15:3306) is accessible from the
+     entire internal network. Should be restricted to ehr-srv-01.
+   - PostgreSQL on ehr-db-01 (10.10.2.11:5432) is accessible from the
+     entire internal network. Should be restricted to ehr-srv-01.
+   - RDP (3389) is enabled on reception and admin workstations. No
+     network-level restriction.
+   - The NAS management interface (10.10.2.41:5000/5001) is accessible
+     from the entire network.
+
+5. MEDICAL DEVICE EXPOSURE:
+   All Philips monitors, BD Alaris pumps and other medical devices
+   have HTTP/HTTPS management interfaces accessible from the entire
+   network. The BD Alaris firmware version (12.1.2) has known CVEs
+   (BD issued a security bulletin 18 months ago recommending network
+   isolation as mitigation -- this has not been done).
+
+========================================================================
+                    END OF NETWORK SCAN SUMMARY
+========================================================================
