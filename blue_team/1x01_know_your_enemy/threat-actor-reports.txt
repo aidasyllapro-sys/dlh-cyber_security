@@ -1,0 +1,124 @@
+================================================================================
+          THREAT INTELLIGENCE REPORTS -- CLASSIFICATION EXERCISE
+          8 Anonymized Incident Reports
+          Source: Compiled from public breach disclosures and CISA advisories
+================================================================================
+
+========================================================================
+REPORT A
+========================================================================
+
+A global pharmaceutical company discovered that proprietary drug trial
+data had been systematically copied from its research servers over a
+period of 14 months. The attackers used a custom-built remote access
+tool that communicated via encrypted DNS queries, making detection
+extremely difficult. The malware was signed with a stolen code-signing
+certificate. Forensic analysis revealed that the initial compromise
+occurred through a zero-day vulnerability in the company's VPN appliance.
+The stolen data included Phase III clinical trial results valued at
+an estimated $2 billion in future revenue.
+
+========================================================================
+REPORT B
+========================================================================
+
+A regional hospital's billing department was targeted by an email
+campaign. The emails contained invoices that appeared to come from a
+medical supply vendor. When opened, the attached PDF exploited a known
+Adobe Reader vulnerability to install a commercially available
+remote access trojan (RAT). Three weeks later, ransomware was deployed
+across the hospital network. Before encryption, approximately 15GB of
+patient records were exfiltrated to an external server. The attackers
+demanded 40 Bitcoin (approximately $1.6 million) and threatened to
+publish the patient data if payment was not received within 72 hours.
+
+========================================================================
+REPORT C
+========================================================================
+
+A hospital's public website was defaced overnight. The homepage was
+replaced with a message criticizing the hospital's recent decision to
+close its free community health clinic. The message included the logo
+of a known activist group and called for protests. No patient data was
+accessed. The defacement was achieved through a SQL injection
+vulnerability in the website's content management system. The attackers
+made no attempt to move beyond the web server to internal systems.
+
+========================================================================
+REPORT D
+========================================================================
+
+An IT administrator at a healthcare insurance company was terminated
+after a disciplinary hearing. Two days later, production database tables
+containing claims processing data were dropped (deleted). Investigation
+revealed the administrator had created a secondary VPN account before
+termination that was not linked to the corporate directory. The account
+was used at 2:30 AM from the administrator's home IP address. The
+administrator had also disabled the automated backup job for the claims
+database 3 days before being fired.
+
+========================================================================
+REPORT E
+========================================================================
+
+A clinic network discovered cryptocurrency mining software on 12 of
+its workstations. The software had been installed via an automated
+exploit targeting a known vulnerability in a remote management tool
+(CVE published 6 months earlier). The attackers did not attempt to
+access patient data, move laterally to servers, or install persistent
+backdoors. The mining software was a publicly available tool configured
+to mine Monero. The attacker's wallet address was linked to a cluster
+of similar infections across 300+ organizations worldwide, suggesting
+mass automated exploitation rather than targeted attack.
+
+========================================================================
+REPORT F
+========================================================================
+
+A hospital network's nurse call system began malfunctioning during a
+weekend. Investigation revealed that an employee in the biomedical
+engineering department had connected a personal Raspberry Pi to the
+medical device network "to monitor network performance for a personal
+project." The Pi was running an outdated version of Raspbian with
+default credentials (pi/raspberry). An external attacker had discovered
+the device through an internet-facing port that the employee had
+inadvertently exposed, used the default credentials to gain access,
+and pivoted from the Pi to the nurse call system. The employee had
+no malicious intent.
+
+========================================================================
+REPORT G
+========================================================================
+
+A mid-size hospital discovered that 3,200 patient records had been
+accessed and downloaded over a 6-week period. The access occurred
+through a legitimate physician account, always during off-hours
+(between 11 PM and 4 AM), and always from the same IP address. The
+physician in question had been on extended medical leave for the
+entire period. When confronted, the physician denied any involvement
+and produced documentation showing they were out of the country.
+
+The downloaded records did not correspond to any of the physician's
+current or former patients. The records were concentrated in patients
+with high-value insurance plans. No ransom demand was received. The
+data has not appeared on known dark web marketplaces as of the time
+of this report.
+
+========================================================================
+REPORT H
+========================================================================
+
+A healthcare technology startup received an email from an unknown
+sender claiming to have discovered a critical vulnerability in their
+patient scheduling API. The sender demanded $50,000 in cryptocurrency
+in exchange for not publishing the vulnerability details and the
+2,000 patient records they had extracted as proof. The sender provided
+a sample of 50 records that were verified as authentic. Analysis of
+the API logs confirmed unauthorized access from a Tor exit node. The
+vulnerability exploited was a broken authentication endpoint that had
+been reported internally by a junior developer 3 months earlier but
+was deprioritized in the development backlog.
+
+========================================================================
+                END OF REPORTS
+========================================================================
