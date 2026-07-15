@@ -1,6 +1,6 @@
-MedDefense Health Systems — Security Posture Assessment
+# MedDefense Health Systems: Threat Landscape Assessment
 
-A regional 3-site hospital group (2,000 staff) with no prior dedicated security function needs a full security posture assessment for the Board after reading about the Change Healthcare breach.
-As the new Junior Security Analyst replacing a predecessor who left incomplete notes, this project builds that assessment from scratch: asset inventory, criticality, controls, gaps, and prioritized treatment recommendations.
+The companion project to the Security Posture Assessment (0x00): where that project answered "what do we have and where are we weak," this project answers "who is trying to hurt us, and how."
+Starting from a predecessor's unfinished threat intelligence dossier, it profiles MedDefense's adversaries, maps every attack vector and surface, builds complete kill chains and STRIDE/ATT&CK-based threat models, and produces a prioritized, threat-informed ranking of the 5 risks most likely to hurt MedDefense.
 
-See 0-environment_summary.md through 17-ciso_briefing.md for the full deliverable set.
+See `0-intelligence_briefing.md` through `18-threat_landscape_report.md` for the full deliverable set.
