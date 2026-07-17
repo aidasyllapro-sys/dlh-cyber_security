@@ -1,6 +1,6 @@
 # MedDefense Health Systems: Threat Actor Taxonomy - 8-Report Classification Exercise
 
-**Prepared by:** Aïda Sylla, Security Analyst **Prepared for:** James Chen, Deputy CISO **Source material:** `threat-actor-reports.txt`, 8 anonymized intelligence reports **Purpose:** Practice inferring threat actor type, attributes, and motivation from observed behavior alone. The core analytical skill of threat intelligence, since actor identity is rarely known at the time of investigation.
+**Prepared by:** Aïda Sylla, Security Analyst **Prepared for:** James Chen, Deputy CISO **Source material:** `threat-actor-reports.txt`, 8 anonymized intelligence reports **Purpose:** Practice inferring threat actor type, attributes, and motivation from observed behavior alone; the core analytical skill of threat intelligence, since actor identity is rarely known at the time of investigation.
 
 **Framework applied:** 6 actor categories (nation-state, organized crime, hacktivist, insider threat, unskilled attacker, shadow IT), each assessed on Internal/External, Resources, Sophistication, and Primary Motivation (from the standard motivation list: data exfiltration, espionage, service disruption, blackmail, financial gain, philosophical/political belief, ethical motivation, revenge, chaos, war).
 
@@ -170,46 +170,54 @@ Report F:
 ```
 
 ```
-Report G: [DELIBERATELY AMBIGUOUS — primary classification below, full
-  discussion of the alternate hypothesis and distinguishing evidence
-  follows immediately after]
-  Actor Type: Insider Threat (Malicious) — primary classification. No
-    malware, exploited vulnerability, or phishing lure is described
-    anywhere in this report; every observable action (a legitimate
-    account, no technical intrusion artifacts) is consistent with
-    account misuse by someone with direct or indirect access to it,
-    which is the defining signature of this category rather than
-    Organized Crime.
-  Internal/External: Internal — primary classification, on the same
-    reasoning: the complete absence of any technical compromise
-    indicator points toward someone already positioned inside the
-    organization rather than an external party who first had to obtain
-    access.
+Report G: [DELIBERATELY AMBIGUOUS — the evidence in this report does
+  not actually distinguish between the two leading hypotheses (see
+  below); a single primary label is still given, with an explicit
+  tiebreak criterion rather than a false claim of discriminating
+  evidence]
+  Actor Type: Insider Threat (Malicious) — primary classification, but
+    on a narrow basis. The absence of malware, an exploited
+    vulnerability, or a phishing lure does NOT, by itself, favor an
+    insider over an external actor — a purchased or stolen credential
+    would produce an identical absence of technical artifacts, since
+    the access itself would still be genuine. The actual tiebreak used
+    here is the documented sector base rate: insiders account for
+    approximately 35% of healthcare breaches (this project's Task 0
+    intelligence dossier, Verizon DBIR healthcare supplement), a
+    quantifiable prior that marginally favors this label in the
+    absence of any case-specific evidence pointing either way — not a
+    claim that the report's details themselves discriminate between
+    the two.
+  Internal/External: Internal — follows directly from the Actor Type
+    tiebreak above, on the same basis and with the same limitation:
+    this is a probabilistic lean, not a conclusion the case evidence
+    itself supports over the external alternative.
   Resources: Low to Medium — the operation required only a working set
-    of valid credentials, not custom tooling or a zero-day.
+    of valid credentials, not custom tooling or a zero-day; this
+    attribute is identical under either hypothesis and does not help
+    distinguish them.
   Sophistication: Medium — the consistent off-hours access pattern from
     a single IP address, sustained over 6 weeks, and the selective
     targeting of high-value-insurance patients rather than bulk/random
     records, both suggest deliberate, disciplined operational behavior
-    rather than a low-skill or automated actor.
+    rather than a low-skill or automated actor — true under either
+    hypothesis.
   Primary Motivation: Financial gain — the concentration on
     high-value-insurance-plan patients (valuable for identity theft
     and insurance fraud, per this project's threat landscape summary)
     points toward financial motive over espionage, disruption, or
     ideology, even though no ransom demand was made and no dark-web
     listing has appeared yet.
-  Confidence Level: Low — the primary classification above is my best
-    single assessment given the evidence, but confidence in it remains
-    Low. A strong, evidence-consistent alternate hypothesis exists
-    (Organized Crime, using stolen or purchased valid credentials) and
-    is addressed in full immediately below, since real intelligence
-    analysis often produces exactly this outcome: a defensible lead
-    hypothesis rather than a certain one.
+  Confidence Level: Low — this is a forced single-choice classification
+    made explicitly on a statistical tiebreak, not on case-specific
+    discriminating evidence, and should be read accordingly. The full
+    alternate hypothesis, and the specific evidence that would actually
+    resolve this case one way or the other, follows immediately below.
 ```
 
-### Why the primary classification above is contested, and what would resolve it
+### Why this classification is a tiebreak, not a conclusion, and what would actually resolve it
 
-Report G is constructed so that two very different actor types produce the **same observable evidence**. The classification above (Insider Threat, Malicious) is the stronger single hypothesis for the reasons stated, but it is not the only one the evidence supports:
+Report G is constructed so that 2 very different actor types produce **exactly the same observable evidence**, and no detail in the report itself breaks that symmetry. This is worth stating plainly rather than papering over with a confident-sounding label:
 
 **Candidate 1: Insider threat (malicious), by someone other than the absent physician.** The access used a _legitimate_ physician account rather than any sign of external intrusion (no exploited vulnerability, no malware, no phishing lure is described). Someone with the ability to access or reuse that physician's credentials (a colleague, a member of IT/helpdesk staff, or anyone who knew or had access to that login) could be exploiting a legitimate account that nobody thought to monitor precisely because the credential itself is genuine and privileged. Healthcare's structurally broad clinical access (documented in this project's threat landscape summary as a core insider-threat enabler) makes this entirely plausible.
 
@@ -259,15 +267,15 @@ Report H:
 
 ## Summary Table
 
-|Report|Actor Type|Internal/External|Resources|Sophistication|Motivation|Confidence|
-|---|---|---|---|---|---|---|
-|A|Nation-state|External|High|High|Espionage|Medium|
-|B|Organized crime|External|Medium|Medium|Financial gain|High|
-|C|Hacktivist|External|Low|Low–Medium|Philosophical/political|High|
-|D|Insider threat (malicious)|Internal|Low|Low–Medium|Revenge|High|
-|E|Unskilled attacker|External|Low|Low|Financial gain|High|
-|F|Shadow IT + Unskilled attacker|Internal (enabling) / External (exploitation)|Low|Low|None (Shadow IT) / opportunistic (external)|High|
-|G|Insider threat **or** Organized crime — undetermined|Could be either|Low–Medium|Medium|Financial gain|**Low**|
-|H|Organized crime (independent actor)|External|Medium|Medium|Blackmail|Medium|
+| Report | Actor Type                                           | Internal/External                             | Resources  | Sophistication | Motivation                                  | Confidence |
+| ------ | ---------------------------------------------------- | --------------------------------------------- | ---------- | -------------- | ------------------------------------------- | ---------- |
+| A      | Nation-state                                         | External                                      | High       | High           | Espionage                                   | Medium     |
+| B      | Organized crime                                      | External                                      | Medium     | Medium         | Financial gain                              | High       |
+| C      | Hacktivist                                           | External                                      | Low        | Low–Medium     | Philosophical/political                     | High       |
+| D      | Insider threat (malicious)                           | Internal                                      | Low        | Low–Medium     | Revenge                                     | High       |
+| E      | Unskilled attacker                                   | External                                      | Low        | Low            | Financial gain                              | High       |
+| F      | Shadow IT + Unskilled attacker                       | Internal (enabling) / External (exploitation) | Low        | Low            | None (Shadow IT) / opportunistic (external) | High       |
+| G      | Insider threat **or** Organized crime - undetermined | Could be either                               | Low–Medium | Medium         | Financial gain                              | **Low**    |
+| H      | Organized crime (independent actor)                  | External                                      | Medium     | Medium         | Blackmail                                   | Medium     |
 
-**Observation across all 8 reports:** the two reports with the lowest confidence (A and H) are precisely the 2 where behavioral evidence is technically strong but attribution-specific evidence (named group affiliation, infrastructure overlap with known campaigns) is absent. A realistic reminder that sophistication and confidence are independent axes: knowing _how good_ an actor is does not automatically tell you _who_ they are.
+**Observation across all 8 reports:** the 2 reports with the lowest confidence (A and H) are precisely the 2 where behavioral evidence is technically strong but attribution-specific evidence (named group affiliation, infrastructure overlap with known campaigns) is absent. A realistic reminder that sophistication and confidence are independent axes: knowing _how good_ an actor is does not automatically tell you _who_ they are.
