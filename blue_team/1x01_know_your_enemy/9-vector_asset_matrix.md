@@ -1,0 +1,40 @@
+# MedDefense Health Systems: The Vector-to-Asset Matrix
+
+**Prepared by:** Aïda Sylla, Security Analyst **Prepared for:** James Chen, Deputy CISO **Source material:** Project 0x00 Top 5 Critical Assets (Task 8), Control Matrix, Gap Analysis; Tasks 0–8 of this project (Threat Actor Taxonomy, BlackReef, Insider File, Human Vector, Supply Chain, Threat Actor Matrix, Attack Surface, Technical Vectors) **Purpose:** Cross-reference attack vectors against critical assets to move from individual data points to a complete threat exposure map, showing not just _that_ a vector exists, but exactly which path it takes to reach which asset.
+
+**Columns:** the Top 5 Critical Assets from Project 0x00 Task 8 (EHR System, Primary Domain Controller, BD Alaris Infusion Pumps, MRI Scanner & WS-RAD-01, Backup Infrastructure), plus Medical IoT (the broader device population beyond infusion pumps specifically Philips monitors, badge readers, nurse call) and Active Directory (the logical identity/directory service spanning both domain controllers, distinct from the single physical host ad-dc-01 represented in its own column).
+
+---
+
+## The Matrix
+
+|Vector|EHR System|Primary Domain Controller|Infusion Pumps|MRI Scanner (WS-RAD-01)|Backup Infrastructure|Medical IoT (broader)|Active Directory|
+|---|---|---|---|---|---|---|---|
+|**Phishing / Spear Phishing**|Phishing → stolen credential (no MFA, GAP-017) → remote login → flat network → PostgreSQL 5432 open → ehr-db-01|Spear phishing targeting IT staff (T4 Scenario 1) → workstation/credential compromise → flat network lateral movement → ad-dc-01|—|—|Phishing → workstation foothold → flat network → NAS-01 management interface (5000/5001) → backup neutralized|—|Phishing → harvested credential (no MFA) → direct authentication against AD (Kerberos/LDAP) → domain-wide access|
+|**VPN Exploit**|VPN CVE exploited (GAP-016) → internal foothold → flat network → PostgreSQL 5432 → ehr-db-01|VPN exploit → internal foothold → credential harvesting (Mimikatz-style, per BlackReef Phase 3) → ad-dc-01|VPN exploit → internal foothold → flat network → BD Alaris management interface (80/443) reachable|VPN exploit → internal foothold → flat network → WS-RAD-01 (unpatched XP) reachable|VPN exploit → internal foothold → flat network → NAS-01 targeted before deployment (BlackReef's own playbook)|VPN exploit → internal foothold → flat network → Philips monitor/badge reader interfaces reachable|VPN exploit → internal foothold → domain enumeration (BloodHound-style) → AD compromised|
+|**Default / Shared Credentials**|—|—|Unconfirmed default admin/admin on BD Alaris interface → direct device access (mirrors the real-world Gamma case, T2)|—|—|Default/vendor credentials on Philips/badge-reader interfaces (status unconfirmed, GAP-001 action item) → device management access|—|
+|**Vulnerable Software Exploit**|Apache 2.4.29 RCE on billing-srv-01 → server compromised → flat network → ehr-db-01 (5432)|Apache RCE on billing-srv-01 → server compromised → flat network → credential harvesting → ad-dc-01|—|Known Windows XP vulnerability (unpatched since 2014) → direct exploitation of WS-RAD-01|Apache RCE on billing-srv-01 → server compromised → flat network → NAS-01 reachable|—|Apache RCE on billing-srv-01 → server compromised → flat network → domain credential harvesting → AD|
+|**Supply Chain Compromise**|MedTech Solutions compromised → legitimate EHR maintenance access → ehr-srv-01/ehr-db-01 (T5)|Any compromised vendor foothold → flat network → ad-dc-01 reachable|—|Siemens compromised → legitimate maintenance access → WS-RAD-01 firmware/update path (T5)|—|—|Sophos/Microsoft tenant compromise → mass credential-harvesting capability across managed endpoints → AD|
+|**Insider (Malicious)**|Malicious insider → legitimate or retained account (GAP-018) → direct EHR record access (T3 "Curious Employee," "Ghost Account")|—|—|—|Malicious insider with backup-admin knowledge → disables/deletes backup job before departure (mirrors T1 Report D pattern)|—|Malicious insider → retained VPN/AD credentials post-termination (GAP-018) → domain access (T3 "Ghost Account")|
+|**Insider (Negligent)**|Negligent shadow IT device (UNKNOWN-01, 10.10.2.99) sits on the same subnet as ehr-db-01 → unmonitored pivot point|Negligent shadow IT device (UNKNOWN-01) sits on the same subnet as ad-dc-01 → unmonitored pivot point|—|—|Negligent, untested change (the cron job behind Incident A) → backup reliability directly degraded|—|—|
+|**Physical Access**|Undifferentiated badge access to server room (GAP-007) → direct physical access to ehr-srv-01/ehr-db-01|Undifferentiated badge access to server room (GAP-007) → direct physical access to ad-dc-01|—|—|Undifferentiated badge access to server room (GAP-007) → direct physical access to NAS-01|—|Undifferentiated badge access to server room (GAP-007) → direct physical tampering with ad-dc-01/02|
+
+**Cells filled: 32 of 56 possible.** Cells were left empty where no direct or one-hop indirect path is supported by evidence gathered in this or the prior project. For example, no MedDefense-specific vendor was identified in Task 5 with direct access to Medical IoT devices, and no documented insider scenario in Task 3 touched the MRI or infusion pumps directly, so those cells remain blank rather than filled with a speculative, unsupported path.
+
+---
+
+## Three Most Connected Assets
+
+**1. EHR System, reachable by 7 of 8 vectors.** This is the only asset on the matrix touched by every vector category except default/shared credentials, confirming its position as MedDefense's #1 Critical asset (0x00, Task 8) is matched by an equally unmatched breadth of exposure, nearly every attacker archetype in this project's Threat Actor Matrix (Task 6) has a viable, evidenced path to it.
+
+**2. Primary Domain Controller and Active Directory (identity infrastructure), 6 of 8 vectors each.** These two columns ranking together at the top is itself the finding, not a redundancy: it shows MedDefense's identity backbone is exposed at both the physical host layer (ad-dc-01 itself) and the logical service layer (the directory data and trust relationships it maintains), meaning an attacker has two independent ways to compromise the same underlying trust anchor that nearly every other system in the environment depends on.
+
+**3. Backup Infrastructure, 6 of 8 vectors.** The asset specifically designed to be MedDefense's recovery mechanism is nearly as reachable as the assets it is meant to protect, which directly explains why BlackReef's own documented playbook (T2) treats neutralizing the backup as a mandatory step before ransomware deployment rather than an afterthought.
+
+## Three Most Versatile Vectors
+
+**1. VPN Exploit, reaches all 7 of 7 assets.** This is the only vector on the matrix that has a viable path to every single column, which aligns exactly with this project's own Threat Actor Matrix ranking Ransomware Groups as the #1 priority threat (T6). The entry point most capable of reaching everything is also the entry point used by the actor category rated most likely and highest-impact.
+
+**2. Vulnerable Software Exploit, reaches 5 of 7 assets.** A single unpatched service (Apache 2.4.29 on billing-srv-01) already provided the pivot point in 5 of 7 mapped paths, which is a direct, evidenced illustration of why the absence of a patch management process (GAP-016) is disproportionately dangerous on a flat network. One unpatched server becomes a launchpad toward nearly everything else.
+
+**3. Phishing / Spear Phishing, reaches 4 of 7 assets (tied closely with Supply Chain Compromise and Physical Access, also at 4 of 7).** Phishing earns the third spot ahead of its close ties because it requires no prior technical foothold or vendor relationship at all. Per the Task 0 intelligence dossier, phishing already accounts for 31% of healthcare ransomware initial access, making it simultaneously one of the cheapest vectors for an attacker to attempt and one of the most consequential once it succeeds against an unprotected, MFA-less credential.
