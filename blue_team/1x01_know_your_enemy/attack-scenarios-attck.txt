@@ -1,0 +1,175 @@
+================================================================================
+          ATTACK SCENARIO NARRATIVES FOR ATT&CK MAPPING
+          Context: MedDefense Health Systems
+          Purpose: Map each step to MITRE ATT&CK tactics and techniques
+================================================================================
+
+========================================================================
+SCENARIO ALPHA: "Operation Flatline" -- Ransomware Campaign
+========================================================================
+
+Threat Actor: BlackReef affiliate (organized crime / RaaS)
+Target: MedDefense Health Systems
+Objective: Double extortion (data theft + encryption)
+
+--- NARRATIVE ---
+
+STEP 1:
+A BlackReef affiliate purchases a list of healthcare organizations with
+Fortinet VPN appliances from an initial access broker on a dark web forum.
+The list was compiled by scanning the internet for FortiGate management
+interfaces and cross-referencing with healthcare industry databases. The
+affiliate pays $2,500 for a list of 40 organizations, including
+MedDefense.
+
+STEP 2:
+The affiliate crafts a spear phishing email targeting Sarah Park
+(IT Director, MedDefense). The email appears to come from Fortinet
+support and warns of a critical firmware vulnerability. It includes
+a link to a fake Fortinet support portal that hosts a malicious
+document. Sarah downloads and opens the document on her workstation
+(WS-HQ-01 at Corporate HQ). A macro executes a PowerShell command
+that downloads and runs a reverse shell payload.
+
+STEP 3:
+The reverse shell connects to the affiliate's command and control
+server. The affiliate now has a foothold on Sarah's workstation
+(10.10.20.10) at Corporate HQ. They install a persistent backdoor
+by creating a scheduled task that re-establishes the connection
+every 30 minutes, disguised as a Windows Update task.
+
+STEP 4:
+From Sarah's workstation, the affiliate runs network discovery
+commands: "nltest /dclist:", "net group 'Domain Admins' /domain",
+and "arp -a" to map the network. Because HQ connects to Central via
+site-to-site VPN and the network is flat, the affiliate can see the
+entire 10.10.0.0/16 range. They identify ad-dc-01 (10.10.2.20),
+ehr-srv-01 (10.10.2.10), ehr-db-01 (10.10.2.11), billing-srv-01
+(10.10.2.15) and backup-srv-01 (10.10.2.40) / NAS-01 (10.10.2.41).
+
+STEP 5:
+The affiliate uses Mimikatz on Sarah's workstation to dump cached
+credentials from memory. Sarah's account has local admin rights on
+her workstation but not domain admin rights. However, the credential
+dump reveals that a domain admin account (svc_backup) was used to
+authenticate on this machine during a recent backup troubleshooting
+session. Its NTLM hash is captured.
+
+STEP 6:
+Using the svc_backup hash, the affiliate performs a pass-the-hash
+attack to authenticate to ad-dc-01 (10.10.2.20). They now have
+Domain Admin access to the entire MedDefense Active Directory
+environment. They verify access by querying the domain for all
+computer objects.
+
+STEP 7:
+Before deploying ransomware, the affiliate locates high-value data.
+They connect to ehr-db-01 (10.10.2.11:5432) -- the PostgreSQL
+database is accessible from anywhere on the network with no
+additional authentication beyond OS-level access. They use pg_dump
+to export the patient database (approximately 35 GB). They also
+access file-srv-01 for HR and financial documents (8 GB). The data
+is compressed and exfiltrated to an attacker-controlled cloud
+storage account using Rclone over HTTPS. No alerts are generated.
+
+STEP 8:
+The affiliate targets the backup infrastructure. NAS-01 (10.10.2.41)
+is on the same network and accessible via its web interface
+(port 5001). Using the domain admin credentials, they access the
+NAS management interface and delete all backup jobs and stored
+backups. They also delete Volume Shadow Copies on all Windows
+systems using "vssadmin delete shadows /all /quiet".
+
+STEP 9:
+The affiliate creates a Group Policy Object on ad-dc-01 that
+deploys the BlackReef ransomware payload to all domain-joined
+Windows systems at the next Group Policy refresh cycle (within
+90 minutes). The ransomware encrypts all local drives and accessible
+network shares. Linux servers (ehr-srv-01, billing-srv-01) are
+targeted separately via SSH using credentials found in a
+configuration file on file-srv-01.
+
+--- END SCENARIO ALPHA ---
+
+
+========================================================================
+SCENARIO BETA: "The Quiet Departure" -- Insider Data Theft
+========================================================================
+
+Threat Actor: Malicious insider (billing department employee)
+Target: Patient records and financial data
+Objective: Data theft for financial gain (selling records)
+
+--- NARRATIVE ---
+
+STEP 1:
+Maria, a billing department employee at MedDefense Central, learns
+that she will be laid off as part of a cost-reduction initiative.
+She has 3 weeks before her last day. Maria has been with MedDefense
+for 4 years and has legitimate access to the billing system
+(billing-srv-01) and the EHR system (read-only access for billing
+verification purposes). She decides to copy patient records to sell
+on the black market.
+
+STEP 2:
+Maria begins by assessing what data she can access through her
+normal work applications. Through the billing interface, she can
+view patient names, dates of birth, insurance information, diagnosis
+codes and billing amounts. Through her EHR read-only access, she
+can view medical histories and prescription records. She notes that
+the EHR application does not limit the number of records she can
+view in a session or alert on unusual access volumes.
+
+STEP 3:
+Over the next two weeks, Maria accesses approximately 200 patient
+records per day during her normal work hours, mixed in with her
+legitimate work. She uses the EHR's built-in export function to
+download CSV files of patient data to her workstation. The export
+function is available to all users with read access -- no additional
+authorization is required. No alert is triggered because the
+EHR audit log records the access but nobody reviews the logs.
+
+STEP 4:
+Maria transfers the CSV files from her workstation to a personal
+USB drive. No Group Policy restricts USB storage devices on
+MedDefense workstations. She plugs in the drive at her desk without
+concern because she has seen other employees use USB drives for
+personal purposes without consequence. Over 2 weeks, she accumulates
+approximately 2,800 patient records.
+
+STEP 5:
+To cover her tracks, Maria deletes the CSV files from her
+workstation and empties the recycle bin. She does not know that the
+EHR application maintains its own access audit log on ehr-srv-01,
+which she cannot access or modify. However, as Marcus noted, these
+logs require a 48-hour vendor export request and are never reviewed
+proactively.
+
+STEP 6:
+On her second-to-last day, Maria notices that the billing application
+stores database connection credentials in a configuration file on
+her workstation (a practice she discovered months ago). She copies
+this file to her USB drive as well, giving her direct database
+access credentials for billing-srv-01 even after her network access
+is revoked.
+
+STEP 7:
+Maria's last day arrives. HR processes her departure. Her manager
+submits a ticket to IT requesting account deactivation. The ticket
+sits in the queue for 5 business days before being processed (IT
+has no SLA for offboarding tickets and no automated deactivation
+linked to HR termination). During these 5 days, Maria's VPN
+credentials remain active.
+
+STEP 8:
+Three days after her last day, Maria connects to the MedDefense VPN
+from home using her still-active credentials. She accesses
+billing-srv-01 using the database credentials she saved and extracts
+an additional 400 records directly from the database. She then
+disconnects and does not access the network again.
+
+--- END SCENARIO BETA ---
+
+========================================================================
+          END OF ATTACK SCENARIOS
+========================================================================
