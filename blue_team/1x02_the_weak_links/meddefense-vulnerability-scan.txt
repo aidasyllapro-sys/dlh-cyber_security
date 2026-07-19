@@ -1,0 +1,623 @@
+================================================================================
+          MEDDEFENSE HEALTH SYSTEMS
+          Vulnerability Scan Report
+          Scanner: OpenVAS 22.x (Greenbone Community Edition)
+          Scan Date: [Current - 5 days]
+          Scan Target: 10.10.0.0/16 (all internal subnets)
+          Scan Policy: Full and Deep (authenticated where credentials available)
+          Requested by: James Chen, Deputy CISO
+          Executed by: SecurePoint Consulting (third-party)
+================================================================================
+
+SCAN SUMMARY:
+  Total hosts scanned: 47 (responsive during scan window)
+  Total findings: 31
+  Critical: 4
+  High: 7
+  Medium: 11
+  Low: 5
+  Informational: 4
+
+========================================================================
+FINDING 001 -- CRITICAL
+========================================================================
+Host: 10.10.2.15 (billing-srv-01)
+Port: 80/tcp (Apache)
+Plugin: Apache HTTP Server mod_lua Buffer Overflow
+CVE: CVE-2021-44790
+CVSS Base: 9.8
+Vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+
+Description: Apache HTTP Server 2.4.51 and earlier contains a buffer
+overflow vulnerability in mod_lua multipart parser. A crafted request
+body can cause a buffer overflow in the mod_lua r:parsebody function,
+potentially allowing remote code execution without authentication.
+
+Detected Version: Apache/2.4.29 (Ubuntu)
+Fixed Version: 2.4.52
+Vendor Advisory: https://httpd.apache.org/security/vulnerabilities_24.html
+
+Note: This server also runs the MedDefense billing application.
+Authenticated scan confirmed mod_lua is loaded.
+
+========================================================================
+FINDING 002 -- CRITICAL
+========================================================================
+Host: 10.10.2.15 (billing-srv-01)
+Port: 80/tcp (Apache)
+Plugin: Apache HTTP Server Privilege Escalation
+CVE: CVE-2019-0211
+CVSS Base: 7.8
+Vector: CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H
+
+Description: In Apache HTTP Server 2.4.17 to 2.4.38, a local attacker
+with the ability to write to a child process (such as through a
+compromised web application) can escalate privileges to root. This
+allows full system compromise from a low-privilege web shell.
+
+Detected Version: Apache/2.4.29 (Ubuntu)
+Fixed Version: 2.4.39
+Vendor Advisory: https://httpd.apache.org/security/vulnerabilities_24.html
+
+Note: Combined with CVE-2021-44790, this creates a chain: remote code
+execution as www-data (Finding 001) followed by privilege escalation
+to root (this finding).
+
+========================================================================
+FINDING 003 -- CRITICAL
+========================================================================
+Host: 10.10.2.11 (ehr-db-01)
+Port: 5432/tcp (PostgreSQL)
+Plugin: PostgreSQL Unrestricted Network Access
+CVE: N/A (Misconfiguration)
+CVSS Base: N/A (Scanner rated: Critical)
+
+Description: PostgreSQL on this host is configured to accept connections
+from any IP address on the internal network (pg_hba.conf allows
+connections from 10.10.0.0/16). The database contains protected health
+information (confirmed via authenticated scan). No additional
+authentication layer (firewall, network ACL) restricts access to this
+port. Any compromised host on the internal network can connect directly
+to the patient database.
+
+Configuration Found:
+  pg_hba.conf: host all all 10.10.0.0/16 md5
+  listen_addresses = '*'
+
+Recommendation: Restrict pg_hba.conf to accept connections only from
+ehr-srv-01 (10.10.2.10). Configure host-based firewall to drop all
+other connections to port 5432.
+
+========================================================================
+FINDING 004 -- CRITICAL
+========================================================================
+Host: 10.10.1.70 (WS-RAD-01 -- MRI Workstation)
+Port: Multiple
+Plugin: Microsoft Windows XP End-of-Life Detection
+CVE: Multiple (see detail)
+CVSS Base: N/A (Scanner rated: Critical -- EOL)
+
+Description: This host is running Microsoft Windows XP SP3, which
+reached end of extended support on April 8, 2014. No security patches
+have been released for over 10 years. The following critical unpatched
+vulnerabilities are confirmed present:
+
+  CVE-2017-0144 (EternalBlue/MS17-010) -- CVSS 8.1
+    SMB Remote Code Execution. Weaponized. Used in WannaCry.
+    Port 445/tcp is OPEN on this host.
+
+  CVE-2019-0708 (BlueKeep) -- CVSS 9.8
+    Remote Desktop Protocol RCE. Weaponized.
+    Port 3389/tcp is OPEN on this host.
+
+  CVE-2008-4250 (MS08-067) -- CVSS 10.0
+    Windows Server Service RCE. Weaponized.
+    Port 445/tcp is OPEN on this host.
+
+Note: This is a medical device workstation (MRI scanner control).
+Network scan confirms it is on the same subnet (10.10.1.0/24) as all
+other workstations with no VLAN isolation.
+
+========================================================================
+FINDING 005 -- HIGH
+========================================================================
+Host: 10.10.2.50 (web-srv-01 -- Patient Portal)
+Port: 443/tcp (HTTPS)
+Plugin: SSL/TLS Weak Protocol Version Detection
+CVE: CVE-2011-3389 (BEAST), CVE-2014-3566 (POODLE)
+CVSS Base: 7.5
+Vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
+
+Description: The remote host supports TLS 1.0 alongside TLS 1.2. TLS
+1.0 is vulnerable to multiple known attacks (BEAST, POODLE, Lucky
+Thirteen) that can allow decryption of intercepted traffic. This server
+hosts the patient portal which transmits protected health information.
+
+Detected: TLSv1.0, TLSv1.2
+Recommended: Disable TLS 1.0 and 1.1. Enable TLS 1.3 if supported.
+
+========================================================================
+FINDING 006 -- HIGH
+========================================================================
+Host: 10.10.2.15 (billing-srv-01)
+Port: 3306/tcp (MySQL)
+Plugin: MySQL Unrestricted Network Binding
+CVE: N/A (Misconfiguration)
+CVSS Base: N/A (Scanner rated: High)
+
+Description: MySQL on this host is bound to 0.0.0.0 (all interfaces),
+accepting connections from any IP on the internal network. Authenticated
+scan confirmed the database contains financial records and billing data.
+Combined with the flat network topology, any compromised host can
+attempt to connect to this database.
+
+Configuration Found:
+  bind-address = 0.0.0.0 in /etc/mysql/mysql.conf.d/mysqld.cnf
+
+Recommendation: Bind MySQL to localhost (127.0.0.1) or restrict to
+the specific application server IPs that require access.
+
+========================================================================
+FINDING 007 -- HIGH
+========================================================================
+Host: 10.10.2.20 (ad-dc-01 -- Domain Controller)
+Port: 389/tcp (LDAP)
+Plugin: LDAP Signing Not Required
+CVE: N/A (Misconfiguration -- Microsoft Security Advisory)
+CVSS Base: N/A (Scanner rated: High)
+
+Description: The Active Directory domain controller does not require
+LDAP signing. This allows an attacker to perform LDAP relay attacks
+and potentially modify directory objects. Combined with the flat
+network, any host can reach the domain controller.
+
+Additionally: SMBv1 is enabled on this host. SMBv1 has known
+vulnerabilities and should be disabled.
+
+========================================================================
+FINDING 008 -- HIGH
+========================================================================
+Host: 10.10.2.31 (print-srv-01)
+Port: Multiple
+Plugin: Microsoft Windows Server 2012 R2 End-of-Life
+CVE: Multiple (cumulative)
+CVSS Base: N/A (Scanner rated: High -- EOL)
+
+Description: This host is running Windows Server 2012 R2, which reached
+end of extended support on October 10, 2023. Security patches are no
+longer provided. Known unpatched vulnerabilities include print spooler
+vulnerabilities (PrintNightmare family).
+
+  CVE-2021-34527 (PrintNightmare) -- CVSS 8.8
+    Print Spooler RCE/LPE. Weaponized. PoC widely available.
+    Print Spooler service is RUNNING on this host.
+
+========================================================================
+FINDING 009 -- HIGH
+========================================================================
+Host: 10.10.2.15 (billing-srv-01)
+Port: 22/tcp (SSH)
+Plugin: SSH Password Authentication Enabled
+CVE: N/A (Misconfiguration)
+CVSS Base: N/A (Scanner rated: High)
+
+Description: SSH on this host allows password-based authentication.
+Combined with no account lockout policy on the Linux system, this
+permits brute-force attacks against user accounts. SSH key-only
+authentication is recommended.
+
+Note: ehr-srv-01 (10.10.2.10) has SSH key-only auth properly
+configured. All other Linux servers still allow password auth.
+
+========================================================================
+FINDING 010 -- HIGH
+========================================================================
+Host: Multiple (10.10.3.40-46, BD Alaris pumps)
+Port: 80/tcp, 443/tcp
+Plugin: BD Alaris Infusion Pump Known Vulnerabilities
+CVE: CVE-2020-25165
+CVSS Base: 7.5
+Vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H
+
+Description: BD Alaris infusion pumps running firmware version 12.1.2
+are affected by a network session vulnerability that could allow an
+attacker to cause a denial of service. BD has published a security
+bulletin recommending network isolation as the primary mitigation.
+
+Detected Firmware: 12.1.2
+Vendor Bulletin: BD Security Bulletin (2022)
+Recommendation: Isolate on dedicated VLAN with firewall restricting
+traffic to clinical workstations and PACS server only.
+
+Additional Note: The web management interface on these devices responds
+with default credentials (admin/admin). 7 of 7 scanned pumps have
+unchanged default credentials.
+
+========================================================================
+FINDING 011 -- HIGH
+========================================================================
+Host: 10.10.2.15 (billing-srv-01)
+Port: General
+Plugin: Ubuntu 18.04 LTS Extended Support Status
+CVE: N/A (EOL status)
+CVSS Base: N/A (Scanner rated: High)
+
+Description: This host runs Ubuntu 18.04 LTS. Standard security
+support ended June 2023. Extended Security Maintenance (ESM) via
+Ubuntu Pro is available but not activated on this system. Without ESM,
+no security patches are being applied to OS-level packages.
+
+  Detected: Ubuntu 18.04.6 LTS
+  ESM Status: Not enrolled
+  Last apt update: [42 days ago]
+
+========================================================================
+FINDING 012 -- MEDIUM
+========================================================================
+Host: 10.10.2.50 (web-srv-01 -- Patient Portal)
+Port: 80/tcp, 443/tcp
+Plugin: HTTP Security Headers Missing
+CVE: N/A (Best Practice)
+CVSS Base: N/A (Scanner rated: Medium)
+
+Description: The web server does not set recommended security headers:
+  - X-Content-Type-Options: missing (enables MIME-sniffing attacks)
+  - X-Frame-Options: missing (enables clickjacking)
+  - Content-Security-Policy: missing (enables XSS)
+  - Strict-Transport-Security: missing (enables SSL stripping)
+  - X-XSS-Protection: missing
+
+These headers are defense-in-depth measures against common web attacks.
+
+========================================================================
+FINDING 013 -- MEDIUM
+========================================================================
+Host: 10.10.2.50 (web-srv-01 -- Patient Portal)
+Port: 443/tcp
+Plugin: SSL Certificate Expiration Warning
+CVE: N/A
+CVSS Base: N/A (Scanner rated: Medium)
+
+Description: The SSL certificate for the patient portal
+(portal.meddefense.local) expires in 23 days. If not renewed, browsers
+will display security warnings to patients and some may be unable to
+access the portal entirely.
+
+  Issuer: Let's Encrypt
+  Expiry: [Current + 23 days]
+  Auto-renewal: Not configured
+
+========================================================================
+FINDING 014 -- MEDIUM
+========================================================================
+Host: 10.10.10.1 (Westside Clinic -- Netgear Router)
+Port: 80/tcp, 443/tcp
+Plugin: Consumer-Grade Router with Default Administration Page
+CVE: N/A (Misconfiguration / Architecture)
+CVSS Base: N/A (Scanner rated: Medium)
+
+Description: The Westside Clinic perimeter device is a Netgear
+Nighthawk consumer router. The administration interface is accessible
+from the internal network. Consumer routers are not designed for
+enterprise or healthcare use and typically lack: enterprise logging,
+IDS/IPS capability, granular ACL management, VPN scalability, and
+firmware security hardening.
+
+This device also terminates the site-to-site IPSec VPN to MedDefense
+Central. If compromised, the attacker gains a direct tunnel into the
+Central server network.
+
+========================================================================
+FINDING 015 -- MEDIUM
+========================================================================
+Host: 10.10.2.41 (NAS-01 -- Backup Storage)
+Port: 5000/tcp, 5001/tcp
+Plugin: Synology DSM Web Interface Accessible
+CVE: N/A (Misconfiguration)
+CVSS Base: N/A (Scanner rated: Medium)
+
+Description: The Synology NAS management interface (DSM) is accessible
+from the entire internal network on ports 5000 (HTTP) and 5001 (HTTPS).
+This NAS stores all backup data for MedDefense servers. The management
+interface should be restricted to administrative IPs only.
+
+Note: Backup data is stored unencrypted on the NAS.
+
+========================================================================
+FINDING 016 -- MEDIUM
+========================================================================
+Host: Multiple (10.10.3.10-32, Philips IntelliVue monitors)
+Port: 80/tcp, 443/tcp, 2575/tcp
+Plugin: Medical Device HTTP Interface Accessible
+CVE: N/A (Misconfiguration)
+CVSS Base: N/A (Scanner rated: Medium)
+
+Description: Philips IntelliVue patient monitors expose web management
+interfaces accessible from the entire network. Port 2575 is the HL7
+(Health Level 7) communication port used for patient data exchange.
+These interfaces are not protected by authentication beyond the
+network layer (which provides no protection in a flat network).
+
+Detected: 13 Philips IntelliVue monitors with open web interfaces.
+Firmware: Version varies (oldest: 2019, newest: 2022).
+
+========================================================================
+FINDING 017 -- MEDIUM
+========================================================================
+Host: 10.10.2.10 (ehr-srv-01)
+Port: 8080/tcp
+Plugin: Apache Tomcat Default Error Page Information Disclosure
+CVE: N/A (Misconfiguration)
+CVSS Base: N/A (Scanner rated: Medium)
+
+Description: The EHR application server exposes Apache Tomcat on port
+8080. The default error pages reveal the Tomcat version (9.0.31) and
+stack traces with internal path information. While not directly
+exploitable, this information assists attackers in targeting specific
+vulnerabilities.
+
+  Detected: Apache Tomcat/9.0.31
+  Note: Tomcat 9.0.31 has known CVEs including CVE-2020-1938
+  (Ghostcat, CVSS 9.8) -- AJP connector on port 8009.
+
+  ** Scanner was unable to confirm if AJP connector is active. **
+  ** Manual verification recommended. **
+
+========================================================================
+FINDING 018 -- MEDIUM
+========================================================================
+Host: 10.10.2.20 (ad-dc-01), 10.10.2.21 (ad-dc-02)
+Port: 88/tcp (Kerberos)
+Plugin: Kerberos Weak Encryption Types Supported
+CVE: N/A (Misconfiguration)
+CVSS Base: N/A (Scanner rated: Medium)
+
+Description: The domain controllers support DES and RC4 Kerberos
+encryption types, which are considered weak and susceptible to
+offline cracking attacks (Kerberoasting). AES-128 and AES-256 are
+also supported but weak types have not been disabled.
+
+========================================================================
+FINDING 019 -- MEDIUM
+========================================================================
+Host: Multiple (10.10.1.10, 10.10.1.50-52, 10.10.10.10)
+Port: 3389/tcp
+Plugin: Remote Desktop Protocol Enabled
+CVE: N/A (Misconfiguration)
+CVSS Base: N/A (Scanner rated: Medium)
+
+Description: Remote Desktop Protocol (RDP) is enabled on 5 hosts
+including reception workstations and the Westside server. RDP is a
+common target for brute-force attacks and has had multiple critical
+vulnerabilities (BlueKeep). NLA (Network Level Authentication) is
+enabled, which provides partial mitigation.
+
+========================================================================
+FINDING 020 -- MEDIUM
+========================================================================
+Host: 10.10.2.40 (backup-srv-01)
+Port: 22/tcp
+Plugin: OpenSSH Version Outdated
+CVE: CVE-2023-38408
+CVSS Base: 9.8
+Vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+
+Description: OpenSSH 8.9p1 on this host is affected by a critical
+vulnerability in the PKCS#11 provider. However, this vulnerability
+requires specific conditions: the ssh-agent must be running with
+PKCS#11 support forwarded to an attacker-controlled host.
+
+  Detected: OpenSSH_8.9p1 Ubuntu-3ubuntu0.1
+  Fixed: OpenSSH 9.3p2
+
+** NOTE FROM SECUREPOINT: This finding may be a FALSE POSITIVE in
+this environment. The vulnerability requires ssh-agent forwarding to
+an attacker-controlled system, which is unlikely in this server's
+operational context. Manual verification of ssh-agent configuration
+recommended before prioritizing remediation. **
+
+========================================================================
+FINDING 021 -- MEDIUM
+========================================================================
+Host: 10.10.2.50 (web-srv-01)
+Port: 80/tcp
+Plugin: HTTP TRACE Method Enabled
+CVE: N/A (Misconfiguration)
+CVSS Base: N/A (Scanner rated: Medium)
+
+Description: The HTTP TRACE method is enabled on the web server.
+While low-risk in isolation, TRACE can be used in Cross-Site Tracing
+(XST) attacks to steal credentials from HTTP headers when combined
+with XSS vulnerabilities.
+
+========================================================================
+FINDING 022 -- LOW
+========================================================================
+Host: 10.10.2.10 (ehr-srv-01)
+Port: General
+Plugin: System Clock Skew Detected
+CVE: N/A
+CVSS Base: N/A (Scanner rated: Low)
+
+Description: The system clock on ehr-srv-01 is 47 seconds ahead of
+the scanner's NTP reference. Clock skew can cause issues with
+certificate validation, Kerberos authentication, and log correlation.
+
+Recommendation: Configure NTP synchronization.
+
+========================================================================
+FINDING 023 -- LOW
+========================================================================
+Host: Multiple (10.10.1.20-42, nurse station workstations)
+Port: General
+Plugin: USB Mass Storage Not Restricted
+CVE: N/A (Misconfiguration)
+CVSS Base: N/A (Scanner rated: Low)
+
+Description: Group Policy does not restrict USB mass storage devices
+on clinical workstations. Users can connect USB drives without
+restriction, creating a data exfiltration vector and a potential
+malware entry point.
+
+Hosts affected: approximately 280 workstations (all clinical
+endpoints without USB restriction GPO).
+
+========================================================================
+FINDING 024 -- LOW
+========================================================================
+Host: 10.10.2.12 (pacs-srv-01)
+Port: 4242/tcp, 11112/tcp
+Plugin: DICOM Service Detected Without Encryption
+CVE: N/A (Medical protocol)
+CVSS Base: N/A (Scanner rated: Low)
+
+Description: The PACS server exposes DICOM services (ports 4242 and
+11112) without TLS encryption. DICOM traffic contains patient
+identifiers and medical images. Traffic between the MRI workstation,
+radiology workstations, and the PACS server traverses the network
+in cleartext.
+
+========================================================================
+FINDING 025 -- LOW
+========================================================================
+Host: 10.10.2.20 (ad-dc-01)
+Port: 53/tcp (DNS)
+Plugin: DNS Zone Transfer Enabled
+CVE: N/A (Misconfiguration)
+CVSS Base: N/A (Scanner rated: Low)
+
+Description: The DNS server allows zone transfers to any requester.
+An attacker can request a full dump of all DNS records, revealing
+internal hostnames, IP addresses, and network structure. This is
+useful for reconnaissance.
+
+========================================================================
+FINDING 026 -- LOW
+========================================================================
+Host: 10.10.2.15 (billing-srv-01)
+Port: General
+Plugin: Kernel Version Outdated
+CVE: Multiple (cumulative)
+CVSS Base: N/A (Scanner rated: Low)
+
+Description: Kernel version 4.15.0-213-generic has 47 known CVEs
+with available patches. These include local privilege escalation
+vulnerabilities. However, exploitation requires local access
+(already possible via Finding 001/002 chain).
+
+  Note: This kernel is part of the Ubuntu 18.04 LTS release. Without
+  ESM enrollment (Finding 011), these patches will not be received.
+
+========================================================================
+FINDING 027 -- INFORMATIONAL
+========================================================================
+Host: Multiple (all Windows workstations)
+Port: General
+Plugin: Windows Defender Antivirus Status
+CVE: N/A
+
+Description: Windows Defender is not the primary endpoint protection
+on managed workstations (Sophos Endpoint is deployed). However, 15
+workstations show Sophos agent as "inactive" or "not reporting" per
+Sophos Central data (cross-referenced with IT asset management).
+These workstations may have reduced endpoint protection.
+
+========================================================================
+FINDING 028 -- INFORMATIONAL
+========================================================================
+Host: 10.10.2.99 (Unknown device)
+Port: 22/tcp, 8888/tcp, 9090/tcp
+Plugin: Unidentified Linux Host on Server Subnet
+CVE: N/A
+
+Description: An unidentified Linux device (kernel 5.x) was detected
+on the server subnet. This device is not registered in any IT asset
+inventory. It exposes SSH (22), and two web services (8888, 9090).
+The web service on port 9090 responds with a Cockpit login page.
+Port 8888 responds with what appears to be a Jupyter Notebook
+interface.
+
+Note: This may be an unauthorized or undocumented device (shadow IT).
+
+========================================================================
+FINDING 029 -- INFORMATIONAL
+========================================================================
+Host: 10.10.10.200 (Unknown device -- Westside)
+Port: 22/tcp, 80/tcp, 3000/tcp
+Plugin: Unidentified Linux Host at Westside Clinic
+CVE: N/A
+
+Description: An unidentified Linux device was detected at the
+Westside Clinic. Port 3000 responds with a Grafana login page
+(version 8.2.0). Grafana 8.2.0 has a known critical vulnerability:
+
+  CVE-2021-43798 -- Path Traversal (CVSS 7.5)
+  Allows unauthenticated file read from the server.
+  Exploit: Publicly available, trivial to execute.
+
+This device is not in any IT documentation.
+
+========================================================================
+FINDING 030 -- INFORMATIONAL
+========================================================================
+Host: 10.10.2.10 (ehr-srv-01)
+Port: 443/tcp
+Plugin: TLS Certificate Common Name Mismatch
+CVE: N/A
+
+Description: The TLS certificate on ehr-srv-01 is issued for
+"ehr.meddefense.local" but the server is accessed by some clients
+using the IP address directly (10.10.2.10), causing certificate
+validation warnings in browsers. This is an operational issue, not
+a security vulnerability.
+
+========================================================================
+FINDING 031 -- HIGH (Added by SecurePoint -- Manual Finding)
+========================================================================
+Host: 10.10.2.10 (ehr-srv-01)
+Port: 8009/tcp (AJP)
+Plugin: Manual verification of Finding 017
+
+Description: Following up on Finding 017 (Tomcat information
+disclosure), SecurePoint manually verified the AJP connector status.
+
+  Result: AJP connector IS active on port 8009.
+  CVE-2020-1938 (Ghostcat) -- CVSS 9.8
+  Vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N
+
+  This vulnerability allows an attacker to read any file on the
+  server through the AJP protocol, including configuration files
+  that may contain database credentials. Combined with the flat
+  network, any compromised host can exploit this.
+
+  ** This is on the EHR application server. **
+  ** Exploitation could expose database credentials for patient data. **
+
+  PoC: Publicly available (multiple GitHub repositories).
+  CISA KEV: Not currently listed.
+
+========================================================================
+
+SCAN METHODOLOGY NOTES (SecurePoint Consulting):
+
+1. Authenticated scan was performed where credentials were available
+   (Linux servers via SSH, Windows via domain credentials). Medical
+   devices were scanned unauthenticated (no credentials provided).
+
+2. The scan was performed during off-peak hours (02:00-06:00) to
+   minimize clinical impact.
+
+3. No active exploitation was attempted. All findings are based on
+   version detection, configuration analysis, and authenticated
+   checks.
+
+4. False positive rate for OpenVAS in this configuration is typically
+   5-10%. Manual verification is recommended for high-value findings
+   before committing remediation resources.
+
+5. This scan does NOT cover: cloud services (O365), mobile devices
+   (iPads), or assets that were offline during the scan window.
+
+========================================================================
+                    END OF VULNERABILITY SCAN REPORT
+========================================================================
