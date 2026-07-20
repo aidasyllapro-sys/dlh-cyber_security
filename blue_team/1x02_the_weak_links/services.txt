@@ -1,0 +1,6 @@
+apache 2.4.29
+postgresql 14
+openssh 8.9
+tomcat 9.0
+windows xp smb
+grafana 8.2
