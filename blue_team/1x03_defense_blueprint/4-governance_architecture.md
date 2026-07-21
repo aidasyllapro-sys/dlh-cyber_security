@@ -6,26 +6,26 @@
 
 ## Part 1: RACI Matrix
 
-| Activity                    | CEO | Deputy CISO (James) | IT Director (Sarah) | Dept Heads | Security Analyst (Aïda) |
-| --------------------------- | --- | ------------------- | ------------------- | ---------- | ----------------------- |
-| Security budget approval    | A   | R                   | C                   | I          | R                       |
-| Vulnerability remediation   | I   | A                   | R                   | C          | R                       |
-| Incident response execution | I   | A                   | R                   | C          | R                       |
-| Security policy approval    | A   | R                   | C                   | C          | C                       |
-| Risk acceptance decisions   | A   | R                   | C                   | C          | C                       |
-| Security awareness training | I   | A                   | R                   | R          | C                       |
-| Vendor risk assessment      | I   | A                   | C                   | C          | R                       |
-| Audit coordination          | I   | A                   | C                   | I          | R                       |
+|Activity|CEO|Deputy CISO (James)|IT Director (Sarah)|Dept Heads|Security Analyst|
+|---|---|---|---|---|---|
+|Security budget approval|A|R|C|I|C|
+|Vulnerability remediation|I|A|R|C|R|
+|Incident response execution|I|A|R|C|R|
+|Security policy approval|A|R|C|R|C|
+|Risk acceptance decisions|A|R|C|R|C|
+|Security awareness training|I|A|R|R|C|
+|Vendor risk assessment|I|A|C|C|R|
+|Audit coordination|I|A|C|I|R|
 
-**Notes on the judgment calls behind this matrix, stated directly rather than left implicit:**
+**Notes on the judgment calls behind this matrix, stated directly rather than left implicit, and organized around one governing principle: business ownership outweighs technical execution wherever the two could plausibly conflict.**
 
-**Security budget approval** carries 2 Responsible parties deliberately: James builds and presents the strategic business case (exactly the work this entire program has produced), while the Security Analyst performs the underlying quantitative analysis that makes that case defensible to the CFO, consistent with this project's own explicit requirement to show the math behind every dollar figure. The CEO holds sole Accountability, since she is the one signing the check.
+**Security policy approval and Risk acceptance decisions are the two rows where that principle matters most, and Department Heads are marked Responsible, not Consulted, precisely because a security policy or an accepted risk that touches clinical operations is fundamentally a departmental business decision, not a technical one.** James is Responsible for drafting the policy or the risk analysis and recommending a position, exactly the work this program's own three prior projects produced, but he does not own the decision itself: the CEO holds sole Accountability as the final business authority, and any Department Head whose clinical domain is directly affected (Radiology for a decision touching the MRI workstation's accepted EOL risk, for instance) is Responsible alongside James for that provision, not merely consulted after the fact. This is a deliberate correction to a common failure mode in security governance, where technical staff draft a policy and business leadership rubber-stamps it without genuine departmental ownership; at MedDefense specifically, this is also the direct governance fix for Dr. Patel's stated position, his department's Responsible role in decisions touching his own data domain is real and substantive, not symbolic, precisely because it sits alongside James's drafting role rather than beneath it.
 
-**Vulnerability remediation and Incident response execution** both place Sarah's team as Responsible for execution, since IT Operations physically applies patches and configuration changes, while James holds Accountability for the program succeeding. Department Heads are Consulted, not Informed only, specifically because 1x02's own remediation work (Task 19) established that changes touching medical devices require Clinical or Biomedical Engineering sign-off before IT can act at all, a real operational dependency, not a courtesy.
+**Security budget approval** keeps James Responsible for building and presenting the business case, since that is the analytical work this program has produced, but the Security Analyst is marked Consulted here, not Responsible, a deliberate change from an earlier draft of this matrix: producing the underlying quantitative analysis is analyst-level support work feeding into James's business case, not a decision-execution role in its own right, and the CEO's sole Accountability should not be read as anything James "drives" toward on her behalf; James recommends, she decides.
+
+**Vulnerability remediation and Incident response execution** both place Sarah's team as Responsible for execution, since IT Operations physically applies patches and configuration changes, while James holds Accountability for the program succeeding. These two rows are appropriately technical-execution-weighted, unlike the governance rows above, because they concern how an already-approved remediation or response gets carried out, not whether it should happen at all; the Security Analyst's Responsible role here is explicitly technical and analytical support work under Sarah's operational lead, investigation, validation, and tracking, not an independent governance function. Department Heads are Consulted, not Informed only, specifically because 1x02's own remediation work (Task 19) established that changes touching medical devices require Clinical or Biomedical Engineering sign-off before IT can act at all, a real operational dependency, not a courtesy.
 
 **Security awareness training** gives Department Heads a Responsible role alongside Sarah, not merely Informed, because 1x01's own Human Vector analysis found training completion varying as low as 58% at one site: a centrally-mandated program with no local departmental enforcement has already been proven insufficient at MedDefense specifically.
-
-**Security policy approval and Risk acceptance decisions** place the Security Analyst as Consulted rather than Responsible, a deliberate distinction from the technical execution rows above: these are governance and organizational-risk decisions, and the Analyst's role is to supply the evidence and quantitative analysis behind them, not to hold decision authority, which correctly sits with James (drafting and recommending) and the CEO (final approval and accountability).
 
 ---
 
