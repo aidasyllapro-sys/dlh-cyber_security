@@ -1,0 +1,179 @@
+================================================================================
+          CIS CONTROLS v8 -- SUMMARY REFERENCE
+          Implementation Groups: IG1 (Essential), IG2 (Foundational)
+          Compiled for Project 0x03: The Defense Blueprint
+================================================================================
+
+STRUCTURE:
+  18 Controls, each containing multiple Safeguards
+  IG1: 56 safeguards (minimum baseline for ALL organizations)
+  IG2: 74 additional safeguards (for organizations with moderate risk)
+  IG3: 23 additional safeguards (for organizations with advanced threats)
+
+  MedDefense Target: IG1 fully implemented, IG2 partially implemented
+
+========================================================================
+CONTROL 1: Inventory and Control of Enterprise Assets
+========================================================================
+  IG1 Safeguards:
+    1.1 Establish and maintain detailed enterprise asset inventory
+    1.2 Address unauthorized assets (remove, quarantine, or document)
+  Key Question: Do you know every device on your network?
+
+CONTROL 2: Inventory and Control of Software Assets
+========================================================================
+  IG1 Safeguards:
+    2.1 Establish and maintain software inventory
+    2.2 Ensure authorized software is currently supported
+    2.3 Address unauthorized software
+  Key Question: Do you know every application running in your environment?
+
+CONTROL 3: Data Protection
+========================================================================
+  IG1 Safeguards:
+    3.1 Establish and maintain a data management process
+    3.2 Establish and maintain a data inventory
+    3.3 Configure data access control lists
+    3.4 Enforce data retention
+    3.6 Encrypt data on end-user devices
+  Key Question: Is sensitive data classified, controlled, and encrypted?
+
+CONTROL 4: Secure Configuration of Enterprise Assets and Software
+========================================================================
+  IG1 Safeguards:
+    4.1 Establish and maintain secure configuration process
+    4.2 Establish and maintain secure configuration for network infra
+    4.3 Configure automatic session locking on enterprise assets
+    4.4 Implement and manage a firewall on servers
+    4.5 Implement and manage a firewall on end-user devices
+    4.6 Securely manage enterprise assets and software
+    4.7 Manage default accounts on enterprise assets and software
+  Key Question: Are systems hardened beyond default configurations?
+
+CONTROL 5: Account Management
+========================================================================
+  IG1 Safeguards:
+    5.1 Establish and maintain an inventory of accounts
+    5.2 Use unique passwords
+    5.3 Disable dormant accounts (after 45 days)
+    5.4 Restrict administrator privileges to dedicated accounts
+  Key Question: Are all accounts inventoried, unique, and monitored?
+
+CONTROL 6: Access Control Management
+========================================================================
+  IG1 Safeguards:
+    6.1 Establish an access granting process
+    6.2 Establish an access revoking process
+    6.3 Require MFA for externally-exposed applications
+    6.4 Require MFA for remote network access
+    6.5 Require MFA for administrative access
+  Key Question: Is access controlled, revoked timely, and MFA-enforced?
+
+CONTROL 7: Continuous Vulnerability Management
+========================================================================
+  IG1 Safeguards:
+    7.1 Establish and maintain a vulnerability management process
+    7.2 Establish and maintain a remediation process
+    7.3 Perform automated OS patch management
+    7.4 Perform automated application patch management
+  Key Question: Are vulnerabilities identified, prioritized, and patched?
+
+CONTROL 8: Audit Log Management
+========================================================================
+  IG1 Safeguards:
+    8.1 Establish and maintain an audit log management process
+    8.2 Collect audit logs
+    8.3 Ensure adequate audit log storage
+  Key Question: Are security-relevant events logged and retained?
+
+CONTROL 9: Email and Web Browser Protections
+========================================================================
+  IG1 Safeguards:
+    9.1 Ensure use of only fully supported browsers and email clients
+    9.2 Use DNS filtering services
+  Key Question: Are email and browser attack vectors mitigated?
+
+CONTROL 10: Malware Defenses
+========================================================================
+  IG1 Safeguards:
+    10.1 Deploy and maintain anti-malware software
+    10.2 Configure automatic anti-malware signature updates
+    10.3 Disable autorun and autoplay for removable media
+  Key Question: Are endpoints protected against malware?
+
+CONTROL 11: Data Recovery
+========================================================================
+  IG1 Safeguards:
+    11.1 Establish and maintain a data recovery process
+    11.2 Perform automated backups
+    11.3 Protect recovery data (isolate or encrypt)
+    11.4 Establish and maintain an isolated instance of recovery data
+  Key Question: Can you recover from data loss? Are backups isolated?
+
+CONTROL 12: Network Infrastructure Management
+========================================================================
+  IG1 Safeguards:
+    12.1 Ensure network infrastructure is up to date
+  IG2 Safeguards:
+    12.2 Establish and maintain a secure network architecture
+    12.3 Securely manage network infrastructure
+    12.4 Establish and maintain architecture diagrams
+    12.5 Centralize network authentication, authorization, enrollment
+    12.6 Use secure network management and communication protocols
+    12.7 Ensure remote devices use a VPN and connect to managed DNS
+    12.8 Establish and maintain dedicated computing resources for admin
+  Key Question: Is the network architecture secure and segmented?
+
+CONTROL 13: Network Monitoring and Defense
+========================================================================
+  IG2 Safeguards:
+    13.1 Centralize security event alerting
+    13.3 Deploy a network intrusion detection solution
+    13.6 Collect network traffic flow logs
+    13.8 Deploy a network intrusion prevention solution
+  Key Question: Are network anomalies and intrusions detected?
+
+CONTROL 14: Security Awareness and Skills Training
+========================================================================
+  IG1 Safeguards:
+    14.1 Establish and maintain a security awareness program
+    14.2 Train workforce to recognize social engineering attacks
+    14.3 Train workforce on authentication best practices
+    14.4 Train workforce on data handling best practices
+    14.5 Train workforce on causes of unintentional data exposure
+    14.6 Train workforce on recognizing and reporting security incidents
+  Key Question: Are all users trained to recognize and respond to threats?
+
+CONTROL 15: Service Provider Management
+========================================================================
+  IG1 Safeguards:
+    15.1 Establish and maintain an inventory of service providers
+    15.2 Establish and maintain a service provider management policy
+  Key Question: Are third-party providers inventoried and managed?
+
+CONTROL 16: Application Software Security
+========================================================================
+  IG2 Safeguards:
+    16.1 Establish and maintain a secure application development process
+    16.9 Train developers in application security
+  Key Question: Is internally developed software secure?
+
+CONTROL 17: Incident Response Management
+========================================================================
+  IG1 Safeguards:
+    17.1 Designate personnel to manage incident handling
+    17.2 Establish and maintain contact information for reporting
+    17.3 Establish and maintain an enterprise process for reporting
+  Key Question: Can the organization respond to a security incident?
+
+CONTROL 18: Penetration Testing
+========================================================================
+  IG2 Safeguards:
+    18.1 Establish and maintain a penetration testing program
+    18.2 Perform periodic external penetration tests
+    18.3 Remediate penetration test findings
+  Key Question: Is the organization testing its own defenses?
+
+========================================================================
+          END OF CIS CONTROLS v8 SUMMARY
+========================================================================
