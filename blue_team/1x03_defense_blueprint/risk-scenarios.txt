@@ -1,0 +1,134 @@
+================================================================================
+          RISK SCENARIOS FOR QUANTITATIVE ANALYSIS
+          MedDefense Health Systems
+          Purpose: Practice SLE, ARO, and ALE calculation
+================================================================================
+
+========================================================================
+SCENARIO 1: Ransomware Attack on Billing Server
+========================================================================
+
+Asset: billing-srv-01 (Ubuntu 18.04, Apache 2.4.29, MySQL)
+Threat: BlackReef-style ransomware group (from 1x01 profile)
+
+Supporting Data:
+  - Billing-srv-01 processes $4.2 million in revenue transactions/year
+  - The server also stores 3 years of financial records
+  - Average hospital downtime after ransomware: 18 days (CISA data)
+  - MedDefense daily revenue attributed to billing operations: ~$16,000
+  - Recovery cost estimate (forensics, rebuild, vendor support): $85,000
+  - HIPAA penalty for breach of financial/patient data: $50,000-$250,000
+    (assume $100,000 for a mid-range penalty)
+  - Sector ransomware rate for similar-profile hospitals: approximately
+    1 attack every 3-4 years (from 1x01 intelligence dossier)
+
+Your Task: Calculate AV, EF, SLE, ARO, and ALE.
+Hint: The EF depends on how much of the asset's value is lost. Think
+about whether the server itself is destroyed or whether the real cost
+is downtime + recovery + penalties.
+
+========================================================================
+SCENARIO 2: Patient Data Breach via EHR System
+========================================================================
+
+Asset: EHR system (ehr-srv-01 + ehr-db-01)
+Threat: Data exfiltration (external attacker or malicious insider)
+
+Supporting Data:
+  - EHR contains approximately 50,000 patient records
+  - Cost per breached healthcare record: $165 (Ponemon 2024)
+    * This includes detection, notification, legal, and lost business
+  - HIPAA Breach Notification costs: $25,000 (fixed, for notification
+    infrastructure and credit monitoring)
+  - Estimated litigation exposure: $200,000
+  - Reputational impact: estimated 5% patient attrition over 2 years,
+    worth approximately $600,000 in lost revenue
+  - Probability of breach affecting a hospital with no SIEM, flat
+    network, and unpatched systems: estimate 1 in 3 years based on
+    sector data (HHS breach portal shows 1,247 breaches in 24 months
+    across ~6,000 hospitals, but MedDefense is higher risk than average)
+
+Your Task: Calculate AV, EF, SLE, ARO, and ALE.
+Hint: The AV here is not the server's replacement cost. It is the total
+cost of the breach. The EF may be close to 100% because a breach event
+triggers all associated costs.
+
+========================================================================
+SCENARIO 3: Insider Data Theft (Negligent)
+========================================================================
+
+Asset: Patient data accessible via clinical workstations
+Threat: Negligent insider (from 1x01 T3, scenarios 1 and 5)
+
+Supporting Data:
+  - MedDefense has approximately 280 clinical workstations with EHR
+    access and no DLP or USB restriction
+  - Average negligent insider incident cost in healthcare: $120,000
+    (Ponemon Insider Threat Report)
+  - This includes investigation ($30,000), containment ($25,000),
+    remediation ($40,000), and regulatory reporting ($25,000)
+  - Negligent insider incidents account for 60% of healthcare insider
+    events (Verizon DBIR healthcare supplement)
+  - With 2,000 staff, estimate 2-3 negligent incidents per year based
+    on sector averages and MedDefense's lack of controls (no DLP, no
+    USB restriction, shared accounts, no security training program)
+
+Your Task: Calculate AV, EF, SLE, ARO, and ALE.
+Hint: The ARO here may be greater than 1.
+
+========================================================================
+SCENARIO 4: Medical Device Compromise
+========================================================================
+
+Asset: BD Alaris infusion pumps (7 units) + network
+Threat: Opportunistic attacker exploiting default credentials and
+        flat network access (from 1x02 Finding 010)
+
+Supporting Data:
+  - Replacement cost per infusion pump: $15,000 (x7 = $105,000)
+  - However, the primary risk is not device destruction. It is:
+    * Patient safety incident: potential liability $500,000-$5,000,000
+    * FDA investigation costs: $150,000
+    * Operational disruption (switching to manual dosing): $20,000/day
+      for estimated 5 days while devices are quarantined
+  - Probability: low for targeted attack on medical devices, but the
+    flat network and default credentials make opportunistic compromise
+    plausible. Estimate 1 in 10 years for a denial-of-service event,
+    1 in 50 years for a patient safety event.
+
+Your Task: Calculate AV, EF, SLE, ARO, and ALE.
+Hint: You may want to calculate two ALEs: one for the DoS scenario and
+one for the patient safety scenario. The patient safety scenario has
+very low ARO but catastrophic impact.
+
+========================================================================
+SCENARIO 5: VPN Compromise Leading to Full Network Access
+========================================================================
+
+Asset: The entire MedDefense internal network (via FortiGate VPN)
+Threat: External attacker exploiting VPN vulnerability or credential
+        theft (from 1x01 kill chain #1 and 1x02 OSINT findings)
+
+Supporting Data:
+  - FortiGate is the sole perimeter device for all 3 sites
+  - A VPN compromise gives the attacker access to the flat 10.10.0.0/16
+    network, reaching every server, workstation, and medical device
+  - This is the entry point for kill chains #1 and #2 from 1x01
+  - If exploited, the attacker can reach: EHR (50,000 records), billing
+    (financial data), AD (all credentials), backups (not isolated)
+  - Total potential impact is the aggregate of Scenarios 1 + 2
+  - FortiOS vulnerabilities are disclosed regularly. CISA has issued
+    multiple emergency directives for FortiGate CVEs. MedDefense's
+    patching cadence for the FortiGate is unknown (not covered in scan).
+  - Estimated ARO: 0.3 (once every ~3 years, based on VPN being the
+    #1 initial access vector at 38% of healthcare ransomware attacks)
+
+Your Task: Calculate AV, EF, SLE, ARO, and ALE.
+Hint: The AV for this scenario is difficult because it is the "gateway"
+to everything. Consider: what is the maximum aggregate loss if an
+attacker enters through the VPN and executes a full ransomware + data
+exfiltration campaign?
+
+========================================================================
+          END OF RISK SCENARIOS
+========================================================================
