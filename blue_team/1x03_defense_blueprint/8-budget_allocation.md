@@ -28,7 +28,7 @@
 
 **Control 7, 24/7 SOC Staffing ($120,000).** Rejected on the math itself, not merely deferred: Task 7 found this control's net value to be negative (-$40,000) once evaluated honestly against the incremental benefit it provides beyond Control 3's SIEM, already funded above. A control with a negative net value is not a timing question to revisit next year with more budget; it is not currently the right control at all, regardless of available funds, unless MedDefense's risk profile or program maturity changes enough to reopen the calculation.
 
-**Total spend vs. budget:** $95,800 funded against a $120,000 budget, leaving **$24,200 remaining**, deliberately held as reserve rather than allocated to Control 8's still-incomplete business case.
+**Total spend vs. budget:** $95,800 funded against a $120,000 (120000) annual budget, leaving **$24,200 in budget remaining**, deliberately held as reserve rather than allocated to Control 8's still-incomplete business case.
 
 ---
 
