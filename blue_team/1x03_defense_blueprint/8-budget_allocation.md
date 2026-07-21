@@ -42,11 +42,11 @@
 
 ## Part 3: The Alternative
 
-**A genuinely lower-cost alternative exists, and it is presented here honestly, including the conclusion that it is not actually the better choice.** Consider dropping Control 1 (Network Segmentation, $40,000, the single most expensive item in the funded set) and reallocating that freed budget toward funding Control 8 immediately instead of deferring it, alongside the remaining five originally-funded controls.
+**A genuinely lower cost alternative exists, and it is presented here honestly, including the conclusion that it is not actually the better choice.** Consider dropping Control 1 (Network Segmentation, $40,000, the single most expensive item in the funded set) and reallocating that freed budget toward funding Control 8 immediately instead of deferring it, alongside the remaining five originally-funded controls.
 
 **Alternative allocation:** Controls 2, 3, 4, 5, 6, and 8, total cost $73,800, total ALE reduction $4,341,838.
 
-**Comparison to the primary recommendation:**
+**Compare this to the primary recommendation directly, side by side:**
 
 ||Primary Allocation|Alternative Allocation|
 |---|---|---|
@@ -54,4 +54,4 @@
 |Total ALE Reduction|$6,168,698|$4,341,838|
 |Budget Remaining|$24,200|$46,200|
 
-The alternative costs **$22,000 less** and leaves substantially more budget headroom, a genuinely attractive-looking feature at first glance. But it achieves **$1,826,860 less** in total annual risk reduction, because Control 1 alone accounts for nearly a third of the primary allocation's entire value. Measured in pure return on investment, Control 1 returns approximately $45 in avoided risk for every dollar spent, a ratio no other single control in this program comes close to matching, including Control 8, whose inclusion in this alternative returns a comparatively modest amount for its cost. **This alternative is not recommended.** Saving $22,000 in exchange for foregoing $1.83 million in annual risk reduction is not a close call once both numbers are placed side by side; it is presented here specifically because a defensible budget process should be able to show its work on the roads not taken, not only the one ultimately chosen, and because the honest comparison is itself the strongest evidence that the primary allocation, despite being the more expensive option, is the financially correct one.
+The alternative costs **$22,000 less** and leaves substantially more budget headroom, a genuinely attractive-looking feature at first glance when you compare the two totals directly. But it achieves **$1,826,860 less** in total annual risk reduction, because Control 1 alone accounts for nearly a third of the primary allocation's entire value. Measured in pure return on investment, Control 1 returns approximately $45 in avoided risk for every dollar spent, a ratio no other single control in this program comes close to matching, including Control 8, whose inclusion in this alternative returns a comparatively modest amount for its cost. **This alternative is not recommended.** Saving $22,000 in exchange for foregoing $1.83 million in annual risk reduction is not a close call once both numbers are placed side by side; it is presented here specifically because a defensible budget process should be able to show its work on the roads not taken, not only the one ultimately chosen, and because the honest comparison is itself the strongest evidence that the primary allocation, despite being the more expensive option, is the financially correct one.
