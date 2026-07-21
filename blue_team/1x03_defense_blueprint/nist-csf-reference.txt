@@ -1,0 +1,149 @@
+================================================================================
+          NIST CYBERSECURITY FRAMEWORK (CSF) 2.0
+          Reference Summary for MedDefense Health Systems
+          Compiled for Project 0x03: The Defense Blueprint
+================================================================================
+
+OVERVIEW:
+  Publisher: National Institute of Standards and Technology (NIST)
+  Version: 2.0 (released February 2024)
+  Scope: Voluntary framework applicable to all organizations
+  Structure: 6 Functions > Categories > Subcategories
+
+========================================================================
+FUNCTION 1: GOVERN (GV) -- New in CSF 2.0
+========================================================================
+Purpose: Establish, communicate, and monitor the organization's
+cybersecurity risk management strategy, expectations, and policy.
+
+Key Categories:
+  GV.OC: Organizational Context
+    - The organization's mission, stakeholder expectations, and
+      legal/regulatory requirements are understood
+  GV.RM: Risk Management Strategy
+    - Risk appetite, tolerance, and strategy are established
+  GV.RR: Roles, Responsibilities, and Authorities
+    - Cybersecurity roles and authorities are defined
+  GV.PO: Policy
+    - Cybersecurity policy is established and communicated
+  GV.OV: Oversight
+    - Results of cybersecurity activities are used to adjust strategy
+  GV.SC: Cybersecurity Supply Chain Risk Management
+    - Supply chain risks are identified, assessed, and managed
+
+Assessment Questions for MedDefense:
+  - Does MedDefense have a documented cybersecurity strategy?
+  - Are cybersecurity roles formally assigned?
+  - Does a formal security policy exist (AUP, incident response)?
+  - Is there a process for reviewing and updating security activities?
+
+========================================================================
+FUNCTION 2: IDENTIFY (ID)
+========================================================================
+Purpose: Understand the organization's current cybersecurity risks.
+
+Key Categories:
+  ID.AM: Asset Management
+    - Physical and software assets are inventoried
+    - Data flows and external information systems are mapped
+  ID.RA: Risk Assessment
+    - Threats, vulnerabilities, likelihood, and impact are identified
+    - Risk responses are determined
+  ID.IM: Improvement
+    - Improvements are identified from assessments and exercises
+
+Assessment Questions for MedDefense:
+  - Is there a comprehensive asset inventory?
+  - Are risks formally assessed with likelihood and impact?
+  - Has a risk assessment been performed (threat + vulnerability)?
+  - Are lessons learned from incidents documented?
+
+========================================================================
+FUNCTION 3: PROTECT (PR)
+========================================================================
+Purpose: Use safeguards to manage cybersecurity risks.
+
+Key Categories:
+  PR.AA: Identity Management, Authentication, and Access Control
+    - Identities and credentials are managed
+    - Access permissions are enforced using least privilege
+    - MFA is implemented where appropriate
+  PR.AT: Awareness and Training
+    - Users are informed and trained
+  PR.DS: Data Security
+    - Data is protected at rest, in transit, and in use
+  PR.PS: Platform Security
+    - Hardware, software, and services are managed
+    - Secure configuration baselines are maintained
+  PR.IR: Technology Infrastructure Resilience
+    - Security architectures are managed to protect assets
+
+Assessment Questions for MedDefense:
+  - Is MFA deployed on critical systems?
+  - Are endpoints hardened with secure baselines?
+  - Is data encrypted at rest and in transit?
+  - Is the network segmented?
+  - Are users trained on security awareness?
+
+========================================================================
+FUNCTION 4: DETECT (DE)
+========================================================================
+Purpose: Find and analyze possible cybersecurity attacks and compromises.
+
+Key Categories:
+  DE.CM: Continuous Monitoring
+    - Networks and systems are monitored for cybersecurity events
+    - Physical environment is monitored
+  DE.AE: Adverse Event Analysis
+    - Anomalies and potential events are analyzed
+    - Events are correlated from multiple sources
+
+Assessment Questions for MedDefense:
+  - Is there a SIEM or centralized logging?
+  - Are network traffic anomalies detected?
+  - Are alerts investigated and correlated?
+  - Is there 24/7 monitoring capability?
+
+========================================================================
+FUNCTION 5: RESPOND (RS)
+========================================================================
+Purpose: Take action regarding detected cybersecurity incidents.
+
+Key Categories:
+  RS.MA: Incident Management
+    - Incidents are triaged, escalated, and resolved
+    - Incident response plan is executed
+  RS.AN: Incident Analysis
+    - Investigation determines scope and impact
+    - Forensics are performed
+  RS.CO: Incident Reporting and Communication
+    - Internal and external stakeholders are notified
+  RS.MI: Incident Mitigation
+    - Actions are taken to contain and eradicate incidents
+
+Assessment Questions for MedDefense:
+  - Does an incident response plan exist?
+  - Has the IR plan been tested?
+  - Are communication procedures defined for breach notification?
+  - Can MedDefense contain an active incident?
+
+========================================================================
+FUNCTION 6: RECOVER (RC)
+========================================================================
+Purpose: Restore assets and operations affected by cybersecurity incidents.
+
+Key Categories:
+  RC.RP: Incident Recovery Plan Execution
+    - Recovery plan is executed during or after an incident
+  RC.CO: Incident Recovery Communication
+    - Recovery activities are communicated to stakeholders
+
+Assessment Questions for MedDefense:
+  - Are backups tested and recoverable?
+  - Is the backup infrastructure isolated from production?
+  - Can MedDefense restore operations within defined RTOs?
+  - Is there a business continuity plan?
+
+========================================================================
+          END OF CSF 2.0 REFERENCE SUMMARY
+========================================================================
