@@ -1,9 +1,6 @@
-# MedDefense Health Systems: The Defense Blueprint
+# MedDefense Health Systems: The Cryptographic Foundation
 
-The strategic capstone of this program: where Project 0x00 diagnosed MedDefense's posture, Project 1x01 profiled its threats, and Project 1x02 identified and prioritized its vulnerabilities, this project prescribes the cure. Working within a fixed $120,000 budget, it selects a formal framework backbone (NIST CSF 2.0 and CIS Controls v8), calculates risk quantitatively using real dollar figures (SLE, ARO, ALE) rather than colored matrices, builds a Board-ready Risk Register tracing every entry to a specific gap, vulnerability, and threat from the prior three projects, drafts an actual security policy, and produces a 6-month, milestone-driven roadmap and Board pitch that a CFO can approve on the math alone.
+Where Project 1x03 designed the strategy and secured the budget, this project builds the layer every other control depends on: cryptography actually configured correctly. Starting from a full data protection inventory that found only 2 of 21 data-state combinations adequately protected, this project works hands-on with OpenSSL and LUKS to encrypt the patient database at rest, fix the patient portal's TLS configuration before its certificate expires, secure DICOM imaging traffic, harden Active Directory's authentication protocols, and properly design encrypted, key-isolated backup storage, connecting every cryptographic primitive learned directly back to a specific MedDefense system, vulnerability, or requirement identified in Projects 1x00 through 1x03.
 
-See `0-framework_landscape.md` through `19-board_pitch.md` for the full deliverable set.
-
-
-
+See `0-crypto_inventory.md` through `22-implementation_playbook.md` for the full deliverable set.
 
