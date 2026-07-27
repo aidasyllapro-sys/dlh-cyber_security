@@ -1,1 +1,4 @@
 1.txt
+# Fichiers de volumes de test (tache 12, chiffrement disque)
+*.img
+testfile
