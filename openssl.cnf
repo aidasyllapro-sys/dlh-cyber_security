@@ -1,0 +1,22 @@
+[ req ]
+default_bits       = 256
+prompt             = no
+default_md         = sha256
+distinguished_name = dn
+req_extensions     = req_ext
+
+[ dn ]
+CN = portal.meddefense.local
+O  = MedDefense Health Systems
+OU = Information Technology
+L  = Springfield
+ST = Illinois
+C  = US
+
+[ req_ext ]
+subjectAltName = @alt_names
+
+[ alt_names ]
+DNS.1 = portal.meddefense.local
+DNS.2 = www.portal.meddefense.local
+DNS.3 = meddefense.local
