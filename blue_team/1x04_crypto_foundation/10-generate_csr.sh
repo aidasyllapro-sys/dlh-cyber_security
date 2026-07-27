@@ -24,6 +24,12 @@
 #                     extension, not the deprecated Common Name field
 #                     alone (Task 8 of this project).
 #
+# Example, matching this project's own patient portal certificate
+# (Task 10 of this project):
+#   ./10-generate_csr.sh portal.meddefense.local portal www.portal.meddefense.local,meddefense.local
+#   This produces exactly two output files: portal_key.pem (the private
+#   key) and portal.csr (the certificate signing request).
+#
 # Organization fields (O, OU, L, ST, C) are fixed to MedDefense's own
 # values below rather than accepted as arguments, since these should
 # not vary between certificate requests issued by this organization.
