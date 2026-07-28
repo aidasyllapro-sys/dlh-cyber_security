@@ -1,195 +1,221 @@
-# MedDefense Health Systems: Certificate Lifecycle Management
+# MedDefense Health Systems: The Cryptographic Attack Surface
 
-**Prepared by:** Aïda Sylla, Security Analyst **Source material:** Cross-referenced against the Certificate Anatomy and Chain of Trust work (Tasks 8, 9), the CSR Workshop (Task 10), the TLS Audit (Task 11), Finding 013 (1x02), and the Crypto Posture Audit (Task 15) **Purpose:** The patient portal certificate is a symptom, not the disease. The disease is that MedDefense has no certificate inventory, no expiration monitoring, no renewal process, and no policy on certificate types. This document builds the program that prevents this specific emergency from ever recurring.
+**Prepared by:** Aïda Sylla, Security Analyst **Source material:** Cross-referenced directly against the TLS Audit (Task 11), the Hash Laboratory (Task 3), the Key Exchange work (Task 4), the Crypto Inventory (Task 0), and Finding 018, Finding 024, and Finding 003 (1x02) **Purpose:** Downgrade attacks, collision attacks, birthday attacks, and Kerberoasting are not abstract exam concepts here. Each one maps to a specific, already-identified weakness in MedDefense's own environment, not a hypothetical one.
 
 ---
 
-## Part 1: Certificate Inventory
-
-**A note on the expiration dates below, stated honestly:** MedDefense has no existing certificate inventory to query directly, which is the exact gap this task exists to close; every date below is an estimate reasoned from established facts in this program's prior work, not a live system check, and each entry notes its basis explicitly.
+## Attack 1: TLS Downgrade
 
 ```
-Certificate: Patient Portal (web-srv-01)
-Current Issuer: Let's Encrypt
-Expiration: Estimated based on Finding 013 (1x02), which recorded 18
-  days remaining at that assessment's own point in this program's
-  timeline; if the CSR built and verified in this project's own Task 10
-  has since been submitted and issued, this certificate is now on a
-  fresh 90-day cycle from that issuance date. Flagged as the single
-  highest-priority entry in this inventory to verify first, given its
-  documented history.
-Responsible Owner: Sarah Park, IT Director (execution), per the RACI
-  structure this program's own Task 4 (1x03) already established
-```
-
-```
-Certificate: EHR internal TLS (ehr-srv-01 to ehr-db-01, and any
-  internal client connections)
-Current Issuer: Unconfirmed; likely self-signed or entirely absent,
-  given this project's own Crypto Inventory (Task 0) found PostgreSQL's
-  ssl=on setting present but inconsistently enforced, with no confirmed
-  certificate management process behind it at all
-Expiration: Unknown; this is itself a finding, not merely a missing
-  data point, since a certificate MedDefense cannot date is a
-  certificate MedDefense is not managing
-Responsible Owner: Sarah Park, IT Director
-```
-
-```
-Certificate: Active Directory / LDAPS (ad-dc-01, ad-dc-02)
-Current Issuer: Unconfirmed; likely absent, directly consistent with
-  this project's own Task 15 finding (CRYPTO-011) that LDAP is not
-  encrypted by default and LDAP signing is not enforced
-Expiration: N/A currently, since no certificate appears to be deployed
-  for this purpose; this entry exists in the inventory specifically to
-  track the certificate this program's own Task 15 recommendation
-  requires provisioning, not one that already exists
-Responsible Owner: Sarah Park, IT Director
-```
-
-```
-Certificate: Site-to-Site VPN (FortiGate, Central-Westside and
-  Central-HQ tunnels)
-Current Issuer: Unconfirmed whether certificate-based authentication is
-  in use at all; this project's own Task 4 demonstrated directly that
-  plain Diffie-Hellman without certificate authentication is vulnerable
-  to exactly the man-in-the-middle risk already flagged for the
-  Westside tunnel specifically (Finding 014, 1x02; RISK-010, 1x03)
-Expiration: N/A pending confirmation of whether certificates are
-  currently used for tunnel authentication at all
-Responsible Owner: Sarah Park, IT Director, coordinated with the
-  Westside firewall replacement already funded in this program's own
-  budget (1x03, Task 8, Control 6)
-```
-
-```
-Certificate: Email signing / S/MIME (per-user certificates for
-  physicians and staff handling patient data)
-Current Issuer: None currently deployed, directly consistent with this
-  project's own Task 0 and Task 15 findings that S/MIME and Office
-  Message Encryption are not configured
-Expiration: N/A, not yet provisioned; this entry tracks the certificate
-  population this program's own Task 15 recommendation (CRYPTO-016)
-  requires issuing, not an existing deployment
-Responsible Owner: Sarah Park, IT Director, for provisioning; individual
-  physicians and staff as end users once issued
-```
-
-```
-Certificate: NAS-01 DSM Management Interface
-Current Issuer: Unconfirmed; likely self-signed or the Synology default,
-  given Finding 015 (1x02) already confirmed this interface is broadly
-  reachable with no other hardening applied
-Expiration: Unknown
-Responsible Owner: Sarah Park, IT Director
-```
-
-```
-Certificate: Code signing
-Current Issuer: Not applicable
-Expiration: Not applicable
-Responsible Owner: Not applicable
-Note: This entry is included specifically to confirm its absence is
-  correct, not overlooked. This project's own prior work (1x03, Task 2,
-  CIS Control 16) already established MedDefense has no internally
-  developed software in its asset inventory; a code-signing certificate
-  would have no legitimate use case until that changes.
+Attack: TLS Downgrade
+Mechanism: A TLS downgrade attack exploits the fact that a client and
+  server negotiate a protocol version during the initial handshake, and
+  if the server is willing to accept a weaker version at all, an
+  attacker positioned on the network path can interfere with that
+  negotiation to force the weaker choice, even when both parties would
+  otherwise agree on something stronger.
+MedDefense Vulnerability: The patient portal (web-srv-01) supports TLS
+  1.0 alongside TLS 1.2, with no TLS 1.3 available at all.
+Evidence: Finding 005 (1x02); confirmed directly in this project's own
+  Task 11 SSL Labs research, where a live certificate authority's own
+  documented grading policy (in effect since January 2020) automatically
+  caps any server still supporting TLS 1.0 at a B grade, regardless of
+  every other configuration strength.
+Viable Today: Yes. The portal's own configuration permits the exact
+  downgrade path this attack requires; nothing currently prevents a
+  client from being forced onto TLS 1.0, a protocol broken by the
+  BEAST attack since 2011.
+Mitigation: Disable TLS 1.0 and TLS 1.1 entirely on web-srv-01, exactly
+  the hardened Apache configuration this project's own Task 11 already
+  built and documented in full.
 ```
 
 ---
 
-## Part 2: Auto-Renewal Strategy
-
-**Recommendation: ACME via Let's Encrypt for the patient portal specifically, not a commercial CA.** This is not a new decision invented for this task; it is the same recommendation this project already made and built directly in Task 8 and Task 10, restated here with the justification this task specifically asks for.
-
-**Justification, considering 800 daily patients and clinical impact directly.** A commercial CA's 1-year certificate initially looks like the safer choice for a clinical system, fewer renewal events per year seems like fewer opportunities to fail. This reasoning is backwards for MedDefense's actual documented history: Finding 013 (1x02) shows the portal's certificate reached 18 days from expiration specifically because the previous, presumably longer-lived certificate was managed manually with no automated renewal at all. A 1-year commercial certificate does not fix a broken manual process, it only makes the next failure occur once a year instead of every 90 days, with no guarantee the same operational gap that caused Finding 013 has actually closed in the meantime. Let's Encrypt's 90-day cycle, by contrast, is only acceptable, and only becomes an advantage rather than a liability, because it is paired with ACME automation (certbot or an equivalent client) that renews without a human remembering to act at all; a short-lived, automated certificate that renews itself 4 times a year is safer for 800 daily patients than a long-lived, manually-managed one that requires a human to succeed exactly once, correctly, twelve months from now. The clinical impact of a portal outage, patients unable to view records, message physicians, or manage appointments, is not reduced by a longer certificate lifetime; it is reduced by removing the human failure point entirely, which only the automated path achieves.
-
-**Where a commercial CA remains the correct choice, stated directly rather than presenting Let's Encrypt as universally superior:** the Active Directory/LDAPS certificate and any future code-signing certificate are better suited to an internal or commercial CA, since Let's Encrypt cannot issue certificates for internal, non-publicly-resolvable names at all, the exact `.local` domain problem this project's own Task 10 already identified and flagged directly for the patient portal's own Common Name.
-
----
-
-## Part 3: Monitoring and Alerting
-
-**System: the SIEM already funded in this program's own budget allocation (1x03, Task 8), extended to include certificate expiration monitoring as a specific, configured alert source, not a separate tool.** This directly follows the same recommendation this project's own Task 10 (Part 4, Step 8) already made for the patient portal specifically, generalized here to every certificate in Part 1's inventory.
+## Attack 2: Collision Attack
 
 ```
-Threshold: 90 days remaining
-Alert Fires To: Sarah Park (IT Director), as a routine, informational
-  notice confirming automated renewal is expected to trigger on
-  schedule, not yet requiring action
-Purpose: Establishes a baseline confirmation that the certificate is
-  being tracked at all, closing the exact gap Finding 013 exposed:
-  MedDefense had no visibility into this certificate's status until it
-  was nearly too late.
-```
-
-```
-Threshold: 60 days remaining
-Alert Fires To: Sarah Park (IT Director)
-Purpose: A check-in point specifically for any certificate NOT covered
-  by ACME automation (the AD/LDAPS certificate, any commercial-CA-
-  issued certificate), where a human-initiated renewal request needs to
-  begin now to avoid a manual process running down to the wire the way
-  the original portal certificate did.
-```
-
-```
-Threshold: 30 days remaining
-Alert Fires To: Sarah Park (IT Director) and James Chen (Deputy CISO)
-Purpose: Escalation to the Deputy CISO specifically for any certificate
-  still showing as unrenewed at this point, since a healthy, automated
-  certificate should never reach this threshold at all; its presence
-  here is itself a signal the automation has already failed silently
-  and requires direct intervention, not passive monitoring.
-```
-
-```
-Threshold: 7 days remaining
-Alert Fires To: Sarah Park, James Chen, and the CEO's office (Dr.
-  Morales), matching the exact urgency this program's own Board Pitch
-  (1x03, Task 19) already treated as requiring immediate,
-  organization-wide attention when this exact certificate reached 18
-  days
-Purpose: Treated as a Critical incident under the Incident Response
-  Plan already drafted in this program's Quick Wins (1x03, Task 13),
-  not a routine IT ticket, given the direct, immediate clinical impact
-  an expired patient portal certificate carries for 800 daily patients.
+Attack: Collision Attack (MD5/MD4 in Windows authentication)
+Mechanism: A collision attack finds two different inputs that produce
+  the identical hash output, undermining any security property that
+  depends on a hash uniquely representing its input, such as a
+  signature or an integrity check. For MD5 specifically, practical
+  collisions have been demonstrated since 2004, with chosen-prefix
+  collisions (letting an attacker choose the colliding content in
+  advance rather than accept whatever the collision search happens to
+  produce) practical since 2008.
+MedDefense Vulnerability: A precise correction to the task's own
+  framing is worth stating directly, consistent with this project's own
+  practice of not letting an imprecise premise pass uncorrected: Active
+  Directory's NT hash is MD4-based, not MD5, though MD5 does appear
+  directly in this environment, in NTLMv2's own HMAC-MD5 key derivation
+  step, confirmed against Microsoft's official documentation in this
+  project's Task 3. Both MD4 and MD5 come from the same broken hash
+  family and share the same practical exposure to collision-based
+  attack.
+Evidence: This project's own Task 0 (Crypto Inventory) and Task 3 (Hash
+  Laboratory) research, verified directly against Microsoft's own
+  documentation
+Viable Today: Yes, in the sense that the underlying hash algorithms are
+  confirmed broken and in active use in MedDefense's authentication
+  stack; a full Kerberoasting-style offline attack against this exact
+  weakness is detailed separately in Attack 4 below, since that is the
+  more direct, practical exploitation path available today.
+Mitigation: No direct algorithm replacement is possible, since the NT
+  hash format is structurally fundamental to Windows domain
+  authentication; the actionable mitigation targets the exploitation
+  path instead, closing Finding 018 (1x02) by disabling RC4 and DES as
+  supported Kerberos encryption types.
 ```
 
 ---
 
-## Part 4: Certificate Policy
+## Attack 3: Birthday Attack
 
 ```
-1. All internal services must use certificates signed by MedDefense's
-   internal CA or a trusted public CA. Self-signed certificates are
-   prohibited in production, directly closing the gap this task's own
-   Part 1 inventory found for the EHR internal TLS and NAS-01
-   management interface certificates.
+Attack: Birthday Attack (theoretical, worked through directly)
+Mechanism: The birthday attack exploits the mathematical fact that
+  finding any two inputs that collide requires far fewer attempts than
+  finding a collision with one specific, chosen input. For an n-bit
+  hash, a targeted collision requires roughly 2^n attempts, but finding
+  any collision at all requires only about 2^(n/2), the same math
+  behind why a room of just 23 people has a 50% chance two people share
+  a birthday, despite there being 365 possible birthdays.
+MedDefense Vulnerability: This directly determines which of
+  MedDefense's own hash algorithms are within reach of a real attacker
+  and which are not. For MD5 (128-bit), the birthday bound is roughly
+  2^64 operations, a number confirmed practical with modern hardware,
+  which is exactly why real MD5 collisions have been publicly
+  demonstrated since 2004. For SHA-256 (256-bit), the equivalent figure
+  is roughly 2^128, a number that remains computationally infeasible
+  with any hardware that exists or is plausibly foreseeable.
+Evidence: This project's own Task 3 direct calculation: 2^128 possible
+  outputs for MD5 versus 2^256 for SHA-256, and the same task's real,
+  hands-on confirmation of the avalanche effect using actual computed
+  hashes, not assumed values.
+Viable Today: Yes for MD5/MD4, confirmed practical and already relevant
+  to MedDefense's own authentication stack (Attack 2 above); no for
+  SHA-256, which this project has used throughout its own hands-on
+  cryptographic work (Tasks 1, 3, 5) specifically because its 128-bit
+  birthday bound remains out of reach.
+Mitigation: Continue using SHA-256 or stronger for all new hashing work,
+  exactly as this project's own prior tasks already do; the birthday
+  attack is not something MedDefense can configure away for MD5/MD4
+  specifically, since that exposure is fixed once the output size is
+  fixed, reinforcing why closing Finding 018 (removing RC4/DES
+  Kerberos encryption types) is the only real lever available.
+```
 
-2. Every certificate must use ECDSA P-256 as its key algorithm unless a
-   specific, documented compatibility requirement demands RSA-2048
-   instead, matching this project's own established standard (Task 6,
-   Task 8, Task 10) rather than leaving key algorithm choice
-   unstandardized across MedDefense's certificate population.
+---
 
-3. Every publicly-resolvable MedDefense certificate must be issued
-   through an ACME-automated process with auto-renewal configured to
-   trigger at 30 days remaining; no publicly-resolvable certificate may
-   be provisioned through a manual issuance process without the Deputy
-   CISO's documented exception approval.
+## Attack 4: Kerberoasting
 
-4. Every certificate in MedDefense's inventory must be recorded in the
-   central certificate inventory this task establishes, including its
-   issuer, expiration date, responsible owner, and monitoring status,
-   before it is deployed to any production system; no certificate may
-   go into production use without first being added to this inventory.
+```
+Attack: Kerberoasting
+Mechanism: An authenticated domain user requests a Kerberos service
+  ticket for any service account, which the domain controller encrypts
+  using a key derived from that service account's own password hash.
+  If RC4 encryption is permitted for this ticket, the attacker can take
+  the ticket entirely offline and attempt to crack the password at
+  whatever speed modern GPU hardware can compute RC4/MD4-based
+  operations, with no further contact with the domain controller and no
+  way for MedDefense to detect the cracking attempt in progress.
+MedDefense Vulnerability: Both domain controllers (ad-dc-01, ad-dc-02)
+  support RC4 as a Kerberos encryption type, alongside DES.
+Evidence: Finding 018 (1x02), confirmed and analyzed in full detail in
+  this project's own Task 3, including the direct, verified fact that
+  the underlying NT hash is unsalted, confirmed against Microsoft's own
+  official documentation.
+Viable Today: Yes. Both weak encryption types remain enabled, and this
+  project's own Task 15 (Crypto Posture Audit) already rated this
+  finding at the highest urgency tier, Immediate, consistent with its
+  original priority in 1x02's own triage.
+Mitigation: Disable RC4 and DES as supported Kerberos encryption types
+  domain-wide, enforcing AES-256 exclusively, exactly the remediation
+  this project has already recommended consistently since Task 3 and
+  reaffirmed directly in Task 15.
+```
 
-5. Wildcard certificates are prohibited across MedDefense's certificate
-   population. Every certificate must list the specific, minimal set of
-   hostnames it actually needs to cover as explicit Subject Alternative
-   Name entries, directly matching the reasoning this project's own
-   Task 8 already established: a wildcard certificate's broader
-   validation scope is a wider attack surface than a small number of
-   purpose-scoped certificates, a risk MedDefense does not need to
-   accept when the narrower alternative covers every legitimate need.
+---
+
+## Attack 5: On-Path/MITM on Unencrypted Channels
+
+```
+Attack: On-Path/Man-in-the-Middle on Unencrypted Channels
+Mechanism: An attacker positioned on the network path between two
+  legitimate parties can passively read, or actively modify, any
+  traffic that is not both encrypted and authenticated; this project's
+  own Task 4 already demonstrated directly why authentication matters
+  as much as encryption, since an attacker performing a separate key
+  exchange with each victim can decrypt, alter, and re-encrypt traffic
+  passing through them without either party detecting a problem.
+MedDefense Vulnerability: Two specific, confirmed channels: DICOM
+  imaging traffic between the MRI workstation, radiology workstations,
+  and pacs-srv-01 travels entirely in cleartext, including patient
+  identifiers embedded in DICOM headers; and PostgreSQL connections to
+  ehr-db-01 permit unencrypted "hostnossl" connections alongside
+  encrypted ones, with no way to confirm which path any given
+  connection actually used.
+Evidence: Finding 024 (1x02) for DICOM traffic; Finding 003 (1x02) for
+  the PostgreSQL configuration; both independently confirmed again in
+  this project's own Crypto Inventory (Task 0) and formally scored in
+  the Crypto Posture Audit (Task 15) as CRYPTO-002 and CRYPTO-008.
+Viable Today: Yes for both. Neither channel currently enforces
+  encryption in a way that would prevent an on-path attacker positioned
+  anywhere on MedDefense's own internal network, the same flat network
+  this program's own kill chain work (1x01) already showed provides
+  exactly this kind of unrestricted internal positioning.
+Mitigation: Enable DICOM TLS (PS3.15) between all three imaging systems;
+  remove every "hostnossl" entry from pg_hba.conf, enforcing "hostssl"
+  exclusively, both already recommended directly in this project's own
+  Task 15 findings (CRYPTO-002 and CRYPTO-008).
+```
+
+---
+
+## Attack 6: Key Recovery from Memory
+
+```
+Attack: Key Recovery from Memory
+Mechanism: A symmetric encryption key must exist in plaintext in RAM at
+  the exact moment a CPU performs an encryption or decryption operation
+  with it, since the processor cannot execute AES rounds on a key that
+  is itself still encrypted. An attacker with root or administrator
+  access to a running system can dump process memory directly and
+  search it for key material; AES key schedules have a distinctive,
+  identifiable structure in raw memory that makes this search
+  practical even without knowing the target key's value in advance.
+MedDefense Vulnerability: billing-srv-01 specifically. This is not a
+  hypothetical precondition: this exact server was already compromised
+  at the root level once before, during the cryptominer incident this
+  program's earliest work (0x00) documented directly. If the database-
+  level encryption this project's own Task 13 and Task 14 recommend for
+  this server's MySQL data is implemented, the encryption key will, by
+  necessity, exist in that MySQL process's memory whenever it services
+  a query against encrypted data.
+Evidence: The 0x00 cryptominer incident (root-level compromise already
+  proven achievable on this exact host); this project's own Task 13 and
+  Task 14 recommendations, which establish the precondition (a key that
+  will exist in memory) this attack requires.
+Viable Today: Conditionally yes, and this condition should be stated
+  precisely rather than glossed over: the precondition, root-level
+  compromise of billing-srv-01, is already proven achievable, confirmed
+  by the 0x00 incident; the specific key this attack would target does
+  not yet exist in production, since this project's own Task 13/14
+  database encryption recommendation for this server has not yet been
+  deployed. The moment it is deployed without the mitigation below, this
+  attack becomes immediately viable, not a future concern to revisit
+  later.
+Mitigation: Layered, since no single control fully closes this attack
+  once a key must exist somewhere in an active process's memory: first,
+  close the root-access vector itself, the EDR already funded in this
+  program's own budget (1x03, Task 8) specifically to detect exactly
+  the kind of unauthorized access the 0x00 incident achieved; second,
+  where the key management design (Task 14) uses a cloud KMS with
+  genuine HSM-backed operations rather than simply fetching the raw key
+  into application memory, perform the decryption operation inside the
+  HSM boundary itself so the raw key is never exposed to billing-srv-01
+  at all; third, configure the SIEM (1x03, Task 8) to alert on memory-
+  dumping tool signatures and anomalous process access to the MySQL
+  process specifically, since this attack cannot be prevented by
+  encryption algorithm choice alone, only detected and contained.
