@@ -1,0 +1,302 @@
+================================================================================
+          CYBERSECURITY AND INFRASTRUCTURE SECURITY AGENCY (CISA)
+          EMERGENCY ADVISORY: AA26-077A
+          Title: "Crimson Tide" Ransomware Campaign Targeting
+                 Regional Healthcare Organizations
+          TLP: WHITE
+          Date: [Current - 2 days]
+          Severity: CRITICAL
+          Sector: Healthcare and Public Health (HPH)
+================================================================================
+
+========================================================================
+SUMMARY
+========================================================================
+
+CISA, in coordination with the FBI and HHS, is releasing this
+advisory to warn healthcare organizations about an active and
+escalating ransomware campaign attributed to the threat group
+tracked as "Crimson Tide." In the past 10 days, Crimson Tide
+affiliates have successfully compromised at least 5 regional
+hospitals across the United States, including 3 in the
+[MedDefense geographic region].
+
+The campaign targets small-to-mid-size hospitals (100-500 beds)
+using a consistent attack chain that exploits:
+  1. Unpatched FortiGate VPN appliances (CVE-2023-27997)
+  2. Flat internal networks without segmentation
+  3. Weak or absent Active Directory authentication controls
+  4. Unencrypted backup infrastructure
+
+Organizations matching this profile should treat this advisory
+as an IMMEDIATE call to action.
+
+========================================================================
+THREAT ACTOR PROFILE
+========================================================================
+
+Name: Crimson Tide (CT)
+Type: Ransomware-as-a-Service (RaaS) affiliate network
+First Observed: 8 months ago
+Affiliation: Believed to use a modified variant of BlackSuit
+             ransomware (successor to Royal, successor to Conti)
+Motivation: Financial gain via double extortion
+
+Targeting Profile:
+  - Regional hospitals (100-500 beds)
+  - Community health centers
+  - Specialty clinics with legacy medical equipment
+  - Organizations with annual revenue $50M-$500M
+  - Preference for targets with cyber insurance
+
+Operational Model:
+  - Affiliates purchase or develop initial access
+  - Average dwell time: 4-7 days
+  - Data exfiltration BEFORE encryption (confirmed in all 5 cases)
+  - Double extortion: ransom for decryption + ransom for non-publication
+  - Average demand: $1.2M-$3.5M (negotiable)
+  - Payment deadline: 96 hours
+
+========================================================================
+ATTACK CHAIN (Observed in All 5 Incidents)
+========================================================================
+
+PHASE 1 -- INITIAL ACCESS (Day 0)
+  Vector: Exploitation of CVE-2023-27997 (FortiOS SSL-VPN
+          pre-authentication heap-based buffer overflow)
+  Detail: The vulnerability affects FortiOS 7.2.0 through 7.2.4
+          and 7.0.0 through 7.0.11. The attacker sends a crafted
+          request to the SSL-VPN web portal, achieving remote code
+          execution on the FortiGate appliance itself.
+  Impact: Full control of the firewall/VPN device.
+  CVSS: 9.2 (Critical)
+  Patch: Available since June 2023
+  CISA KEV: Listed
+
+  NOTE: In 4 of 5 incidents, the FortiGate firmware was at least
+  6 months behind the latest version. In 2 cases, the firmware was
+  over 18 months old.
+
+PHASE 2 -- INTERNAL RECONNAISSANCE (Day 0-1)
+  From the compromised FortiGate, the attacker:
+  - Captures VPN credentials from memory (the FortiGate processes
+    all VPN authentication)
+  - Dumps the FortiGate routing table to map internal subnets
+  - Uses captured credentials to authenticate to internal systems
+  Tools observed: Built-in FortiOS CLI, custom scripts
+
+PHASE 3 -- LATERAL MOVEMENT (Day 1-3)
+  Using captured credentials (often domain admin or VPN service
+  accounts with excessive privileges):
+  - RDP to Windows systems
+  - SSH to Linux systems
+  - WMI for remote command execution
+  
+  Critical enabling factor: In ALL 5 incidents, the internal
+  network was FLAT (no segmentation between servers, workstations,
+  and medical devices). Once inside the FortiGate, the attacker
+  had direct access to every system.
+
+  In 3 of 5 cases, the attacker also exploited:
+  - Kerberoasting (RC4-encrypted service tickets cracked offline)
+  - Cached credentials on workstations (Mimikatz)
+
+PHASE 4 -- DATA EXFILTRATION (Day 3-5)
+  Target data (consistent across all 5 incidents):
+  - Patient databases (EMR/EHR data)
+  - Financial and billing records
+  - Employee PII (HR data)
+  - Insurance claim data
+  
+  Exfiltration method: Rclone to attacker-controlled cloud storage
+  Volume: 15-65 GB per incident
+  
+  Critical factor: In 4 of 5 cases, the databases were NOT
+  encrypted at rest. The attacker simply copied the raw database
+  files from the filesystem without needing database credentials.
+
+PHASE 5 -- BACKUP DESTRUCTION (Day 5-6)
+  Before deploying ransomware, the attacker specifically targets
+  backup infrastructure:
+  - NAS/SAN devices on the same network (accessible due to flat
+    network)
+  - Volume Shadow Copies on Windows systems (vssadmin delete
+    shadows)
+  - Backup software catalogs (Veeam, Commvault agents)
+  
+  Critical factor: In ALL 5 incidents, backup storage was on the
+  same network as production systems with no isolation. In 3 of 5,
+  backups were unencrypted, allowing the attacker to verify they
+  contained valuable data before destroying them.
+
+PHASE 6 -- RANSOMWARE DEPLOYMENT (Day 6-7)
+  Deployment method: Group Policy Object (GPO) pushed from
+  compromised Domain Controller
+  Payload: Modified BlackSuit variant
+  Encryption: AES-256-CBC with RSA-2048 wrapped key
+  Targets: All Windows systems (servers + workstations)
+  Linux servers: Targeted separately via SSH using harvested
+  credentials
+  
+  Medical devices: NOT encrypted (the ransomware payload does not
+  target embedded systems). However, medical devices that depend on
+  encrypted servers (e.g., EHR integration, PACS) become
+  non-functional due to backend unavailability.
+
+PHASE 7 -- EXTORTION (Day 7+)
+  Dual pressure:
+  1. Ransom for decryption key (clock starts at deployment)
+  2. Threat to publish patient data on Tor-based leak site
+  
+  All 5 hospitals were contacted via:
+  - Ransom note on encrypted systems (with Tor .onion URL)
+  - Direct email to CEO/CFO (attacker had harvested these from
+    the email system or HR records during exfiltration)
+  - Phone call to hospital main line (in 2 cases)
+
+========================================================================
+INDICATORS OF COMPROMISE (IOCs)
+========================================================================
+
+File Hashes (SHA-256):
+  Ransomware payload:
+    a3f7d8e91c2b4a5f6d8e7c9b0a1f2d3e4c5b6a7f8d9e0c1b2a3f4d5e6c7b8a
+  Rclone (modified):
+    b4e8f9a02d3c5b6e7f8d9a0c1b2e3f4d5a6b7c8e9f0d1a2b3c4d5e6f7a8b9c
+
+Network IOCs:
+  C2 server: 185.220.101[.]xxx (Tor exit node)
+  Exfiltration destination: mega[.]nz (legitimate service abused)
+  Attacker email domain: protonmail accounts (varies per incident)
+
+FortiGate exploitation signatures:
+  URI pattern: /remote/logincheck with oversized payload
+  User-Agent: Custom (varies, but non-standard strings observed)
+
+Behavioral IOCs:
+  - Unusual FortiGate CLI commands (show system interface, etc.)
+  - Large outbound data transfers (>5GB) to cloud storage
+  - vssadmin delete shadows on multiple systems
+  - New GPO creation outside change management window
+  - Rclone.exe appearing on systems where not previously present
+
+========================================================================
+AFFECTED HOSPITALS (Anonymized)
+========================================================================
+
+Hospital A (280 beds, [MedDefense region]):
+  - Compromised 8 days ago
+  - 23 servers, ~400 workstations encrypted
+  - 42 GB exfiltrated (patient + financial)
+  - Demand: $2.4M, negotiated to $1.1M, PAID
+  - Downtime: 14 days (still partially recovering)
+  - FortiGate firmware: 18 months old
+
+Hospital B (150 beds, [MedDefense region]):
+  - Compromised 6 days ago
+  - 12 servers, ~180 workstations encrypted
+  - 18 GB exfiltrated
+  - Demand: $1.5M, NOT paid
+  - Data published on leak site 4 days ago
+  - Downtime: Ongoing (Week 2, using paper records)
+  - FortiGate firmware: 8 months old
+
+Hospital C (320 beds, [MedDefense region]):
+  - Compromised 3 days ago
+  - STILL IN PROGRESS (containment ongoing)
+  - FBI on site
+  - Ambulance diversions active
+  - FortiGate firmware: 12 months old
+
+Hospital D (200 beds, US Southeast):
+  - Compromised 10 days ago
+  - Similar profile, similar chain
+  - Demand: $1.8M, negotiation ongoing
+
+Hospital E (175 beds, US Midwest):
+  - Compromised 9 days ago
+  - Demand: $1.2M, PAID
+  - Recovery complete after 11 days
+
+========================================================================
+RECOMMENDED IMMEDIATE ACTIONS
+========================================================================
+
+WITHIN 24 HOURS:
+  1. Verify FortiGate firmware version. If running FortiOS 7.2.0
+     through 7.2.4 or 7.0.0 through 7.0.11, PATCH IMMEDIATELY
+     or disable SSL-VPN until patched.
+  
+  2. Review FortiGate logs for indicators of compromise. Look for
+     unusual CLI commands, unexpected VPN sessions, and
+     authentication anomalies.
+  
+  3. Verify backup isolation. If backup storage is on the same
+     network as production systems, ISOLATE IMMEDIATELY (VLAN,
+     firewall rule, or physical disconnect).
+
+WITHIN 72 HOURS:
+  4. Implement network segmentation if not already in place.
+     Minimum: separate server, workstation, medical device, and
+     management zones.
+  
+  5. Disable RC4 and DES in Active Directory Kerberos settings.
+     Enable AES-only authentication.
+  
+  6. Enforce MFA on all VPN and remote access.
+  
+  7. Encrypt sensitive databases at rest if not already encrypted.
+  
+  8. Review all service accounts for excessive privileges.
+
+WITHIN 30 DAYS:
+  9. Deploy or verify endpoint detection and response (EDR) on
+     all servers and workstations.
+  
+  10. Establish 24/7 monitoring capability (SIEM, SOC) for
+      behavioral indicators listed above.
+  
+  11. Conduct tabletop exercise simulating this specific attack
+      chain against your environment.
+  
+  12. Review and update incident response plan.
+
+========================================================================
+MEDDEFENSE-SPECIFIC NOTES
+(Added by James Chen after reviewing the advisory)
+========================================================================
+
+"Read this carefully. Then read it again.
+
+This is us. Every single element of their attack chain maps to our
+environment:
+
+  - We run a FortiGate 100F. I do not know the firmware version.
+    CHECK IT TODAY.
+  - We have a flat network. We designed the segmentation in the
+    strategy but have not implemented it yet.
+  - Our AD still accepts RC4 for Kerberos. We flagged this in the
+    vulnerability assessment but have not fixed it yet.
+  - Our backups on NAS-01 are unencrypted and on the same network.
+    We designed the encryption in the crypto assessment but have
+    not implemented it yet.
+  - Our patient database has zero encryption at rest.
+
+Hospital C is 45 miles from MedDefense Central.
+
+The Board meeting was scheduled for next week. I moved it to
+tomorrow morning. We present at 9:00 AM.
+
+You have tonight to prepare two things:
+  1. The comprehensive security assessment we have been building
+     for 5 weeks (synthesize everything).
+  2. An emergency response to this specific advisory (what we do
+     in the next 72 hours).
+
+This is not a drill."
+
+  -- James
+
+========================================================================
+          END OF ADVISORY
+========================================================================
