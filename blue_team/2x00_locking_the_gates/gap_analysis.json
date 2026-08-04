@@ -1,0 +1,95 @@
+{
+  "assessment_date": "2026-08-04T12:24:14Z",
+  "controls": [
+    {
+      "control_id": "5.1",
+      "title": "Disable SSH password authentication",
+      "status": "non_compliant",
+      "evidence": "Baseline confirms passwordauthentication=yes; Lynis SSH-7408 present"
+    },
+    {
+      "control_id": "5.1.20",
+      "title": "Disable direct SSH root login",
+      "status": "non_compliant",
+      "evidence": "Baseline confirms permitrootlogin=yes; Lynis SSH-7408 present"
+    },
+    {
+      "control_id": "5.1.4",
+      "title": "Restrict SSH access to an explicit allowed-users list",
+      "status": "non_compliant",
+      "evidence": "Lynis SSH-7408 present (generic SSH hardening); baseline shows allowusers=not-set"
+    },
+    {
+      "control_id": "5.3.3.2.7",
+      "title": "Enforce password quality requirements via pam_pwquality",
+      "status": "partially_compliant",
+      "evidence": "Lynis flags adjacent password-policy items (AUTH-9230/9282/9286/9328), not the pwquality module specifically"
+    },
+    {
+      "control_id": "5.3.3.1.1",
+      "title": "Enable account lockout via pam_faillock after repeated failed logins",
+      "status": "not_assessed",
+      "evidence": "No Lynis finding or baseline data addresses account lockout specifically"
+    },
+    {
+      "control_id": "1.5.3",
+      "title": "Restrict core dumps (fs.suid_dumpable=0)",
+      "status": "non_compliant",
+      "evidence": "Baseline confirms fs.suid_dumpable=2 (should be 0); Lynis KRNL-5820 present"
+    },
+    {
+      "control_id": "3.3.1.8",
+      "title": "Reject ICMP redirects",
+      "status": "compliant",
+      "evidence": "Baseline confirms net.ipv4.conf.all.accept_redirects=0, the secure value"
+    },
+    {
+      "control_id": "3.3.1.1",
+      "title": "Disable IP forwarding",
+      "status": "non_compliant",
+      "evidence": "Baseline confirms net.ipv4.ip_forward=1 on a database/web server with no routing function"
+    },
+    {
+      "control_id": "3.3.1.18",
+      "title": "Enable TCP SYN cookies",
+      "status": "compliant",
+      "evidence": "Baseline confirms net.ipv4.tcp_syncookies=1, the secure value (Ubuntu default)"
+    },
+    {
+      "control_id": "7.1.13",
+      "title": "Identify and remove unauthorized SUID binaries",
+      "status": "non_compliant",
+      "evidence": "Baseline confirms 2 non-standard SUID binaries outside typical package paths (/usr/local, /opt)"
+    },
+    {
+      "control_id": "1.1.2",
+      "title": "Apply noexec, nosuid, and nodev mount options to non-system partitions",
+      "status": "non_compliant",
+      "evidence": "No baseline or Lynis confirmation exists; evidence basis is documented Ubuntu 22.04 default behavior (these mount options are not applied out of the box), not scan data"
+    },
+    {
+      "control_id": "2.1.22",
+      "title": "Disable or remove unnecessary network-facing services",
+      "status": "partially_compliant",
+      "evidence": "Baseline confirms 28 running services on billing-srv-01; no formal approved-services allow-list exists to confirm which are justified"
+    },
+    {
+      "control_id": "4.1.3",
+      "title": "Restrict MySQL to localhost-only binding and enforce default-deny host firewall",
+      "status": "non_compliant",
+      "evidence": "Baseline confirms MySQL bound to 0.0.0.0:3306; Lynis FIRE-4512 confirms iptables loaded with no active rules; FIRE-4513 confirms unused rule review needed"
+    },
+    {
+      "control_id": "6.2.3.1",
+      "title": "Deploy auditd rules for privilege escalation and sensitive file modification",
+      "status": "non_compliant",
+      "evidence": "Lynis ACCT-9630 directly confirms: audit daemon is enabled with an empty ruleset"
+    },
+    {
+      "control_id": "6.1.2.6",
+      "title": "Configure remote log forwarding and enforce log file write-protection",
+      "status": "non_compliant",
+      "evidence": "Lynis LOGG-2154 directly confirms: no external logging host currently configured"
+    }
+  ]
+}

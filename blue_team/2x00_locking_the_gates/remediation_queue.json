@@ -1,0 +1,149 @@
+{
+  "generated": "2026-08-04T12:24:14Z",
+  "queue": [
+    {
+      "control_id": "5.1",
+      "title": "Disable SSH password authentication",
+      "status": "non_compliant",
+      "severity": "critical",
+      "priority_score": 90,
+      "affected_asset": "billing-srv-01,web-srv-01,log-srv-01",
+      "lynis_evidence": "Baseline confirms passwordauthentication=yes; Lynis SSH-7408 present",
+      "remediation_script": "2-ssh_hardening.sh",
+      "operational_risk_if_unresolved": "An attacker with network reach to SSH can attempt password-based brute force against any of the 4 real accounts",
+      "expected_validation_check": "sshd -T | grep -i passwordauthentication returns no"
+    },
+    {
+      "control_id": "5.1.20",
+      "title": "Disable direct SSH root login",
+      "status": "non_compliant",
+      "severity": "critical",
+      "priority_score": 90,
+      "affected_asset": "billing-srv-01,web-srv-01,log-srv-01",
+      "lynis_evidence": "Baseline confirms permitrootlogin=yes; Lynis SSH-7408 present",
+      "remediation_script": "2-ssh_hardening.sh",
+      "operational_risk_if_unresolved": "Root-level SSH access possible without individual account attribution",
+      "expected_validation_check": "sshd -T | grep -i permitrootlogin returns no"
+    },
+    {
+      "control_id": "6.2.3.1",
+      "title": "Deploy auditd rules for privilege escalation and sensitive file modification",
+      "status": "non_compliant",
+      "severity": "critical",
+      "priority_score": 90,
+      "affected_asset": "billing-srv-01,web-srv-01,log-srv-01",
+      "lynis_evidence": "Lynis ACCT-9630 directly confirms: audit daemon is enabled with an empty ruleset",
+      "remediation_script": "10-auditd_configuration.sh",
+      "operational_risk_if_unresolved": "auditd is running but capturing nothing; a privilege escalation or credential theft attempt would leave no audit trail whatsoever",
+      "expected_validation_check": "auditctl -l lists rules watching /etc/passwd, /etc/shadow, and sudo execution"
+    },
+    {
+      "control_id": "1.5.3",
+      "title": "Restrict core dumps (fs.suid_dumpable=0)",
+      "status": "non_compliant",
+      "severity": "critical",
+      "priority_score": 90,
+      "affected_asset": "billing-srv-01,web-srv-01,log-srv-01",
+      "lynis_evidence": "Baseline confirms fs.suid_dumpable=2 (should be 0); Lynis KRNL-5820 present",
+      "remediation_script": "5-kernel_hardening.sh",
+      "operational_risk_if_unresolved": "A process crash could expose credentials or session data resident in memory to any local user",
+      "expected_validation_check": "sysctl fs.suid_dumpable returns 0"
+    },
+    {
+      "control_id": "7.1.13",
+      "title": "Identify and remove unauthorized SUID binaries",
+      "status": "non_compliant",
+      "severity": "critical",
+      "priority_score": 90,
+      "affected_asset": "billing-srv-01",
+      "lynis_evidence": "Baseline confirms 2 non-standard SUID binaries outside typical package paths (/usr/local, /opt)",
+      "remediation_script": "6-filesystem_hardening.sh",
+      "operational_risk_if_unresolved": "An unexplained SUID binary on a previously compromised server (0x00 cryptominer incident) may itself be a persistence mechanism",
+      "expected_validation_check": "SUID list cross-referenced against Task 0 baseline contains zero unexplained entries"
+    },
+    {
+      "control_id": "4.1.3",
+      "title": "Restrict MySQL to localhost-only binding and enforce default-deny host firewall",
+      "status": "non_compliant",
+      "severity": "high",
+      "priority_score": 70,
+      "affected_asset": "billing-srv-01",
+      "lynis_evidence": "Baseline confirms MySQL bound to 0.0.0.0:3306; Lynis FIRE-4512 confirms iptables loaded with no active rules; FIRE-4513 confirms unused rule review needed",
+      "remediation_script": "9-firewall_hardening.sh",
+      "operational_risk_if_unresolved": "The patient database is reachable from any network address with no host firewall enforcing restriction, the same exfiltration method documented in the Crimson Tide advisory",
+      "expected_validation_check": "ss -tulnH shows 3306 bound to 127.0.0.1 only, and ufw status shows default deny incoming"
+    },
+    {
+      "control_id": "5.1.4",
+      "title": "Restrict SSH access to an explicit allowed-users list",
+      "status": "non_compliant",
+      "severity": "high",
+      "priority_score": 70,
+      "affected_asset": "billing-srv-01,web-srv-01,log-srv-01",
+      "lynis_evidence": "Lynis SSH-7408 present (generic SSH hardening); baseline shows allowusers=not-set",
+      "remediation_script": "2-ssh_hardening.sh",
+      "operational_risk_if_unresolved": "Any valid credential on the system can authenticate over SSH, not only approved administrative accounts",
+      "expected_validation_check": "sshd -T | grep -i allowusers lists only approved accounts"
+    },
+    {
+      "control_id": "3.3.1.1",
+      "title": "Disable IP forwarding",
+      "status": "non_compliant",
+      "severity": "high",
+      "priority_score": 70,
+      "affected_asset": "billing-srv-01,web-srv-01,log-srv-01",
+      "lynis_evidence": "Baseline confirms net.ipv4.ip_forward=1 on a database/web server with no routing function",
+      "remediation_script": "5-kernel_hardening.sh",
+      "operational_risk_if_unresolved": "A compromised host could be repurposed as an internal network pivot",
+      "expected_validation_check": "sysctl net.ipv4.ip_forward returns 0"
+    },
+    {
+      "control_id": "1.1.2",
+      "title": "Apply noexec, nosuid, and nodev mount options to non-system partitions",
+      "status": "non_compliant",
+      "severity": "medium",
+      "priority_score": 50,
+      "affected_asset": "billing-srv-01,web-srv-01,log-srv-01",
+      "lynis_evidence": "No baseline or Lynis confirmation exists; evidence basis is documented Ubuntu 22.04 default behavior (these mount options are not applied out of the box), not scan data",
+      "remediation_script": "7-mount_hardening.sh",
+      "operational_risk_if_unresolved": "Partitions that should never execute code currently can, widening post-exploitation persistence options",
+      "expected_validation_check": "mount | grep <partition> shows noexec,nosuid,nodev where applicable"
+    },
+    {
+      "control_id": "6.1.2.6",
+      "title": "Configure remote log forwarding and enforce log file write-protection",
+      "status": "non_compliant",
+      "severity": "medium",
+      "priority_score": 50,
+      "affected_asset": "log-srv-01",
+      "lynis_evidence": "Lynis LOGG-2154 directly confirms: no external logging host currently configured",
+      "remediation_script": "11-log_retention.sh",
+      "operational_risk_if_unresolved": "If any of these three servers, especially log-srv-01, is compromised, an attacker can erase local evidence with no off-host copy surviving",
+      "expected_validation_check": "rsyslog.conf shows a configured remote receiver, and local log files carry append-only protection"
+    },
+    {
+      "control_id": "2.1.22",
+      "title": "Disable or remove unnecessary network-facing services",
+      "status": "partially_compliant",
+      "severity": "high",
+      "priority_score": 49,
+      "affected_asset": "billing-srv-01",
+      "lynis_evidence": "Baseline confirms 28 running services on billing-srv-01; no formal approved-services allow-list exists to confirm which are justified",
+      "remediation_script": "8-service_minimization.sh",
+      "operational_risk_if_unresolved": "Unreviewed running services represent unmeasured, unjustified attack surface on a server with a prior confirmed compromise",
+      "expected_validation_check": "systemctl list-units --state=running count decreases and matches an approved services allow-list"
+    },
+    {
+      "control_id": "5.3.3.2.7",
+      "title": "Enforce password quality requirements via pam_pwquality",
+      "status": "partially_compliant",
+      "severity": "high",
+      "priority_score": 49,
+      "affected_asset": "billing-srv-01,web-srv-01,log-srv-01",
+      "lynis_evidence": "Lynis flags adjacent password-policy items (AUTH-9230/9282/9286/9328), not the pwquality module specifically",
+      "remediation_script": "3-pam_password_quality.sh",
+      "operational_risk_if_unresolved": "Weak passwords may currently be accepted, though the exact pwquality module state is not directly confirmed",
+      "expected_validation_check": "grep pam_pwquality /etc/pam.d/common-password shows minlen and complexity requirements"
+    }
+  ]
+}
