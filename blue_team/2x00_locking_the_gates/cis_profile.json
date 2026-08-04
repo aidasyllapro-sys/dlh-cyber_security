@@ -1,0 +1,171 @@
+{
+  "profile_generated": "2026-08-04T11:16:36Z",
+  "target_assets": ["billing-srv-01", "web-srv-01", "log-srv-01"],
+  "controls": [
+    {
+      "control_id": "5.1",
+      "title": "Disable SSH password authentication",
+      "cis_section": "5",
+      "severity": "critical",
+      "asset_scope": "billing-srv-01,web-srv-01,log-srv-01",
+      "threat_mapping": "1x02 Finding 009 (SSH password auth enabled); Task 0 baseline confirmed passwordauthentication=yes; Crimson Tide Phase 3 (SSH-based lateral movement)",
+      "implementation_task": "2-ssh_hardening.sh",
+      "verification_method": "sshd -T | grep -i passwordauthentication returns no",
+      "justification": "Baseline confirms password auth is currently enabled on billing-srv-01; key-based authentication makes credential brute-forcing practically useless. Note: no single dedicated sub-item for this exact setting was located in the verified table of contents (5.1.1-5.1.22); section 5.1 (Configure SSH Server) is the confirmed parent section, sub-item pending verification against the full text at pages 476-533"
+    },
+    {
+      "control_id": "5.1.20",
+      "title": "Disable direct SSH root login",
+      "cis_section": "5",
+      "severity": "critical",
+      "asset_scope": "billing-srv-01,web-srv-01,log-srv-01",
+      "threat_mapping": "1x02 Finding 009; Task 0 baseline confirmed permitrootlogin=yes; Crimson Tide Phase 3 and Phase 6",
+      "implementation_task": "2-ssh_hardening.sh",
+      "verification_method": "sshd -T | grep -i permitrootlogin returns no",
+      "justification": "Baseline confirms root login is currently permitted directly over SSH; forcing a named account first preserves individual accountability for every privileged action taken. Verified as CIS 5.1.20 'Ensure sshd PermitRootLogin is disabled' against the real table of contents"
+    },
+    {
+      "control_id": "5.1.4",
+      "title": "Restrict SSH access to an explicit allowed-users list",
+      "cis_section": "5",
+      "severity": "high",
+      "asset_scope": "billing-srv-01,web-srv-01,log-srv-01",
+      "threat_mapping": "Crimson Tide Phase 3 (lateral movement via any valid credential)",
+      "implementation_task": "2-ssh_hardening.sh",
+      "verification_method": "sshd -T | grep -i allowusers lists only approved accounts",
+      "justification": "Baseline shows 4 real accounts (analyst, medadmin, sysadmin, mike); an explicit allow-list ensures a compromised or forgotten account cannot authenticate over SSH even if its credential is later exposed. Verified as CIS 5.1.4 'Ensure sshd access is configured' against the real table of contents"
+    },
+    {
+      "control_id": "5.3.3.2.7",
+      "title": "Enforce password quality requirements via pam_pwquality",
+      "cis_section": "5",
+      "severity": "high",
+      "asset_scope": "billing-srv-01,web-srv-01,log-srv-01",
+      "threat_mapping": "Weak credential hygiene enabling online cracking; Crimson Tide Phase 3",
+      "implementation_task": "3-pam_password_quality.sh",
+      "verification_method": "grep pam_pwquality /etc/pam.d/common-password shows minlen and complexity requirements",
+      "justification": "No password complexity requirement is currently enforced at the PAM layer; this closes the gap before a weak password is ever created, not merely after it is guessed. Verified as CIS 5.3.3.2.7 'Ensure password quality checking is enforced' against the real table of contents"
+    },
+    {
+      "control_id": "5.3.3.1.1",
+      "title": "Enable account lockout via pam_faillock after repeated failed logins",
+      "cis_section": "5",
+      "severity": "high",
+      "asset_scope": "billing-srv-01,web-srv-01,log-srv-01",
+      "threat_mapping": "Crimson Tide Phase 3 (credential brute-forcing)",
+      "implementation_task": "4-pam_account_lockout.sh",
+      "verification_method": "grep pam_faillock /etc/pam.d/common-auth is present and enabled",
+      "justification": "Without this control an attacker with network access to any authentication service can attempt unlimited passwords for free; this turns brute-forcing into a slow, detectable operation. Verified as CIS 5.3.3.1.1 'Ensure password failed attempts lockout is configured' against the real table of contents"
+    },
+    {
+      "control_id": "1.5.3",
+      "title": "Restrict core dumps (fs.suid_dumpable=0)",
+      "cis_section": "1",
+      "severity": "critical",
+      "asset_scope": "billing-srv-01,web-srv-01,log-srv-01",
+      "threat_mapping": "1x02 Finding 026 (47 known kernel CVEs, same weakness class); Task 0 baseline confirmed fs.suid_dumpable=2",
+      "implementation_task": "5-kernel_hardening.sh",
+      "verification_method": "sysctl fs.suid_dumpable returns 0",
+      "justification": "Baseline confirmed fs.suid_dumpable=2, the least restrictive possible value; a process crash could currently expose credentials or session data resident in memory to any local user. Verified as CIS 1.5.3 'Ensure suid_dumpable is configured' against the real table of contents; this control lives under Initial Setup / Process Hardening, not Network, correcting an earlier assumption"
+    },
+    {
+      "control_id": "3.3.1.8",
+      "title": "Reject ICMP redirects",
+      "cis_section": "3",
+      "severity": "high",
+      "asset_scope": "billing-srv-01,web-srv-01,log-srv-01",
+      "threat_mapping": "On-path traffic manipulation consistent with Crimson Tide's network-level lateral movement",
+      "implementation_task": "5-kernel_hardening.sh",
+      "verification_method": "sysctl net.ipv4.conf.all.accept_redirects returns 0",
+      "justification": "Baseline shows this already at 0 on billing-srv-01 but must be verified and enforced identically on web-srv-01 and log-srv-01, since one unhardened host undermines the whole segment. Verified as CIS 3.3.1.8 'Ensure net.ipv4.conf.all.accept_redirects is configured' against the real table of contents"
+    },
+    {
+      "control_id": "3.3.1.1",
+      "title": "Disable IP forwarding",
+      "cis_section": "3",
+      "severity": "high",
+      "asset_scope": "billing-srv-01,web-srv-01,log-srv-01",
+      "threat_mapping": "Prevents a compromised host being repurposed as an internal pivot, directly relevant to the flat-network lateral movement pattern in every prior kill chain analysis",
+      "implementation_task": "5-kernel_hardening.sh",
+      "verification_method": "sysctl net.ipv4.ip_forward returns 0",
+      "justification": "Baseline confirmed ip_forward=1 on billing-srv-01, a database and web server with no legitimate routing function; this setting has no operational justification. Verified as CIS 3.3.1.1 'Ensure net.ipv4.ip_forward is configured' against the real table of contents"
+    },
+    {
+      "control_id": "3.3.1.18",
+      "title": "Enable TCP SYN cookies",
+      "cis_section": "3",
+      "severity": "medium",
+      "asset_scope": "billing-srv-01,web-srv-01,log-srv-01",
+      "threat_mapping": "Network-layer denial of service resilience, same kernel-hardening class as Finding 026",
+      "implementation_task": "5-kernel_hardening.sh",
+      "verification_method": "sysctl net.ipv4.tcp_syncookies returns 1",
+      "justification": "Baseline already shows this enabled by Ubuntu's own default; retained as an explicitly verified control rather than an unconfirmed assumption. Verified as CIS 3.3.1.18 'Ensure net.ipv4.tcp_syncookies is configured' against the real table of contents"
+    },
+    {
+      "control_id": "7.1.13",
+      "title": "Identify and remove unauthorized SUID binaries",
+      "cis_section": "1",
+      "severity": "critical",
+      "asset_scope": "billing-srv-01",
+      "threat_mapping": "Direct baseline finding: /usr/local/bin/oldtool and /opt/legacy/setuid-app, two non-standard SUID binaries matching no known Ubuntu package",
+      "implementation_task": "6-filesystem_hardening.sh",
+      "verification_method": "SUID list cross-referenced against Task 0 baseline contains zero unexplained entries",
+      "justification": "billing-srv-01 already had one confirmed compromise (the 0x00 cryptominer incident); two unexplained SUID binaries on this exact server are treated as a live incident-response question, not routine cleanup. DISCLOSED GROUPING: verified as CIS 7.1.13 'Ensure SUID and SGID files are reviewed', which technically sits under Section 7 (System Maintenance); grouped here under Section 1 in this profile for consolidated filesystem-hardening deployment, not because it is genuinely a Section 1 item"
+    },
+    {
+      "control_id": "1.1.2",
+      "title": "Apply noexec, nosuid, and nodev mount options to non-system partitions",
+      "cis_section": "1",
+      "severity": "medium",
+      "asset_scope": "billing-srv-01,web-srv-01,log-srv-01",
+      "threat_mapping": "Reduces post-exploitation persistence and privilege escalation options",
+      "implementation_task": "7-mount_hardening.sh",
+      "verification_method": "mount | grep <partition> shows noexec,nosuid,nodev where applicable",
+      "justification": "No baseline mount option hardening currently exists; low operational risk since it only affects partitions that never legitimately execute code. Verified as CIS 1.1.2 'Configure Filesystem Partitions' against the real table of contents"
+    },
+    {
+      "control_id": "2.1.22",
+      "title": "Disable or remove unnecessary network-facing services",
+      "cis_section": "1",
+      "severity": "high",
+      "asset_scope": "billing-srv-01",
+      "threat_mapping": "billing-srv-01's own prior compromise (0x00 cryptominer); Task 0 baseline confirmed 28 running services, several with no clear operational purpose on a headless server",
+      "implementation_task": "8-service_minimization.sh",
+      "verification_method": "systemctl list-units --state=running count decreases and matches an approved services allow-list",
+      "justification": "Every additional running service is additional attack surface; a server that already suffered one compromise warrants the strictest justification standard for what stays enabled. DISCLOSED GROUPING: verified as CIS 2.1.22 'Ensure only approved services are listening on a network interface', which technically sits under Section 2 (Services); grouped here under Section 1 in this profile for consolidated deployment, not because it is genuinely a Section 1 item"
+    },
+    {
+      "control_id": "4.1.3",
+      "title": "Restrict MySQL to localhost-only binding and enforce default-deny host firewall",
+      "cis_section": "4",
+      "severity": "high",
+      "asset_scope": "billing-srv-01",
+      "threat_mapping": "Direct baseline finding: MySQL listening on 0.0.0.0:3306, reachable from any address, the same exposure pattern as 1x02 Finding 006; Crimson Tide Phase 4 (direct database file exfiltration)",
+      "implementation_task": "9-firewall_hardening.sh",
+      "verification_method": "ss -tulnH shows 3306 bound to 127.0.0.1 only, and ufw status shows default deny incoming",
+      "justification": "The baseline shows this database is reachable from any network address today; this is the single most literal match in this profile to the exact exfiltration method Crimson Tide is documented using. Verified as CIS 4.1.3 'Ensure ufw incoming default is configured' against the real table of contents; the MySQL-specific binding change is an application-level complement to this CIS control, not itself a numbered CIS item"
+    },
+    {
+      "control_id": "6.2.3.1",
+      "title": "Deploy auditd rules for privilege escalation and sensitive file modification",
+      "cis_section": "6",
+      "severity": "critical",
+      "asset_scope": "billing-srv-01,web-srv-01,log-srv-01",
+      "threat_mapping": "Crimson Tide Phase 3 (credential theft) and Phase 6 (domain-wide changes); GAP-004 (no detection capability)",
+      "implementation_task": "10-auditd_configuration.sh",
+      "verification_method": "auditctl -l lists rules watching /etc/passwd, /etc/shadow, and sudo execution",
+      "justification": "Task 0 baseline confirms auditd is already running as a service, but a running daemon with no meaningful rules provides no actual visibility; this ensures the rules themselves exist. Verified as CIS 6.2.3.1 'Ensure changes to system administration scope (sudoers) is collected' against the real table of contents"
+    },
+    {
+      "control_id": "6.1.2.6",
+      "title": "Configure remote log forwarding and enforce log file write-protection",
+      "cis_section": "6",
+      "severity": "medium",
+      "asset_scope": "log-srv-01",
+      "threat_mapping": "Project context: log-srv-01 compromise would let an attacker erase all other evidence; Crimson Tide Phase 5 (backup/evidence destruction pattern)",
+      "implementation_task": "11-log_retention.sh",
+      "verification_method": "rsyslog.conf shows a configured remote receiver, and local log files carry append-only protection",
+      "justification": "log-srv-01 is the most critical server to harden in this project precisely because its compromise would let an attacker erase evidence from every other system; retention and write-protection are what make its own logs trustworthy after an incident. Verified as CIS 6.1.2.6 'Ensure rsyslog is configured to send logs to a remote log host' against the real table of contents"
+    }
+  ]
+}
