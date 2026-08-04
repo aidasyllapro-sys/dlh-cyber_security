@@ -28,13 +28,14 @@
 # This script is idempotent: running it twice produces the same final
 # sshd_config state, not two backups or duplicated directive lines.
  
-set -uo pipefail
-# Note: NOT using -e here deliberately. This script's own safety logic
-# (validate, then restart-or-rollback) depends on being able to detect
-# and react to a failed "sshd -t" command itself, which -e would turn
-# into an immediate script termination before the rollback branch ever
-# runs. Every command that can legitimately fail is checked explicitly
-# below instead.
+set -euo pipefail
+# Every command below that could legitimately fail (sshd -t, systemctl
+# restart) is wrapped in an if/then/else construct, which bash exempts
+# from triggering set -e (the shell assumes a tested exit status is
+# being deliberately handled). The few standalone commands that are
+# NOT inside such a condition (the backup and rollback cp calls) are
+# each explicitly guarded below with their own error handling, so nothing
+# in this script relies on -e being absent to behave safely.
  
 SSHD_CONFIG="/etc/ssh/sshd_config"
 BACKUP_PATH="/etc/ssh/sshd_config.bak"
@@ -60,7 +61,10 @@ fi
 # STEP 1: BACKUP
 # ---------------------------------------------------------------------
 echo "[*] Backing up ${SSHD_CONFIG}"
-cp -p "$SSHD_CONFIG" "$BACKUP_PATH"
+cp -p "$SSHD_CONFIG" "$BACKUP_PATH" || {
+  echo "ERROR: backup command failed, aborting before making any changes." >&2
+  exit 1
+}
 if [ ! -f "$BACKUP_PATH" ]; then
   echo "ERROR: backup failed, aborting before making any changes." >&2
   exit 1
@@ -194,16 +198,17 @@ if [ "$VALIDATION_OK" = true ]; then
   else
     echo "ERROR: sshd -t passed but the service failed to restart." >&2
     echo "[*] Restoring backup configuration..." >&2
-    cp -p "$BACKUP_PATH" "$SSHD_CONFIG"
+    cp -p "$BACKUP_PATH" "$SSHD_CONFIG" || echo "ERROR: restore itself failed; manually copy ${BACKUP_PATH} back." >&2
     systemctl restart "$SERVICE_NAME" || true
     echo "Backup restored. No hardening settings are active. Investigate before re-running." >&2
     exit 1
   fi
 else
   echo "[*] Configuration invalid. Restoring backup..." >&2
-  cp -p "$BACKUP_PATH" "$SSHD_CONFIG"
+  cp -p "$BACKUP_PATH" "$SSHD_CONFIG" || echo "ERROR: restore itself failed; manually copy ${BACKUP_PATH} back." >&2
   echo "Backup restored from ${BACKUP_PATH}. SSH service was not restarted; the" >&2
   echo "currently running sshd process is unaffected and continues using the" >&2
   echo "previous, unmodified configuration." >&2
   exit 1
 fi
+
