@@ -114,7 +114,7 @@ verify_log_activity() {
   local log_path="$1" facility="$2" marker="$3"
   logger -p "$facility" "$marker" 2>/dev/null || true
   sleep 1
-  if [ -f "$log_path" ] && grep -qF "$marker" "$log_path" 2>/dev/null; then
+  if [ -f "$log_path" ] && tail -n 20 "$log_path" 2>/dev/null | grep -qF "$marker"; then
     printf '    %-20s receiving events       [OK]\n' "$log_path:"
     return 0
   elif [ "$RSYSLOG_ACTIVE" != true ]; then
