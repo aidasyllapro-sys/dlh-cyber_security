@@ -76,7 +76,7 @@ json_escape() {
 }
  
 # ---------------------------------------------------------------------
-# PRE-CHECKS: verify every referenced script exists and is executable
+# PRE-CHECKS: verify every required script exists and is executable
 # ---------------------------------------------------------------------
 PRECHECK_OK=true
 MISSING_SCRIPTS=()
@@ -99,7 +99,7 @@ else
   for m in "${MISSING_SCRIPTS[@]}"; do
     echo "  missing: ${m}" >&2
   done
-  echo "Aborting before running any step." >&2
+  echo "One or more required scripts are missing. Aborting before running any step." >&2
   exit 1
 fi
  
