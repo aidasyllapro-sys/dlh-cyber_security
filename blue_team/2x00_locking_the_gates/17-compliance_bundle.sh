@@ -118,6 +118,15 @@ if [ "$VERIFIED_COUNT" -gt "$REMEDIATED_COUNT" ]; then
   VERIFIED_COUNT=$REMEDIATED_COUNT
 fi
  
+# Unresolved: controls this project attempted to remediate but whose
+# post-hardening validation (Task 15) did not confirm as passing --
+# distinct from a deviation (a deliberate, documented substitution);
+# an unresolved control is an attempted fix that still needs attention.
+UNRESOLVED_COUNT=$((REMEDIATED_COUNT - VERIFIED_COUNT))
+if [ "$UNRESOLVED_COUNT" -lt 0 ]; then
+  UNRESOLVED_COUNT=0
+fi
+ 
 # ---------------------------------------------------------------------
 # STEP 4: DEVIATIONS (controls in cis_profile.json with a disclosed
 # compensating-control substitution, per this project's own Task 1
@@ -213,6 +222,7 @@ cat > "$OUTPUT_FILE" <<EOF
   "controls_already_compliant_at_baseline": ${ALREADY_COMPLIANT},
   "controls_remediated": ${REMEDIATED_COUNT},
   "controls_verified": ${VERIFIED_COUNT},
+  "controls_unresolved": ${UNRESOLVED_COUNT},
   "deviations_count": ${DEVIATIONS_COUNT},
   "deviations": ${DEVIATIONS_JSON},
   "residual_lynis_findings": ${RESIDUAL_FINDINGS},
@@ -230,6 +240,7 @@ echo "Evidence files loaded: ${LOADED_COUNT}"
 echo "Controls selected: ${SELECTED_COUNT}"
 echo "Controls remediated: ${REMEDIATED_COUNT}"
 echo "Controls verified: ${VERIFIED_COUNT}"
+echo "Controls unresolved: ${UNRESOLVED_COUNT}"
 echo "Deviations documented: ${DEVIATIONS_COUNT}"
 echo "Overall compliance: ${COMPLIANCE_PCT}%"
 echo "Residual findings: ${RESIDUAL_FINDINGS}"
