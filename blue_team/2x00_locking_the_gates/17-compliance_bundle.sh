@@ -8,6 +8,8 @@
 # audit telemetry proof (Task 11), post-hardening validation (Task 15),
 # and the Lynis before/after delta (Task 16). This script reads only;
 # it makes no system changes and does not re-run any hardening step.
+# Reports selected, remediated, verified, and unresolved control counts,
+# documented deviations, and an overall compliance percentage.
 #
 # DESIGN NOTE, disclosed directly: "remediated" below means every
 # control that was NOT already compliant at baseline (gap_analysis.json
@@ -194,7 +196,8 @@ fi
 [ -z "$RESIDUAL_FINDINGS" ] && RESIDUAL_FINDINGS=0
  
 # ---------------------------------------------------------------------
-# STEP 6: COMPLIANCE PERCENTAGE
+# STEP 6: COMPLIANCE PERCENTAGE (verified controls as a percentage of
+# controls selected)
 # ---------------------------------------------------------------------
 if [ "$SELECTED_COUNT" -gt 0 ]; then
   COMPLIANCE_PCT=$(python3 -c "print(f'{(${VERIFIED_COUNT}/${SELECTED_COUNT})*100:.1f}')" 2>/dev/null || echo "0.0")
