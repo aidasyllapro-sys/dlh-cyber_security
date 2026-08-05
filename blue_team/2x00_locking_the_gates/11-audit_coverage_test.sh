@@ -31,9 +31,28 @@ if [ "$(id -u)" -ne 0 ]; then
   exit 1
 fi
  
+# Does not assume Task 10 already ran in this exact environment: if
+# auditd tools are missing, install them here rather than hard-exiting,
+# so this script is self-sufficient on any Debian/Ubuntu host.
 if ! command -v auditctl >/dev/null 2>&1 || ! command -v ausearch >/dev/null 2>&1; then
-  echo "ERROR: auditd tools not found. Run 10-auditd_config.sh first." >&2
-  exit 1
+  echo "[*] auditd tools not found, installing..."
+  apt-get install -y auditd audispd-plugins >/tmp/auditd_install.$$ 2>&1 || true
+  rm -f /tmp/auditd_install.$$
+  systemctl enable auditd >/dev/null 2>&1 || true
+  systemctl start auditd >/dev/null 2>&1 || true
+fi
+ 
+# Soft dependency from here on: if auditctl/ausearch are still missing
+# after the install attempt (e.g. no network in this environment), the
+# 6 tests below still run their safe commands and are still reported
+# and written to audit_validation.json, each explicitly marked MISSED
+# with a clear reason, rather than the whole script aborting and
+# producing no report at all.
+AUDITD_AVAILABLE=true
+if ! command -v auditctl >/dev/null 2>&1 || ! command -v ausearch >/dev/null 2>&1; then
+  echo "[*] auditd tools still unavailable; tests will run and be" >&2
+  echo "recorded, but capture verification cannot be performed." >&2
+  AUDITD_AVAILABLE=false
 fi
  
 # ---------------------------------------------------------------------
@@ -75,14 +94,16 @@ trap cleanup EXIT
 # ---------------------------------------------------------------------
 # SET UP TEMPORARY TEST-ONLY AUDIT RULES (tests 5 and 6)
 # ---------------------------------------------------------------------
-mkdir -p "$TEST_DIR"
+mkdir -p "$TEST_DIR" "$(dirname "$TEST_RULES_FILE")"
 {
   echo "## Temporary, test-only rules from 11-audit_coverage_test.sh"
   echo "## Removed automatically at the end of this script's run."
   echo "-w ${TEST_DIR} -p wa -k audit_test_write"
   echo "-w /etc/cron.d/ -p wa -k cron_test"
 } > "$TEST_RULES_FILE"
-augenrules --load >/dev/null 2>&1 || true
+if [ "$AUDITD_AVAILABLE" = true ]; then
+  augenrules --load >/dev/null 2>&1 || true
+fi
  
 # ---------------------------------------------------------------------
 # RUN A SINGLE TEST: execute a command, wait briefly, search the audit
@@ -93,19 +114,26 @@ run_test() {
   local ts status count excerpt
  
   ts=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-  sleep 1
-  local search_out
-  search_out=$(ausearch -ts recent -k "$key" 2>/dev/null || true)
-  count=$(printf '%s\n' "$search_out" | grep -oE 'audit\([0-9]+\.[0-9]+:[0-9]+\)' | sort -u | grep -c . || true)
  
-  if [ "$count" -gt 0 ]; then
-    status="CAPTURED"
-    CAPTURED_COUNT=$((CAPTURED_COUNT + 1))
-    excerpt=$(printf '%s\n' "$search_out" | grep -m1 '^type=SYSCALL' || printf '%s\n' "$search_out" | head -1)
+  if [ "$AUDITD_AVAILABLE" = true ]; then
+    sleep 1
+    local search_out
+    search_out=$(ausearch -ts recent -k "$key" 2>/dev/null || true)
+    count=$(printf '%s\n' "$search_out" | grep -oE 'audit\([0-9]+\.[0-9]+:[0-9]+\)' | sort -u | grep -c . || true)
+    if [ "$count" -gt 0 ]; then
+      status="CAPTURED"
+      CAPTURED_COUNT=$((CAPTURED_COUNT + 1))
+      excerpt=$(printf '%s\n' "$search_out" | grep -m1 '^type=SYSCALL' || printf '%s\n' "$search_out" | head -1)
+    else
+      status="MISSED"
+      MISSED_COUNT=$((MISSED_COUNT + 1))
+      excerpt="no matching event found for key ${key}"
+    fi
   else
+    count=0
     status="MISSED"
     MISSED_COUNT=$((MISSED_COUNT + 1))
-    excerpt="no matching event found for key ${key}"
+    excerpt="auditd/ausearch unavailable in this environment; command ran but capture could not be verified"
   fi
  
   printf '[%d/6] %-38s [%s]\n' "$index" "$label" "$status"
