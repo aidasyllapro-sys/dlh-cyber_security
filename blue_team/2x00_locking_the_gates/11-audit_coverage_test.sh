@@ -18,7 +18,7 @@ TEST_WRITE_FILE="${TEST_DIR}/coverage_test_file.txt"
 TEST_CRON_FILE="/etc/cron.d/meddefense-coverage-test"
 REPORT_FILE="./audit_validation.json"
  
-RESULTS=()   # one JSON object string per test, appended in order
+TEST_OUTCOMES=()   # one JSON object string per test, appended in order
 CAPTURED_COUNT=0
 MISSED_COUNT=0
  
@@ -138,7 +138,7 @@ run_test() {
  
   printf '[%d/6] %-38s [%s]\n' "$index" "$label" "$status"
  
-  RESULTS+=("{\"test_name\":\"$(json_escape "$label")\",\"expected_audit_key\":\"$(json_escape "$key")\",\"command_executed\":\"$(json_escape "$command_desc")\",\"timestamp\":\"${ts}\",\"capture_status\":\"${status}\",\"event_count\":${count},\"excerpt\":\"$(json_escape "$excerpt")\"}")
+  TEST_OUTCOMES+=("{\"test_name\":\"$(json_escape "$label")\",\"expected_audit_key\":\"$(json_escape "$key")\",\"command_executed\":\"$(json_escape "$command_desc")\",\"timestamp\":\"${ts}\",\"capture_status\":\"${status}\",\"event_count\":${count},\"excerpt\":\"$(json_escape "$excerpt")\"}")
 }
  
 # ---------------------------------------------------------------------
@@ -184,11 +184,11 @@ run_test 6 "cron configuration check" "cron_test" "create placeholder ${TEST_CRO
 # whether the temporary test artifacts still exist on disk)
 # ---------------------------------------------------------------------
 {
-  printf '{\n  "run_date": "%s",\n  "tests_executed": %d,\n  "captured": %d,\n  "missed": %d,\n  "results": [\n' \
-    "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" "${#RESULTS[@]}" "$CAPTURED_COUNT" "$MISSED_COUNT"
-  total=${#RESULTS[@]}
-  for i in "${!RESULTS[@]}"; do
-    printf '    %s' "${RESULTS[$i]}"
+  printf '{\n  "run_date": "%s",\n  "tests_executed": %d,\n  "captured": %d,\n  "missed": %d,\n  "test_outcomes": [\n' \
+    "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" "${#TEST_OUTCOMES[@]}" "$CAPTURED_COUNT" "$MISSED_COUNT"
+  total=${#TEST_OUTCOMES[@]}
+  for i in "${!TEST_OUTCOMES[@]}"; do
+    printf '    %s' "${TEST_OUTCOMES[$i]}"
     if [ "$i" -lt $((total - 1)) ]; then printf ',\n'; else printf '\n'; fi
   done
   printf '  ]\n}\n'
@@ -205,7 +205,7 @@ cleanup
 # ---------------------------------------------------------------------
 # SUMMARY
 # ---------------------------------------------------------------------
-echo "Tests executed: ${#RESULTS[@]}"
+echo "Tests executed: ${#TEST_OUTCOMES[@]}"
 echo "Captured: ${CAPTURED_COUNT}"
 echo "Missed: ${MISSED_COUNT}"
 echo "Report saved to: ${REPORT_FILE}"
