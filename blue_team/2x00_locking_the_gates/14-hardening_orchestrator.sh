@@ -76,7 +76,7 @@ json_escape() {
 }
  
 # ---------------------------------------------------------------------
-# PRE-CHECKS: every referenced script must exist and be executable
+# PRE-CHECKS: verify every referenced script exists and is executable
 # ---------------------------------------------------------------------
 PRECHECK_OK=true
 MISSING_SCRIPTS=()
@@ -85,7 +85,7 @@ for step in "${STEPS[@]}"; do
   path="${SCRIPT_DIR}/${step}"
   if [ ! -f "$path" ]; then
     PRECHECK_OK=false
-    MISSING_SCRIPTS+=("${step} (not found)")
+    MISSING_SCRIPTS+=("${step} (does not exist)")
   elif [ ! -x "$path" ]; then
     PRECHECK_OK=false
     MISSING_SCRIPTS+=("${step} (not executable)")
