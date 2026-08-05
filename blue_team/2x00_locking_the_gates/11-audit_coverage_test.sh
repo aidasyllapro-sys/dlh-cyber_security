@@ -2,34 +2,13 @@
 #
 # 11-audit_coverage_test.sh
 #
-# Goal: prove, with real, observed evidence rather than assumption,
-# that the 14 audit rules deployed in Task 10 actually capture the
-# security events MedDefense cares about at the kernel level.
-#
-# Context: this rebuilt version deliberately avoids the risky pattern
-# the original validator encouraged (real privilege-escalation
-# attempts, real credential access, uncontrolled system changes).
-# Every test below is a controlled, reversible, safe action: metadata
-# touches instead of real content reads/writes to sensitive files,
-# --version flags instead of real network downloads, and dedicated,
-# clearly-temporary test artifacts that are fully removed at the end.
-#
-# TEST-SCOPE AUDIT RULES, disclosed directly: tests 5 and 6 need audit
-# coverage that Task 10's 14 permanent MedDefense rules do not include
-# (a generic monitored test path, and cron-file visibility). Rather
-# than silently modifying Task 10's own rules file
-# (/etc/audit/rules.d/meddefense.rules), which this script does not
-# own, this script deploys its own separate, clearly-named temporary
-# rules file (/etc/audit/rules.d/meddefense-coverage-test.rules) for
-# the duration of the test, then deletes it and reloads auditd during
-# cleanup. Task 10's permanent rules are never touched, and the system
-# is left in exactly the audit state Task 10 configured, not this
-# script's temporary state.
-#
-# This script does not gate, block, or deny anything. It generates
-# activity, then reads back what auditd captured. It is idempotent:
-# re-running it creates and removes the same temporary artifacts each
-# time, leaving no accumulating state.
+# Proves the 14 audit rules from Task 10 actually capture events, via
+# 6 controlled, reversible tests: run a safe action, ausearch for the
+# expected key, record captured/missed, clean up every test artifact.
+# Tests 5-6 need coverage beyond Task 10's rules; this script adds its
+# own temporary rules file (meddefense-coverage-test.rules), never
+# touching Task 10's own rules file, and deletes it during cleanup.
+# Idempotent: reruns create/remove the same artifacts, no accumulation.
  
 set -euo pipefail
  
@@ -139,21 +118,15 @@ run_test() {
 # ---------------------------------------------------------------------
 echo "[*] Running audit telemetry coverage tests..."
  
-# 1. Privileged command execution through sudo. Invokes the real sudo
-# binary (already root here, so this triggers no actual privilege
-# change), which is exactly what Task 10's "-w /usr/bin/sudo -p x
-# -k priv_esc" watches for: execution of that binary path.
+# 1. sudo execution (already root, no real privilege change occurs)
 sudo -n /usr/bin/true >/dev/null 2>&1 || /usr/bin/sudo /usr/bin/true >/dev/null 2>&1 || true
 run_test 1 "sudo execution" "priv_esc" "sudo /usr/bin/true"
  
-# 2. Attempted access to /etc/shadow. touch updates file metadata
-# (an attribute-change syscall) without altering any password hash
-# content, the same safe method Task 10 uses for its own self-test.
+# 2. shadow metadata touch only, never reads/writes real hash content
 touch /etc/shadow 2>/dev/null || true
 run_test 2 "shadow access" "identity" "touch /etc/shadow"
  
-# 3. Execution of a suspicious download tool. --version performs no
-# actual network activity; only the binary's execution is tested.
+# 3. --version only, no real network activity
 if command -v curl >/dev/null 2>&1; then
   curl --version >/dev/null 2>&1 || true
   DL_CMD="curl --version"
@@ -165,23 +138,15 @@ else
 fi
 run_test 3 "suspicious download tool" "suspicious_download" "$DL_CMD"
  
-# 4. Read or metadata check of /etc/ssh/sshd_config. touch again, for
-# the same reason as test 2: exercises the "-p wa" watch without
-# depending on read access being separately monitored.
+# 4. sshd_config metadata touch only
 touch /etc/ssh/sshd_config 2>/dev/null || true
 run_test 4 "sshd config read" "sshd_config" "touch /etc/ssh/sshd_config"
  
-# 5. Controlled write to a temporary file under a monitored test path.
-# Uses this script's own temporary rule, added above, removed in
-# cleanup below.
+# 5. write under this script's own temporary monitored test path
 echo "coverage test $(date -u +%s)" > "$TEST_WRITE_FILE" 2>/dev/null || true
 run_test 5 "monitored test file write" "audit_test_write" "echo > ${TEST_WRITE_FILE}"
  
-# 6. Cron configuration inspection: a controlled, comment-only test
-# cron file (never a real, executable schedule line) is created then
-# immediately covered by cleanup at the end of this script, never left
-# behind and never capable of actually running anything since it
-# contains no valid cron schedule line.
+# 6. comment-only placeholder cron file, never a real schedule line
 echo "# meddefense audit coverage test placeholder, safe to ignore" > "$TEST_CRON_FILE" 2>/dev/null || true
 run_test 6 "cron configuration check" "cron_test" "create placeholder ${TEST_CRON_FILE}"
  
