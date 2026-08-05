@@ -5,8 +5,11 @@
 # Read-only, independent verification that every hardening control from
 # Tasks 4-13 is still in its expected state -- the recurring drift check
 # James Chen runs every Monday. This script makes NO changes to the
-# system, ever: only reads and reports PASS/FAIL for each required
-# control, then exits 0 if everything passed or 1 if anything failed.
+# system's configuration, ever: it only reads state and reports
+# PASS/FAIL for each control, both to the terminal and to
+# validation_results.json (its own evidence file, consumed by this
+# project's Task 17 compliance bundle), then exits 0 if everything
+# passed or 1 if anything failed.
  
 set -euo pipefail
 # Every risky read (sshd -T, grep against a config file, aa-status
@@ -17,24 +20,41 @@ set -euo pipefail
 # already treats correctly as a FAIL, not a crash. No unguarded risky
 # command sits directly in this script's own top-level flow.
  
+VALIDATION_JSON="./validation_results.json"
 PASS_COUNT=0
 FAIL_COUNT=0
+CHECK_ENTRIES=()
+ 
+# ---------------------------------------------------------------------
+# JSON ESCAPE HELPER
+# ---------------------------------------------------------------------
+json_escape() {
+  local s="$1"
+  s="${s//\\/\\\\}"
+  s="${s//\"/\\\"}"
+  s="${s//$'\n'/\\n}"
+  printf '%s' "$s"
+}
  
 # ---------------------------------------------------------------------
 # CHECK HELPER: compares an actual value to an expected one, prints
-# [PASS]/[FAIL] in the task's exact format, and tracks totals. Never
-# writes anything; every "actual" value passed in must already have
-# been read by the caller.
+# [PASS]/[FAIL] in the task's exact format, tracks totals, and records
+# a structured entry for validation_results.json. Never modifies
+# system state; every "actual" value passed in must already have been
+# read by the caller.
 # ---------------------------------------------------------------------
 check() {
-  local label="$1" actual="$2" expected="$3"
+  local label="$1" actual="$2" expected="$3" status
   if [ "$actual" = "$expected" ]; then
     echo "[PASS] ${label} = ${actual}"
+    status="PASS"
     PASS_COUNT=$((PASS_COUNT + 1))
   else
     echo "[FAIL] ${label} = ${actual} (expected: ${expected})"
+    status="FAIL"
     FAIL_COUNT=$((FAIL_COUNT + 1))
   fi
+  CHECK_ENTRIES+=("{\"control\":\"$(json_escape "$label")\",\"actual\":\"$(json_escape "$actual")\",\"expected\":\"$(json_escape "$expected")\",\"status\":\"${status}\"}")
 }
  
 # ---------------------------------------------------------------------
@@ -240,6 +260,19 @@ if command -v ufw >/dev/null 2>&1; then
 else
   check "UFW status" "not-installed" "active"
 fi
+ 
+# =======================================================================
+# WRITE validation_results.json
+# =======================================================================
+{
+  printf '{\n  "run_date": "%s",\n  "checks": [\n' "$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+  total=${#CHECK_ENTRIES[@]}
+  for i in "${!CHECK_ENTRIES[@]}"; do
+    printf '    %s' "${CHECK_ENTRIES[$i]}"
+    if [ "$i" -lt $((total - 1)) ]; then printf ',\n'; else printf '\n'; fi
+  done
+  printf '  ],\n  "passed": %d,\n  "failed": %d\n}\n' "$PASS_COUNT" "$FAIL_COUNT"
+} > "$VALIDATION_JSON"
  
 # =======================================================================
 # SUMMARY / EXIT CODE
