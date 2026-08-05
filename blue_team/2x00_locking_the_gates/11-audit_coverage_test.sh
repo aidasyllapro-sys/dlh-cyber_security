@@ -16,6 +16,7 @@ TEST_RULES_FILE="/etc/audit/rules.d/meddefense-coverage-test.rules"
 TEST_DIR="/var/lib/meddefense-audit-test"
 TEST_WRITE_FILE="${TEST_DIR}/coverage_test_file.txt"
 TEST_CRON_FILE="/etc/cron.d/meddefense-coverage-test"
+TEST_USER="meddefense-audit-test-user"
 REPORT_FILE="./audit_validation.json"
  
 TEST_OUTCOMES=()   # one JSON object string per test, appended in order
@@ -84,6 +85,9 @@ cleanup() {
   rm -f "$TEST_CRON_FILE" 2>/dev/null || true
   rm -f "$TEST_WRITE_FILE" 2>/dev/null || true
   rmdir "$TEST_DIR" 2>/dev/null || true
+  if id "$TEST_USER" >/dev/null 2>&1; then
+    userdel -f "$TEST_USER" >/dev/null 2>&1 || true
+  fi
   if [ -f "$TEST_RULES_FILE" ]; then
     rm -f "$TEST_RULES_FILE"
     augenrules --load >/dev/null 2>&1 || true
@@ -146,9 +150,13 @@ run_test() {
 # ---------------------------------------------------------------------
 echo "[*] Running audit telemetry coverage tests..."
  
-# 1. sudo execution (already root, no real privilege change occurs)
-sudo -n /usr/bin/true >/dev/null 2>&1 || /usr/bin/sudo /usr/bin/true >/dev/null 2>&1 || true
-run_test 1 "sudo execution" "priv_esc" "sudo /usr/bin/true"
+# 1. sudo execution, exercised via a dedicated, minimal, no-login test
+# account (no home dir, no shell) rather than just the current root
+# session, so the sudo/priv_esc rule is tested against a genuine
+# privilege-context switch. Removed via userdel in cleanup() above.
+useradd -M -s /usr/sbin/nologin "$TEST_USER" >/dev/null 2>&1 || true
+sudo -n -u "$TEST_USER" /usr/bin/true >/dev/null 2>&1 || /usr/bin/sudo -u "$TEST_USER" /usr/bin/true >/dev/null 2>&1 || true
+run_test 1 "sudo execution" "priv_esc" "sudo -u ${TEST_USER} /usr/bin/true"
  
 # 2. shadow metadata touch only, never reads/writes real hash content
 touch /etc/shadow 2>/dev/null || true
