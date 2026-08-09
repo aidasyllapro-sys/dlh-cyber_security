@@ -5,7 +5,7 @@
                   file creation, registry modification, DNS query) by triggering
                   each action deliberately and confirming the matching Sysmon
                   Event ID appears in the Operational log with the expected detail.
-    author      : Aïda Sylla
+    author      : <your name>
     date        : 2026-08-09
 #>
  
@@ -167,7 +167,12 @@ $Results.Add([PSCustomObject]@{ Test = "DNS query (EID 22)"; Pass = $pass5 })
 # ---------------------------------------------------------------------------
 Write-Host "[*] Cleanup: removing test artifacts..."
 try { if (Test-Path $testFile) { Remove-Item -Path $testFile -Force -ErrorAction Stop } } catch { Write-Warning "Cleanup of test file failed: $($_.Exception.Message)" }
-try { if (Test-Path $regPath) { Remove-Item -Path $regPath -Recurse -Force -ErrorAction Stop } } catch { Write-Warning "Cleanup of test registry key failed: $($_.Exception.Message)" }
+try {
+    if (Test-Path $regPath) {
+        try { Remove-ItemProperty -Path $regPath -Name $regValueName -Force -ErrorAction Stop } catch { Write-Warning "Cleanup of test registry value failed: $($_.Exception.Message)" }
+        Remove-Item -Path $regPath -Recurse -Force -ErrorAction Stop
+    }
+} catch { Write-Warning "Cleanup of test registry key failed: $($_.Exception.Message)" }
  
 # ---------------------------------------------------------------------------
 # Summary
