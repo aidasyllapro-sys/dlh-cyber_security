@@ -1,6 +1,6 @@
 <#
     Script name : 0-sysmon_validation.ps1
-    Purpose     : Validate that Sysmon is correctly capturing 5 categories of
+    purpose     : Validate that Sysmon is correctly capturing 5 categories of
                   security-relevant events (process creation, network connection,
                   file creation, registry modification, DNS query) by triggering
                   each action deliberately and confirming the matching Sysmon
