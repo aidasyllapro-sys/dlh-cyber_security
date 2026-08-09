@@ -1,0 +1,35 @@
+{
+  "snapshot_date": "2026-08-04T10:08:27Z",
+  "system_identification": {
+    "hostname": "billing-srv-01",
+    "os": "Ubuntu 22.04.5 LTS",
+    "kernel_version": "5.15.0-174-generic",
+    "uptime": "up 7 hours, 50 minutes"
+  },
+  "running_services": {
+    "count": 28,
+    "list": ["apache2.service","auditd.service","cron.service","dbus.service","getty@tty1.service","irqbalance.service","ModemManager.service","multipathd.service","mysql.service","networkd-dispatcher.service","open-vm-tools.service","packagekit.service","polkit.service","rsyslog.service","snapd.service","snmpd.service","ssh.service","systemd-journald.service","systemd-logind.service","systemd-networkd.service","systemd-resolved.service","systemd-timesyncd.service","systemd-udevd.service","udisks2.service","unattended-upgrades.service","upower.service","user@1000.service","vgauth.service"]
+  },
+  "open_ports": {
+    "count": 13,
+    "list": ["udp UNCONN 0      0      127.0.0.53%lo:53    0.0.0.0:*","udp UNCONN 0      0            0.0.0.0:68    0.0.0.0:*","udp UNCONN 0      0            0.0.0.0:68    0.0.0.0:*","udp UNCONN 0      0            0.0.0.0:68    0.0.0.0:*","udp UNCONN 0      0            0.0.0.0:68    0.0.0.0:*","udp UNCONN 0      0          127.0.0.1:161   0.0.0.0:*","udp UNCONN 0      0              [::1]:161      [::]:*","tcp LISTEN 0      4096   127.0.0.53%lo:53    0.0.0.0:*","tcp LISTEN 0      70         127.0.0.1:33060 0.0.0.0:*","tcp LISTEN 0      151          0.0.0.0:3306  0.0.0.0:*","tcp LISTEN 0      128          0.0.0.0:22    0.0.0.0:*","tcp LISTEN 0      128             [::]:22       [::]:*","tcp LISTEN 0      511                *:80          *:*"]
+  },
+  "suid_binaries": {
+    "count": 16,
+    "list": ["/usr/lib/dbus-1.0/dbus-daemon-launch-helper","/usr/lib/openssh/ssh-keysign","/usr/libexec/polkit-agent-helper-1","/usr/local/bin/oldtool","/usr/bin/umount","/usr/bin/gpasswd","/usr/bin/newgrp","/usr/bin/passwd","/usr/bin/su","/usr/bin/fusermount3","/usr/bin/chfn","/usr/bin/mount","/usr/bin/sudo","/usr/bin/chsh","/usr/bin/pkexec","/opt/legacy/setuid-app"]
+  },
+  "sgid_binaries": {
+    "count": 8,
+    "list": ["/usr/lib/x86_64-linux-gnu/utempter/utempter","/usr/sbin/pam_extrausers_chkpwd","/usr/sbin/unix_chkpwd","/usr/local/bin/shared","/usr/bin/crontab","/usr/bin/chage","/usr/bin/expiry","/usr/bin/ssh-agent"]
+  },
+  "world_writable_files": {
+    "count": 0,
+    "list": []
+  },
+  "sysctl_parameters": {"net.ipv4.tcp_syncookies":"1","net.ipv4.conf.all.accept_redirects":"0","net.ipv4.conf.all.send_redirects":"1","net.ipv4.ip_forward":"1","net.ipv4.icmp_echo_ignore_broadcasts":"1","kernel.randomize_va_space":"2","fs.suid_dumpable":"2"},
+  "ssh_configuration": {"permitrootlogin":"yes","passwordauthentication":"yes","pubkeyauthentication":"yes","protocol":"not-set","x11forwarding":"yes","maxauthtries":"6","clientaliveinterval":"0","allowusers":"not-set"},
+  "user_accounts": {
+    "real_users": ["analyst","medadmin","sysadmin","mike"],
+    "sudo_group_members": ["analyst","medadmin","sysadmin"]
+  }
+}

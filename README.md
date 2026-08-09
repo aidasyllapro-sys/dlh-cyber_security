@@ -1,6 +1,7 @@
-# MedDefense Health Systems: The Cryptographic Foundation
+MedDefense Health Systems: The Windows Fortress
 
-Where Project 1x03 designed the strategy and secured the budget, this project builds the layer every other control depends on: cryptography actually configured correctly. Starting from a full data protection inventory that found only 2 of 21 data-state combinations adequately protected, this project works hands-on with OpenSSL and LUKS to encrypt the patient database at rest, fix the patient portal's TLS configuration before its certificate expires, secure DICOM imaging traffic, harden Active Directory's authentication protocols, and properly design encrypted, key-isolated backup storage, connecting every cryptographic primitive learned directly back to a specific MedDefense system, vulnerability, or requirement identified in Projects 1x00 through 1x03.
+DC01, the Windows Server 2022 domain controller for meddefense.local, has never had a structured security reconnaissance performed against it. The Crimson Tide campaign profiled in 1x01 targets exactly this kind of environment: privileged accounts, service accounts, and Kerberos delegation paths that go unreviewed. Until the current state of the domain — accounts, groups, service accounts, GPOs, password and lockout policy, Kerberos encryption support, and privileged group membership — is documented, no targeted hardening decision can be justified.
 
-See `0-crypto_inventory.md` through `22-implementation_playbook.md` for the full deliverable set.
+This project produces no report. Every deliverable is a PowerShell script: read-only where reconnaissance is the goal, idempotent where configuration changes are made, and producing structured JSON output as audit evidence. Every script carries a header (name, purpose, author, date) and uses Set-StrictMode -Version Latest and $ErrorActionPreference = "Stop" for robust error handling.
 
+See 0-domain_baseline.ps1 onward for the full deliverable set.
