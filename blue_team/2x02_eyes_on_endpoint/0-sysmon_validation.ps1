@@ -26,7 +26,9 @@ try {
 }
  
 # ---------------------------------------------------------------------------
-# Generic Sysmon event lookup with short retry window (logging latency)
+# Generic Sysmon event lookup with short retry window (logging latency).
+# Each action records a timestamp before it runs; that timestamp is passed in
+# as StartTime and used to search Sysmon logs for a matching event afterward.
 # ---------------------------------------------------------------------------
 function Test-SysmonEvent {
     param(
