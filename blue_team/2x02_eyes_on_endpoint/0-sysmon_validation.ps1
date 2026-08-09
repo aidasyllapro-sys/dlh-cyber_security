@@ -1,12 +1,12 @@
 <#
-    Script name : 0-sysmon_validation.ps1
+    script name : 0-sysmon_validation.ps1
     purpose     : Validate that Sysmon is correctly capturing 5 categories of
                   security-relevant events (process creation, network connection,
                   file creation, registry modification, DNS query) by triggering
                   each action deliberately and confirming the matching Sysmon
                   Event ID appears in the Operational log with the expected detail.
-    Author      : Aïda Sylla
-    Date        : 2026-08-09
+    author      : Aïda Sylla
+    date        : 2026-08-09
 #>
  
 Set-StrictMode -Version Latest
