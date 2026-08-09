@@ -1,0 +1,160 @@
+{
+    "domain":  "meddefense.local",
+    "scan_date":  "2026-08-04T19:44:34Z",
+    "total_findings":  15,
+    "critical_count":  3,
+    "high_count":  3,
+    "medium_count":  9,
+    "findings":  [
+                     {
+                         "id":  "FIND-001",
+                         "severity":  "Critical",
+                         "category":  "Password Policy",
+                         "asset":  "meddefense.local",
+                         "evidence":  "Minimum password length is 7, target is 14",
+                         "risk":  "Short passwords are vulnerable to brute force and dictionary attacks",
+                         "recommended_remediation":  "Set minimum password length to 14 via Default Domain Policy or PSO",
+                         "mapped_task":  "2-password_policy"
+                     },
+                     {
+                         "id":  "FIND-002",
+                         "severity":  "Critical",
+                         "category":  "Password Policy",
+                         "asset":  "meddefense.local",
+                         "evidence":  "Password complexity is disabled",
+                         "risk":  "Users can set trivially simple passwords like \u0027password123\u0027",
+                         "recommended_remediation":  "Enable password complexity in Default Domain Policy",
+                         "mapped_task":  "2-password_policy"
+                     },
+                     {
+                         "id":  "FIND-003",
+                         "severity":  "High",
+                         "category":  "Password Policy",
+                         "asset":  "meddefense.local",
+                         "evidence":  "Password history count is 0, target is 24",
+                         "risk":  "Users can reuse old passwords, defeating rotation goals",
+                         "recommended_remediation":  "Set password history to 24 in Default Domain Policy",
+                         "mapped_task":  "2-password_policy"
+                     },
+                     {
+                         "id":  "FIND-004",
+                         "severity":  "Critical",
+                         "category":  "Lockout Policy",
+                         "asset":  "meddefense.local",
+                         "evidence":  "Account lockout threshold is 0 (unlimited attempts)",
+                         "risk":  "Brute force attacks against accounts have no rate limit",
+                         "recommended_remediation":  "Set lockout threshold to 5 attempts with 30 minute duration",
+                         "mapped_task":  "2-password_policy"
+                     },
+                     {
+                         "id":  "FIND-005",
+                         "severity":  "High",
+                         "category":  "Credential Management",
+                         "asset":  "Administrator",
+                         "evidence":  "Account: Administrator, State: Enabled, ServiceAccount: No, PasswordLastSet: 2026-04-16, MemberOf: Group Policy Creator Owners, Domain Admins, Enterprise Admins, Schema Admins, Administrators",
+                         "risk":  "Passwords that never expire increase exposure window if compromised",
+                         "recommended_remediation":  "Remove PasswordNeverExpires flag, implement managed service accounts or gMSAs where applicable",
+                         "mapped_task":  "3-service_accounts"
+                     },
+                     {
+                         "id":  "FIND-006",
+                         "severity":  "Medium",
+                         "category":  "Stale Objects",
+                         "asset":  "BILLING-SRV-01",
+                         "evidence":  "No authentication activity in 90+ days. LastLogon: No logon data, Enabled: True",
+                         "risk":  "Stale computer objects can be reused for lateral movement or persistence",
+                         "recommended_remediation":  "Disable and remove stale computer objects after validation",
+                         "mapped_task":  "7-stale_cleanup"
+                     },
+                     {
+                         "id":  "FIND-007",
+                         "severity":  "Medium",
+                         "category":  "Stale Objects",
+                         "asset":  "WEB-SRV-01",
+                         "evidence":  "No authentication activity in 90+ days. LastLogon: No logon data, Enabled: True",
+                         "risk":  "Stale computer objects can be reused for lateral movement or persistence",
+                         "recommended_remediation":  "Disable and remove stale computer objects after validation",
+                         "mapped_task":  "7-stale_cleanup"
+                     },
+                     {
+                         "id":  "FIND-008",
+                         "severity":  "Medium",
+                         "category":  "Stale Objects",
+                         "asset":  "LOG-SRV-01",
+                         "evidence":  "No authentication activity in 90+ days. LastLogon: No logon data, Enabled: True",
+                         "risk":  "Stale computer objects can be reused for lateral movement or persistence",
+                         "recommended_remediation":  "Disable and remove stale computer objects after validation",
+                         "mapped_task":  "7-stale_cleanup"
+                     },
+                     {
+                         "id":  "FIND-009",
+                         "severity":  "Medium",
+                         "category":  "Stale Objects",
+                         "asset":  "NURSE-WS-01",
+                         "evidence":  "No authentication activity in 90+ days. LastLogon: No logon data, Enabled: True",
+                         "risk":  "Stale computer objects can be reused for lateral movement or persistence",
+                         "recommended_remediation":  "Disable and remove stale computer objects after validation",
+                         "mapped_task":  "7-stale_cleanup"
+                     },
+                     {
+                         "id":  "FIND-010",
+                         "severity":  "High",
+                         "category":  "Audit Policy",
+                         "asset":  "meddefense.local",
+                         "evidence":  "Missing audit subcategories: Process Creation, Special Logon, Account Management, Object Access; Sysmon not installed; PowerShell Script Block Logging not enabled",
+                         "risk":  "Without comprehensive audit logging, attacker activity will go undetected",
+                         "recommended_remediation":  "Configure advanced audit policy via GPO for process creation, special logon, account management, and object access. Deploy Sysmon and enable PowerShell script block logging.",
+                         "mapped_task":  "6-audit_policy"
+                     },
+                     {
+                         "id":  "FIND-011",
+                         "severity":  "Medium",
+                         "category":  "Service Account Security",
+                         "asset":  "svc_backup",
+                         "evidence":  "Service account has interactive logon permission - should be restricted; Never logged on",
+                         "risk":  "Compromised service account could lead to domain-wide compromise",
+                         "recommended_remediation":  "Restrict delegation, remove from privileged groups, convert to gMSA, enforce AES-only Kerberos",
+                         "mapped_task":  "3-service_accounts"
+                     },
+                     {
+                         "id":  "FIND-012",
+                         "severity":  "Medium",
+                         "category":  "Service Account Security",
+                         "asset":  "svc_ehr",
+                         "evidence":  "Service account has interactive logon permission - should be restricted; Never logged on",
+                         "risk":  "Compromised service account could lead to domain-wide compromise",
+                         "recommended_remediation":  "Restrict delegation, remove from privileged groups, convert to gMSA, enforce AES-only Kerberos",
+                         "mapped_task":  "3-service_accounts"
+                     },
+                     {
+                         "id":  "FIND-013",
+                         "severity":  "Medium",
+                         "category":  "Service Account Security",
+                         "asset":  "svc_sql",
+                         "evidence":  "Service account has interactive logon permission - should be restricted; Never logged on",
+                         "risk":  "Compromised service account could lead to domain-wide compromise",
+                         "recommended_remediation":  "Restrict delegation, remove from privileged groups, convert to gMSA, enforce AES-only Kerberos",
+                         "mapped_task":  "3-service_accounts"
+                     },
+                     {
+                         "id":  "FIND-014",
+                         "severity":  "Medium",
+                         "category":  "GPO Posture",
+                         "asset":  "meddefense.local",
+                         "evidence":  "Only default GPOs are configured: Default Domain Policy, Default Domain Controllers Policy",
+                         "risk":  "No centralized security hardening is enforced through Group Policy",
+                         "recommended_remediation":  "Create dedicated MedDefense hardening GPOs for password, audit, Kerberos, and service account policies",
+                         "mapped_task":  "6-audit_policy"
+                     },
+                     {
+                         "id":  "FIND-015",
+                         "severity":  "Medium",
+                         "category":  "GPO Posture",
+                         "asset":  "meddefense.local",
+                         "evidence":  "No GPOs matching MedDefense hardening naming convention found",
+                         "risk":  "Security settings are not centrally managed or enforced",
+                         "recommended_remediation":  "Create MedDefense Hardening GPO with audit, Kerberos, and privilege restriction settings",
+                         "mapped_task":  "6-audit_policy"
+                     }
+                 ]
+}
