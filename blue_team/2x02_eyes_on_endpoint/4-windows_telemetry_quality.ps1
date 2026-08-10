@@ -56,7 +56,7 @@ function Get-EventLabel {
 }
  
 # ---------------------------------------------------------------------------
-# 1. Event distribution - count and % of total per (channel-aware) Event ID
+# 1. Event Distribution - count and % of total per (channel-aware) Event ID
 # ---------------------------------------------------------------------------
 $eventDistribution = $events | Group-Object { Get-EventLabel $_ } | Sort-Object Count -Descending | ForEach-Object {
     [PSCustomObject]@{
