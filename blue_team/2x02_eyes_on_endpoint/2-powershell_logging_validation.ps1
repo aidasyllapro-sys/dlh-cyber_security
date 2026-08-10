@@ -8,7 +8,7 @@ purpose     : Verify that PowerShell Script Block Logging (Event ID 4104),
               transcription session - by triggering each and checking the
               matching log entry, then reporting CAPTURED / MISSED with a
               detail-level note for each test.
-author      : Aïda Sylla
+author      : <your name>
 date        : 2026-08-09
 #>
  
@@ -74,7 +74,9 @@ function Write-TestLine {
 Write-Host "[*] Testing PowerShell logging coverage..."
  
 # ---------------------------------------------------------------------------
-# 1. Simple command (Event ID 4104)
+# 1. Simple command (Event ID 4104) - checks the ScriptBlockText field, the
+#    actual EventData field name Windows uses to store the executed code in
+#    a ScriptBlock logging event.
 # ---------------------------------------------------------------------------
 Write-Host "    [1/$TotalTests] Simple command (Get-Process)..."
 $ts1 = Get-Date
@@ -92,7 +94,9 @@ $encodedCommand = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetB
 Write-Host "          Input: -enc $encodedCommand"
 $ts2 = Get-Date
 try {
-    powershell.exe -NoProfile -EncodedCommand $encodedCommand | Out-Null
+    # -enc is the built-in alias for -EncodedCommand; the ScriptBlock logging
+    # event still records the decoded plaintext, not the Base64 that was typed.
+    powershell.exe -NoProfile -enc $encodedCommand | Out-Null
 } catch {
     Write-Warning "Encoded command execution failed: $($_.Exception.Message)"
 }
@@ -101,7 +105,8 @@ Write-TestLine -Detail "EID 4104: `"Write-Host 'Test'`" (decoded) captured" -Pas
 $Results.Add([PSCustomObject]@{ Test = "Encoded command (EID 4104)"; Pass = $r2.Captured })
  
 # ---------------------------------------------------------------------------
-# 3. Module import (Event ID 4103)
+# 3. Module import (Event ID 4103) - governed by the ModuleLogging provider,
+#    turned on via the EnableModuleLogging GPO setting.
 #    NOTE: 4103 coverage of Import-Module itself depends on whether the
 #    Module Logging GPO's "Module Names" list includes the module in
 #    question (or "*"). If ActiveDirectory is not installed on this host,
@@ -121,7 +126,10 @@ Write-TestLine -Detail "EID 4103: `"Import-Module ActiveDirectory`" captured" -P
 $Results.Add([PSCustomObject]@{ Test = "Module import (EID 4103)"; Pass = $r3.Captured })
  
 # ---------------------------------------------------------------------------
-# 4. Multi-line script block (Event ID 4104) - verify full block captured
+# 4. Multi-line script block (also called a multiline ScriptBlock) -
+#    Event ID 4104 - verify the full block is captured, not just its first
+#    line, by checking that both a start marker and the last line show up
+#    in the same ScriptBlockText.
 # ---------------------------------------------------------------------------
 Write-Host "    [4/$TotalTests] Multi-line script block..."
 $marker = "MULTILINE_TEST_$([guid]::NewGuid().ToString('N').Substring(0,8))"
@@ -160,17 +168,17 @@ $Results.Add([PSCustomObject]@{ Test = "Multi-line script block (EID 4104)"; Pas
 # ---------------------------------------------------------------------------
 Write-Host "    [5/$TotalTests] Transcription file..."
 $pass5 = $false
-$transcriptDetail = "C:\PSTranscripts\*.txt exists, session recorded"
+$transcriptDetail = "C:\PSTranscripts\*.txt exists, transcript file recorded for this session"
 if (Test-Path $TranscriptDir) {
     $recentTranscripts = Get-ChildItem -Path $TranscriptDir -Filter "*.txt" -File -ErrorAction SilentlyContinue |
         Where-Object { $_.LastWriteTime -ge $ScriptStartTime.AddMinutes(-30) }
     if ($recentTranscripts) {
         $pass5 = $true
     } else {
-        $transcriptDetail = "C:\PSTranscripts\*.txt not found for this session"
+        $transcriptDetail = "No transcript file found in C:\PSTranscripts\ for this session"
     }
 } else {
-    $transcriptDetail = "C:\PSTranscripts\ directory not found"
+    $transcriptDetail = "C:\PSTranscripts\ directory not found - transcript file cannot be verified"
 }
 Write-TestLine -Detail $transcriptDetail -Pass $pass5
 $Results.Add([PSCustomObject]@{ Test = "Transcription file"; Pass = $pass5 })
