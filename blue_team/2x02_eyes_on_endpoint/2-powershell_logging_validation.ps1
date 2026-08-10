@@ -8,7 +8,7 @@ purpose     : Verify that PowerShell Script Block Logging (Event ID 4104),
               transcription session - by triggering each and checking the
               matching log entry, then reporting CAPTURED / MISSED with a
               detail-level note for each test.
-author      : <your name>
+author      : Aïda Sylla
 date        : 2026-08-09
 #>
  
@@ -154,9 +154,24 @@ try {
 } catch {
     Write-Warning "Multi-line script block execution failed: $($_.Exception.Message)"
 }
-$r4 = Test-PSLogEvent -EventId 4104 -StartTime $ts4 -Match { param($m) $m -match [regex]::Escape($marker) -and $m -match 'Iteration 3' }
-Write-TestLine -Detail "EID 4104: Full block captured ($expectedLineCount lines)" -Pass $r4.Captured
-$Results.Add([PSCustomObject]@{ Test = "Multi-line script block (EID 4104)"; Pass = $r4.Captured })
+$rFull = Test-PSLogEvent -EventId 4104 -StartTime $ts4 -Match { param($m) $m -match [regex]::Escape($marker) -and $m -match 'Iteration 3' }
+if ($rFull.Captured) {
+    $detail4 = "Full block captured ($expectedLineCount lines)"
+    $pass4 = $true
+} else {
+    # Full block not confirmed - check if at least the start marker was
+    # logged, which would mean only a partial ScriptBlockText was captured
+    # (e.g. truncated by a length limit), rather than nothing at all.
+    $rPartial = Test-PSLogEvent -EventId 4104 -StartTime $ts4 -Match { param($m) $m -match [regex]::Escape($marker) } -TimeoutSec 3
+    if ($rPartial.Captured) {
+        $detail4 = "Partial block captured (start marker found, end of block missing - possible truncation)"
+    } else {
+        $detail4 = "Block not captured (neither start nor end marker found)"
+    }
+    $pass4 = $false
+}
+Write-TestLine -Detail "EID 4104: $detail4" -Pass $pass4
+$Results.Add([PSCustomObject]@{ Test = "Multi-line script block (EID 4104)"; Pass = $pass4 })
  
 # ---------------------------------------------------------------------------
 # 5. Transcription file for the session
