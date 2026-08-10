@@ -15,26 +15,32 @@ date        : 2026-08-09
  
 param(
     [int]$HoursBack = 24,
+    [datetime]$EndTime = (Get-Date),
     [string]$OutputPath = (Join-Path -Path $PSScriptRoot -ChildPath "windows_events_export.json")
 )
  
 Set-StrictMode -Version Latest
  
 $Hostname = $env:COMPUTERNAME
-$StartTime = (Get-Date).AddHours(-$HoursBack)
-$WindowEnd = Get-Date
+$StartTime = $EndTime.AddHours(-$HoursBack)
+$WindowEnd = $EndTime
  
 Write-Host "[*] Exporting Windows telemetry from last $HoursBack hours..."
  
 # ---------------------------------------------------------------------------
 # Pull events for one channel/log, tolerating "no events found" as an empty
 # result rather than a fatal error (a quiet log is a valid outcome, not a
-# broken query).
+# broken query). Both StartTime and EndTime bound the query so the window is
+# fully configurable, not just open-ended from StartTime onward.
 # ---------------------------------------------------------------------------
 function Get-ChannelEvents {
-    param([Parameter(Mandatory)][string]$LogName, [Parameter(Mandatory)][datetime]$StartTime)
+    param(
+        [Parameter(Mandatory)][string]$LogName,
+        [Parameter(Mandatory)][datetime]$StartTime,
+        [Parameter(Mandatory)][datetime]$EndTime
+    )
     try {
-        return @(Get-WinEvent -FilterHashtable @{ LogName = $LogName; StartTime = $StartTime } -ErrorAction Stop)
+        return @(Get-WinEvent -FilterHashtable @{ LogName = $LogName; StartTime = $StartTime; EndTime = $EndTime } -ErrorAction Stop)
     } catch {
         if ($_.Exception.Message -match "No events were found") {
             return @()
@@ -198,9 +204,9 @@ function ConvertTo-NormalizedRecord {
 # ---------------------------------------------------------------------------
 # Pull and normalize each channel
 # ---------------------------------------------------------------------------
-$securityEvents = Get-ChannelEvents -LogName "Security" -StartTime $StartTime
-$sysmonEvents = Get-ChannelEvents -LogName "Microsoft-Windows-Sysmon/Operational" -StartTime $StartTime
-$psEvents = Get-ChannelEvents -LogName "Microsoft-Windows-PowerShell/Operational" -StartTime $StartTime
+$securityEvents = Get-ChannelEvents -LogName "Security" -StartTime $StartTime -EndTime $EndTime
+$sysmonEvents = Get-ChannelEvents -LogName "Microsoft-Windows-Sysmon/Operational" -StartTime $StartTime -EndTime $EndTime
+$psEvents = Get-ChannelEvents -LogName "Microsoft-Windows-PowerShell/Operational" -StartTime $StartTime -EndTime $EndTime
  
 $allRecords = New-Object System.Collections.Generic.List[PSObject]
 foreach ($e in $securityEvents) { $allRecords.Add((ConvertTo-NormalizedRecord -Event $e -SourceType "security" -Channel "Security")) }
