@@ -140,7 +140,9 @@ $eventsWithAllCoreFields = @($events | Where-Object {
 }).Count
 $requiredFieldCompleteness = [math]::Round(($eventsWithAllCoreFields / $totalEvents) * 100, 2)
  
-# Process events: Sysmon EID 1 and Security 4688
+# Process events: Sysmon EID 1 and Security 4688 - both raw event types
+# expose a CommandLine field natively; this script's normalized JSON stores
+# it under enrichment.command_line.
 $processEvents = @($events | Where-Object {
     ($_.source_type -eq 'sysmon' -and $_.event_id -eq 1) -or ($_.source_type -eq 'security' -and $_.event_id -eq 4688)
 })
