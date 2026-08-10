@@ -149,14 +149,18 @@ $processEvents = @($events | Where-Object {
 $commandLineComplete = @($processEvents | Where-Object { Test-HasValue $_.enrichment.command_line }).Count
 $commandLineCompleteness = if ($processEvents.Count -gt 0) { [math]::Round(($commandLineComplete / $processEvents.Count) * 100, 2) } else { $null }
  
-# Logon events: Security 4624 and 4625
+# Logon events: Security 4624 and 4625 - both raw event types expose a
+# SourceIP-equivalent field (IpAddress) natively; this script's normalized
+# JSON stores it under enrichment.source_ip.
 $logonEvents = @($events | Where-Object {
     $_.source_type -eq 'security' -and ($_.event_id -eq 4624 -or $_.event_id -eq 4625)
 })
 $sourceIpComplete = @($logonEvents | Where-Object { Test-HasValue $_.enrichment.source_ip }).Count
 $sourceIpCompleteness = if ($logonEvents.Count -gt 0) { [math]::Round(($sourceIpComplete / $logonEvents.Count) * 100, 2) } else { $null }
  
-# PowerShell script block events: 4104
+# PowerShell ScriptBlock events: 4104 - the raw field is ScriptBlockText;
+# this script's normalized JSON stores the decoded value under
+# enrichment.decoded_script_block.
 $scriptBlockEvents = @($events | Where-Object { $_.source_type -eq 'powershell' -and $_.event_id -eq 4104 })
 $scriptBlockComplete = @($scriptBlockEvents | Where-Object { Test-HasValue $_.enrichment.decoded_script_block }).Count
 $scriptBlockCompleteness = if ($scriptBlockEvents.Count -gt 0) { [math]::Round(($scriptBlockComplete / $scriptBlockEvents.Count) * 100, 2) } else { $null }
