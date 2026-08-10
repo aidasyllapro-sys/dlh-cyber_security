@@ -131,7 +131,7 @@ $largestGapMinutes = if ($gaps.Count -gt 0) { ($gaps | Measure-Object -Property 
 Write-Host "Largest gap: $largestGapMinutes minutes"
  
 # ---------------------------------------------------------------------------
-# 5. Field completeness
+# 5. Field Completeness
 # ---------------------------------------------------------------------------
 $coreFields = @('timestamp', 'hostname', 'platform', 'source_type', 'channel', 'event_id', 'event_category', 'provider', 'raw_message')
 $eventsWithAllCoreFields = @($events | Where-Object {
