@@ -245,7 +245,8 @@ get_events_per_hour() {
 }
  
 # ---------------------------------------------------------------------------
-# Build and print the table
+# Build and print the table (Source, Path, Format, Rotation, Size,
+# events/hr, Relevance).
 # ---------------------------------------------------------------------------
 printf "%-18s %-28s %-9s %-13s %-8s %-10s %-9s\n" "Source" "Path" "Format" "Rotation" "Size" "Events/hr" "Relevance"
 printf "%-18s %-28s %-9s %-13s %-8s %-10s %-9s\n" "------" "----" "------" "--------" "----" "---------" "---------"
