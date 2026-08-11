@@ -102,24 +102,47 @@ echo "    ${#UPGRADABLE_PKGS[@]} upgradable packages found."
 #    "jammy-security/main"), and derives a short pocket label from it.
 # ---------------------------------------------------------------------------
 get_source_pocket() {
-    local pkg="$1" candidate="$2" policy suite_path suite
+    local pkg="$1" candidate="$2" policy suite_paths suite security_suite first_suite
     policy="$(apt-cache policy "${pkg}" 2>/dev/null || true)"
     [[ -z "${policy}" ]] && { echo "unknown"; return; }
  
-    suite_path="$(awk -v cand="${candidate}" '
+    # A candidate version can be listed under MORE THAN ONE source line at
+    # once (e.g. simultaneously in jammy-updates and jammy-security, same
+    # version) - scan every source line belonging to the candidate's block
+    # (stops at the next version-table entry, i.e. a line starting with a
+    # version token followed by a priority number) rather than just the
+    # first one, and prefer a *-security suite if any of them is one.
+    suite_paths="$(awk -v cand="${candidate}" '
         $1 == cand { found=1; next }
-        found && /http/ { for (i=1;i<=NF;i++) if ($i !~ /^https?:/ && $i ~ /\//) { print $i; exit } }
+        found && /^[[:space:]]*(\*\*\*[[:space:]]+)?[^[:space:]]+[[:space:]]+[0-9]+[[:space:]]*$/ { found=0 }
+        found && /http/ {
+            for (i=1;i<=NF;i++) {
+                if ($i !~ /^https?:/ && $i ~ /\//) { print $i }
+            }
+        }
     ' <<< "${policy}")"
  
-    if [[ -z "${suite_path}" ]]; then
+    if [[ -z "${suite_paths}" ]]; then
         echo "unknown"
         return
     fi
  
-    # suite_path looks like "jammy-security/main" - keep only the suite
-    # (codename-pocket) segment before the first slash.
-    suite="${suite_path%%/*}"
-    echo "${suite}"
+    security_suite=""
+    first_suite=""
+    while IFS= read -r suite_path; do
+        suite="${suite_path%%/*}"
+        [[ -z "${first_suite}" ]] && first_suite="${suite}"
+        if [[ "${suite}" == *-security ]]; then
+            security_suite="${suite}"
+            break
+        fi
+    done <<< "${suite_paths}"
+ 
+    if [[ -n "${security_suite}" ]]; then
+        echo "${security_suite}"
+    else
+        echo "${first_suite}"
+    fi
 }
  
 # ---------------------------------------------------------------------------
