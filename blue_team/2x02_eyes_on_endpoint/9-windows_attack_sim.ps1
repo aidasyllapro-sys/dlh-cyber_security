@@ -78,8 +78,8 @@ $ts1 = Get-Iso8601Utc
 Write-ActionLine -Index 1 -Total $TotalActions -Label "Creating local user '$TestUserName'" -Timestamp $ts1
 Add-GroundTruthEntry -ActionNumber 1 -Description "Create local user account '$TestUserName'" -Timestamp $ts1 `
     -MitreTechnique "T1136.001 - Create Account: Local Account" `
-    -SysmonEventId "1 (Process Creation - host process for the account-creation cmdlet)" `
-    -SecurityEventId "4720 (A user account was created)"
+    -SysmonEventId "Event ID 1 (Process Creation - host process for the account-creation cmdlet)" `
+    -SecurityEventId "Event ID 4720 (A user account was created)"
  
 # ---------------------------------------------------------------------------
 # 2. Add the user to the Administrators group
@@ -93,8 +93,8 @@ $ts2 = Get-Iso8601Utc
 Write-ActionLine -Index 2 -Total $TotalActions -Label "Adding to Administrators group" -Timestamp $ts2
 Add-GroundTruthEntry -ActionNumber 2 -Description "Add '$TestUserName' to the local Administrators group" -Timestamp $ts2 `
     -MitreTechnique "T1098 - Account Manipulation" `
-    -SysmonEventId "1 (Process Creation - host process for the group-membership cmdlet)" `
-    -SecurityEventId "4732 (A member was added to a security-enabled local group)"
+    -SysmonEventId "Event ID 1 (Process Creation - host process for the group-membership cmdlet)" `
+    -SecurityEventId "Event ID 4732 (A member was added to a security-enabled local group)"
  
 # ---------------------------------------------------------------------------
 # 3. Run an encoded PowerShell command (harmless payload)
@@ -110,8 +110,8 @@ $ts3 = Get-Iso8601Utc
 Write-ActionLine -Index 3 -Total $TotalActions -Label "Running encoded PowerShell" -Timestamp $ts3
 Add-GroundTruthEntry -ActionNumber 3 -Description "Run encoded PowerShell command (decoded payload: $plainPayload)" -Timestamp $ts3 `
     -MitreTechnique "T1059.001 - Command and Scripting Interpreter: PowerShell" `
-    -SysmonEventId "1 (Process Creation - powershell.exe with -enc argument)" `
-    -SecurityEventId "4688 (A new process has been created, if process creation auditing with command-line logging is enabled)" `
+    -SysmonEventId "Event ID 1 (Process Creation - powershell.exe with -enc argument)" `
+    -SecurityEventId "Event ID 4688 (A new process has been created, if process creation auditing with command-line logging is enabled)" `
     -OtherDetectionSource "PowerShell Operational EID 4104 (Script Block Logging - captures decoded content)"
  
 # ---------------------------------------------------------------------------
@@ -126,8 +126,8 @@ $ts4 = Get-Iso8601Utc
 Write-ActionLine -Index 4 -Total $TotalActions -Label "Creating scheduled task" -Timestamp $ts4
 Add-GroundTruthEntry -ActionNumber 4 -Description "Create scheduled task '$TaskName' for persistence" -Timestamp $ts4 `
     -MitreTechnique "T1053.005 - Scheduled Task/Job: Scheduled Task" `
-    -SysmonEventId "1 (Process Creation - schtasks.exe)" `
-    -SecurityEventId "4698 (A scheduled task was created)"
+    -SysmonEventId "Event ID 1 (Process Creation - schtasks.exe)" `
+    -SecurityEventId "Event ID 4698 (A scheduled task was created)"
  
 # ---------------------------------------------------------------------------
 # 5. Initiate an outbound network connection
@@ -141,8 +141,8 @@ $ts5 = Get-Iso8601Utc
 Write-ActionLine -Index 5 -Total $TotalActions -Label "Outbound network connection" -Timestamp $ts5
 Add-GroundTruthEntry -ActionNumber 5 -Description "Initiate outbound TCP connection to 8.8.8.8:443" -Timestamp $ts5 `
     -MitreTechnique "T1071 - Application Layer Protocol" `
-    -SysmonEventId "3 (Network Connection)" `
-    -SecurityEventId "5156 (Windows Filtering Platform permitted a connection - only if advanced Filtering Platform Connection auditing is enabled)"
+    -SysmonEventId "Event ID 3 (Network Connection)" `
+    -SecurityEventId "Event ID 5156 (Windows Filtering Platform permitted a connection - only if advanced Filtering Platform Connection auditing is enabled)"
  
 # ---------------------------------------------------------------------------
 # 6. Drop a file in the Startup directory
@@ -157,8 +157,8 @@ $ts6 = Get-Iso8601Utc
 Write-ActionLine -Index 6 -Total $TotalActions -Label "Dropping file in Startup" -Timestamp $ts6
 Add-GroundTruthEntry -ActionNumber 6 -Description "Drop file '$StartupFile' in the all-users Startup folder" -Timestamp $ts6 `
     -MitreTechnique "T1547.001 - Boot or Logon Autostart Execution: Registry Run Keys / Startup Folder" `
-    -SysmonEventId "11 (File Create)" `
-    -SecurityEventId "4663 (An attempt was made to access an object - only if object access auditing is enabled on this folder)"
+    -SysmonEventId "Event ID 11 (File Create)" `
+    -SecurityEventId "Event ID 4663 (An attempt was made to access an object - only if object access auditing is enabled on this folder)"
  
 # ---------------------------------------------------------------------------
 # Cleanup
