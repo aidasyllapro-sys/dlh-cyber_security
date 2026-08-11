@@ -78,7 +78,7 @@ ts1="$(iso8601_utc)"
 print_action_line 1 "${TOTAL_ACTIONS}" "Creating user ${TEST_USER}" "${ts1}"
 add_entry 1 "Create local user account '${TEST_USER}'" "${ts1}" \
     "T1136.001 - Create Account: Local Account" \
-    "" \
+    "identity" \
     "auth.log (useradd entry) / /etc/passwd, /etc/shadow modification"
  
 # ---------------------------------------------------------------------------
@@ -156,8 +156,8 @@ ts6="$(iso8601_utc)"
 print_action_line 6 "${TOTAL_ACTIONS}" "Accessing /etc/shadow" "${ts6}"
 add_entry 6 "Read /etc/shadow" "${ts6}" \
     "T1003.008 - OS Credential Dumping: /etc/passwd and /etc/shadow" \
-    "" \
-    "auditd identity-file watch rule from the 2x00 baseline (exact -k tag depends on your billing-srv-01 config, not part of this module's new rules)"
+    "identity" \
+    "auditd identity-file watch rule from the 2x00 baseline - assumed key name 'identity' based on Task 12's expected output; verify against your actual meddefense.rules on billing-srv-01"
  
 # ---------------------------------------------------------------------------
 # Cleanup
