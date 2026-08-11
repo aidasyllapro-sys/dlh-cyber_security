@@ -175,7 +175,9 @@ try {
 }
  
 try {
-    schtasks /delete /tn $TaskName /f | Out-Null
+    if (Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue) {
+        Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false -ErrorAction Stop
+    }
 } catch {
     $cleanupIssues.Add("scheduled task removal failed: $($_.Exception.Message)")
 }
