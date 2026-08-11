@@ -67,12 +67,16 @@ action_count="$(echo "${GROUND_TRUTH_RAW}" | grep -oP '"action_number":\K[0-9]+'
 echo "[*] Loading ground truth (${action_count} actions)..."
 echo "[*] Searching telemetry..."
  
-# Action 1 ("Create user") and Action 6 ("Access /etc/shadow") are expected
-# to be tagged with the auditd key "identity" in the ground truth, per the
-# 2x00 baseline rule watching identity files (/etc/passwd, /etc/shadow,
-# /etc/group) - this script reads whatever key the ground truth actually
-# provides rather than hardcoding "identity", so it stays correct if your
-# meddefense.rules uses a different tag.
+# Expected auditd keys per action, per the ground truth 11-linux_attack_sim.sh
+# produces (this script reads whatever key the ground truth actually
+# provides rather than hardcoding any of these, so it stays correct if your
+# meddefense.rules uses different tags):
+#   Action 1 (Create user)         -> identity     (2x00 baseline)
+#   Action 2 (Modify sudoers)      -> sudoers       (2x02 Task 5)
+#   Action 3 (Execute from /tmp)   -> process_exec  (2x02 Task 5)
+#   Action 4 (Reverse shell)       -> network_connect (2x02 Task 5)
+#   Action 5 (Cron persistence)    -> cron_persist  (2x02 Task 5)
+#   Action 6 (Access /etc/shadow)  -> identity      (2x00 baseline)
 declare -A ACTION_LABELS=(
     [1]="Create user"
     [2]="Modify sudoers"
