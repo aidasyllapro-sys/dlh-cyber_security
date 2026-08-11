@@ -67,6 +67,12 @@ action_count="$(echo "${GROUND_TRUTH_RAW}" | grep -oP '"action_number":\K[0-9]+'
 echo "[*] Loading ground truth (${action_count} actions)..."
 echo "[*] Searching telemetry..."
  
+# Action 1 ("Create user") and Action 6 ("Access /etc/shadow") are expected
+# to be tagged with the auditd key "identity" in the ground truth, per the
+# 2x00 baseline rule watching identity files (/etc/passwd, /etc/shadow,
+# /etc/group) - this script reads whatever key the ground truth actually
+# provides rather than hardcoding "identity", so it stays correct if your
+# meddefense.rules uses a different tag.
 declare -A ACTION_LABELS=(
     [1]="Create user"
     [2]="Modify sudoers"
