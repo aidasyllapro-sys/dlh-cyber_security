@@ -5,12 +5,13 @@
 #               and assess its quality using the same standard applied to
 #               the Windows export: event distribution (per category and
 #               per source type), time coverage (events per hour, hours
-#               with/without events), gap detection (periods over 30
-#               minutes with no events), field completeness (core fields,
-#               execve command line, SSH source IP/user, auditd file path),
-#               and a weighted 0-100 quality score with a good / acceptable
-#               / poor assessment. Uses jq for all JSON parsing. Writes the
-#               full report to linux_telemetry_quality.json.
+#               with/without events), gap detection (any period with no
+#               events longer than 30 minutes), field completeness (core
+#               fields, execve command line, SSH source IP/user, auditd
+#               file path), and a weighted 0-100 quality score with a good
+#               / acceptable / poor assessment. Uses jq for all JSON
+#               parsing. Writes the full report to
+#               linux_telemetry_quality.json.
 # author      : Aïda Sylla
 # date        : 2026-08-09
  
