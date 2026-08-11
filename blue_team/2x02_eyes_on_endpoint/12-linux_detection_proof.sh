@@ -168,9 +168,10 @@ for i in $(seq 1 6); do
             display_action=""
             [[ "${first_row_for_action}" -eq 1 ]] && display_action="${label}"
             first_row_for_action=0
+            auditd_key_fields="$(echo "${auditd_output}" | head -1 | cut -c1-200)"
             TABLE_LINES+=("$(printf '%-25s %-14s %-16s %-9s %-10s' "${display_action}" "auditd" "${auditd_key}" "Full" "[CAPTURED]")")
-            MATRIX_ROWS_JSON+=("$(printf '{"action_number":%s,"action":"%s","source":"auditd","key":"%s","detail":"Full","status":"CAPTURED"}' \
-                "${i}" "$(json_escape "${label}")" "$(json_escape "${auditd_key}")")")
+            MATRIX_ROWS_JSON+=("$(printf '{"action_number":%s,"action":"%s","source":"auditd","key":"%s","detail":"Full","status":"CAPTURED","key_fields":"%s"}' \
+                "${i}" "$(json_escape "${label}")" "$(json_escape "${auditd_key}")" "$(json_escape "${auditd_key_fields}")")")
         fi
     fi
  
@@ -183,8 +184,8 @@ for i in $(seq 1 6); do
             [[ "${first_row_for_action}" -eq 1 ]] && display_action="${label}"
             first_row_for_action=0
             TABLE_LINES+=("$(printf '%-25s %-14s %-16s %-9s %-10s' "${display_action}" "auth.log" "useradd" "Full" "[CAPTURED]")")
-            MATRIX_ROWS_JSON+=("$(printf '{"action_number":%s,"action":"%s","source":"auth.log","key":"useradd","detail":"Full","status":"CAPTURED"}' \
-                "${i}" "$(json_escape "${label}")")")
+            MATRIX_ROWS_JSON+=("$(printf '{"action_number":%s,"action":"%s","source":"auth.log","key":"useradd","detail":"Full","status":"CAPTURED","key_fields":"%s"}' \
+                "${i}" "$(json_escape "${label}")" "$(json_escape "$(echo "${auth_line}" | cut -c1-200)")")")
         fi
     fi
  
@@ -197,14 +198,14 @@ for i in $(seq 1 6); do
             [[ "${first_row_for_action}" -eq 1 ]] && display_action="${label}"
             first_row_for_action=0
             TABLE_LINES+=("$(printf '%-25s %-14s %-16s %-9s %-10s' "${display_action}" "syslog" "cron" "Partial" "[CAPTURED]")")
-            MATRIX_ROWS_JSON+=("$(printf '{"action_number":%s,"action":"%s","source":"syslog","key":"cron","detail":"Partial","status":"CAPTURED"}' \
-                "${i}" "$(json_escape "${label}")")")
+            MATRIX_ROWS_JSON+=("$(printf '{"action_number":%s,"action":"%s","source":"syslog","key":"cron","detail":"Partial","status":"CAPTURED","key_fields":"%s"}' \
+                "${i}" "$(json_escape "${label}")" "$(json_escape "$(echo "${syslog_line}" | cut -c1-200)")")")
         fi
     fi
  
     if [[ "${sources_captured}" -eq 0 ]]; then
         TABLE_LINES+=("$(printf '%-25s %-14s %-16s %-9s %-10s' "${label}" "-" "-" "Missed" "[MISSED]")")
-        MATRIX_ROWS_JSON+=("$(printf '{"action_number":%s,"action":"%s","source":"-","key":"-","detail":"Missed","status":"MISSED"}' \
+        MATRIX_ROWS_JSON+=("$(printf '{"action_number":%s,"action":"%s","source":"-","key":"-","detail":"Missed","status":"MISSED","key_fields":""}' \
             "${i}" "$(json_escape "${label}")")")
     else
         captured_action_count=$((captured_action_count + 1))
