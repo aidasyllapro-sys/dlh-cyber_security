@@ -12,12 +12,14 @@
 # author      : Aïda Sylla
 # date        : 2026-08-09
  
-set -uo pipefail
-# NOTE: deliberately not using -e here. Every per-source lookup below
-# (permission checks, logrotate parsing, timestamp parsing on files whose
-# exact format can vary by distro/version) is expected to fail gracefully
-# for that one source without aborting the whole inventory; each failure
-# path is handled explicitly and falls back to "N/A" rather than crashing.
+set -euo pipefail
+# Every per-source lookup below (permission checks, logrotate parsing,
+# timestamp parsing on files whose exact format can vary by distro/version)
+# is expected to fail gracefully for that one source without aborting the
+# whole inventory. With -e active, every command that can legitimately
+# return non-zero as part of normal control flow (a grep with no match, a
+# date string that doesn't parse) is explicitly guarded with "|| true" or
+# an if/case check, rather than left to propagate.
  
 echo "[*] Discovering log sources..."
  
@@ -122,6 +124,11 @@ get_rotation_days() {
                     matched=0
                     for glob in ${header}; do
                         [[ -z "${glob}" ]] && continue
+                        # shellcheck disable=SC2254
+                        # Intentionally unquoted: ${glob} must be interpreted
+                        # as a shell glob pattern here (logrotate stanzas
+                        # commonly use paths like /var/log/*.log), not
+                        # matched as a literal string.
                         case "${target}" in
                             ${glob}) matched=1 ;;
                         esac
@@ -141,7 +148,9 @@ get_rotation_days() {
                     fi
                     header=""
                 else
-                    [[ "${clean}" == *rotate* ]] && rotate_n="$(echo "${clean}" | grep -oE '[0-9]+' | head -1)"
+                    if [[ "${clean}" == *rotate* ]]; then
+                        rotate_n="$(echo "${clean}" | grep -oE '[0-9]+' | head -1 || true)"
+                    fi
                     [[ "${clean}" == *daily* ]] && freq="daily"
                     [[ "${clean}" == *weekly* ]] && freq="weekly"
                     [[ "${clean}" == *monthly* ]] && freq="monthly"
@@ -160,7 +169,7 @@ get_rotation_days() {
 get_file_size() {
     local path="$1"
     if [[ -r "${path}" ]]; then
-        du -h "${path}" 2>/dev/null | cut -f1
+        du -h "${path}" 2>/dev/null | cut -f1 || true
     else
         echo "N/A"
     fi
@@ -182,19 +191,19 @@ epoch_from_syslog_line() {
  
 epoch_from_audit_line() {
     local line="$1"
-    echo "${line}" | grep -oP 'msg=audit\(\K[0-9]+' | head -1
+    echo "${line}" | grep -oP 'msg=audit\(\K[0-9]+' | head -1 || true
 }
  
 epoch_from_combined_line() {
     local line="$1" ts
-    ts="$(echo "${line}" | grep -oP '(?<=\[)[0-9]{2}/[A-Za-z]{3}/[0-9]{4}:[0-9]{2}:[0-9]{2}:[0-9]{2}(?= )' | head -1)"
+    ts="$(echo "${line}" | grep -oP '(?<=\[)[0-9]{2}/[A-Za-z]{3}/[0-9]{4}:[0-9]{2}:[0-9]{2}:[0-9]{2}(?= )' | head -1 || true)"
     [[ -z "${ts}" ]] && return 1
     date -d "$(echo "${ts}" | sed 's#/# #; s#/# #; s#:# #')" +%s 2>/dev/null
 }
  
 epoch_from_iso_line() {
     local line="$1" ts
-    ts="$(echo "${line}" | grep -oE '^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}' | head -1)"
+    ts="$(echo "${line}" | grep -oE '^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}' | head -1 || true)"
     [[ -z "${ts}" ]] && return 1
     date -d "${ts}" +%s 2>/dev/null
 }
@@ -214,10 +223,10 @@ get_events_per_hour() {
     last_line="$(tail -n 1 "${path}" 2>/dev/null)"
  
     case "${format}" in
-        syslog)   first_epoch="$(epoch_from_syslog_line "${first_line}")"; last_epoch="$(epoch_from_syslog_line "${last_line}")" ;;
-        audit)    first_epoch="$(epoch_from_audit_line "${first_line}")"; last_epoch="$(epoch_from_audit_line "${last_line}")" ;;
-        combined) first_epoch="$(epoch_from_combined_line "${first_line}")"; last_epoch="$(epoch_from_combined_line "${last_line}")" ;;
-        *)        first_epoch="$(epoch_from_iso_line "${first_line}")"; last_epoch="$(epoch_from_iso_line "${last_line}")" ;;
+        syslog)   first_epoch="$(epoch_from_syslog_line "${first_line}" || true)"; last_epoch="$(epoch_from_syslog_line "${last_line}" || true)" ;;
+        audit)    first_epoch="$(epoch_from_audit_line "${first_line}" || true)"; last_epoch="$(epoch_from_audit_line "${last_line}" || true)" ;;
+        combined) first_epoch="$(epoch_from_combined_line "${first_line}" || true)"; last_epoch="$(epoch_from_combined_line "${last_line}" || true)" ;;
+        *)        first_epoch="$(epoch_from_iso_line "${first_line}" || true)"; last_epoch="$(epoch_from_iso_line "${last_line}" || true)" ;;
     esac
  
     if [[ -z "${first_epoch:-}" || -z "${last_epoch:-}" ]]; then
@@ -249,7 +258,7 @@ for name in "${SOURCE_ORDER[@]}"; do
     if [[ -e "${path}" ]]; then
         format="${SOURCE_FORMAT[${name}]}"
         rotation="$(get_rotation_days "${path}")"
-        size="$(get_file_size "${path}")"
+        size="$(get_file_size "${path}" || true)"
         rate="$(get_events_per_hour "${path}" "${format}")"
         relevance="${SOURCE_RELEVANCE[${name}]}"
         printf "%-18s %-28s %-9s %-13s %-8s %-10s %-9s\n" "${name}" "${path}" "${format}" "${rotation}" "${size}" "${rate}" "${relevance}"
@@ -266,7 +275,7 @@ for name in "${EXTRA_ORDER[@]}"; do
     if [[ -e "${path}" ]]; then
         format="${EXTRA_FORMAT[${name}]}"
         rotation="$(get_rotation_days "${path}")"
-        size="$(get_file_size "${path}")"
+        size="$(get_file_size "${path}" || true)"
         rate="$(get_events_per_hour "${path}" "${format}")"
         relevance="${EXTRA_RELEVANCE[${name}]}"
         extra_rows="${extra_rows}$(printf "%-18s %-28s %-9s %-13s %-8s %-10s %-9s\n" "${name}" "${path}" "${format}" "${rotation}" "${size}" "${rate}" "${relevance}")\n"
@@ -291,4 +300,3 @@ fi
  
 echo ""
 echo "Sources found: ${found_count} | Missing: ${#missing_sources[@]}"
-
