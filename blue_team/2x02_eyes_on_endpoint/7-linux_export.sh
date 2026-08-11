@@ -175,13 +175,20 @@ echo "    SSH logins: ${ssh_count} | sudo: ${sudo_count} | su: ${su_count} | PAM
  
 # ---------------------------------------------------------------------------
 # 2. audit.log
-#    NOTE: a real auditd event is often SEVERAL lines (SYSCALL, PATH,
-#    EXECVE, PROCTITLE...) sharing one msg=audit(id). This script
-#    categorizes line-by-line by record type rather than correlating full
-#    multi-line events - a deliberate scope simplification for this
-#    exercise. execve is read from EXECVE records, file access from PATH
-#    records, network activity from SOCKADDR records; everything else in
-#    audit.log falls into "other".
+#    NOTE: this script reads /var/log/audit/audit.log directly rather than
+#    shelling out to ausearch per event - more efficient for a bulk export
+#    over a whole time window. ausearch (e.g. `ausearch -ts <start>`) is a
+#    valid alternative approach and is what the earlier validation tasks in
+#    this module use for targeted, single-event lookups; for a full-window
+#    bulk export, reading the raw log directly avoids one ausearch process
+#    per matched record.
+#    a real auditd event is often SEVERAL lines (SYSCALL, PATH, EXECVE,
+#    PROCTITLE...) sharing one msg=audit(id). This script categorizes
+#    line-by-line by record type rather than correlating full multi-line
+#    events - a deliberate scope simplification for this exercise. execve
+#    is read from EXECVE records, file access from PATH records, network
+#    activity from SOCKADDR records; everything else in audit.log falls
+#    into "other".
 # ---------------------------------------------------------------------------
 execve_count=0
 file_access_count=0
