@@ -67,8 +67,9 @@ ground_truth_total="$(jq '.total_actions' "${GROUND_TRUTH_PATH}")"
 echo "Ground truth actions: ${ground_truth_total}"
  
 # ---------------------------------------------------------------------------
-# Detection matrix summary (combined Windows + Linux): captured, missed,
-# and multi-source (more than one telemetry source) detections.
+# Detection matrix summary (combined Windows + Linux): total simulated actions,
+# captured, missed, and multi-source (more than one telemetry source)
+# detections.
 # ---------------------------------------------------------------------------
 w_det_total="$(jq '.total_actions' "${WINDOWS_DETECTION_PATH}")"
 w_det_captured="$(jq '.captured_actions' "${WINDOWS_DETECTION_PATH}")"
