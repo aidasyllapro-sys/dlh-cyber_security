@@ -20,6 +20,10 @@
  
 set -euo pipefail
  
+# Default resolved paths (built from HANDOFF_DIR below):
+#   telemetry_handoff/windows_events.json
+#   telemetry_handoff/linux_events.json
+#   telemetry_handoff/attack_ground_truth.json
 HANDOFF_DIR="telemetry_handoff"
 WINDOWS_EVENTS_PATH="${HANDOFF_DIR}/windows_events.json"
 LINUX_EVENTS_PATH="${HANDOFF_DIR}/linux_events.json"
