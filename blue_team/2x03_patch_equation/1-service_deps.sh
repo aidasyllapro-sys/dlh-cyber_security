@@ -10,7 +10,7 @@
 #               service_criticality.json, and cross-check with
 #               needrestart -b to flag whether a restart is currently
 #               pending. Emits service_dependency_map.json.
-# author      : <your name>
+# author      : Aïda Sylla
 # date        : 2026-08-11
  
 set -euo pipefail

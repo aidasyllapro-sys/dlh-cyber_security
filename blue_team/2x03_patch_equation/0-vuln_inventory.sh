@@ -11,7 +11,7 @@
 #               cve_feed.json companion feed, and emit a structured
 #               vulnerability_inventory.json - the measurement step every
 #               later task in this project depends on.
-# author      : <your name>
+# author      : Aïda Sylla
 # date        : 2026-08-11
  
 set -euo pipefail

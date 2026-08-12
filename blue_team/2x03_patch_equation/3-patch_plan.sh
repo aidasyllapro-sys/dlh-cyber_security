@@ -9,7 +9,7 @@
 #               restart or a full reboot is required, and the rollback
 #               target version - classified into emergency / urgent /
 #               scheduled buckets. Emits patch_plan.json.
-# author      : <your name>
+# author      : Aïda Sylla
 # date        : 2026-08-11
  
 set -euo pipefail

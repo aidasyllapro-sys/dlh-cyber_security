@@ -10,7 +10,7 @@
 #               stable-schema pre_patch_state.json. This is the baseline
 #               every later validation and rollback task in this project
 #               compares against.
-# author      : <your name>
+# author      : Aïda Sylla
 # date        : 2026-08-11
  
 set -euo pipefail
