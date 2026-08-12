@@ -1,0 +1,47 @@
+{
+  "initial_diagnosis": {
+    "live_dpkg_apt_processes": [],
+    "existing_lock_files": [
+      "/var/lib/dpkg/lock-frontend",
+      "/var/lib/dpkg/lock",
+      "/var/cache/apt/archives/lock"
+    ],
+    "dpkg_audit_raw": "",
+    "broken_packages": [],
+    "broken_package_count": 0,
+    "free_space_kb": {
+      "root": 18525128,
+      "var": 18525128
+    }
+  },
+  "actions_taken": [
+    {
+      "action": "remove stale locks",
+      "status": "OK",
+      "detail": "removed: /var/lib/dpkg/lock-frontend,/var/lib/dpkg/lock,/var/cache/apt/archives/lock"
+    },
+    {
+      "action": "dpkg --configure -a",
+      "status": "OK",
+      "detail": ""
+    },
+    {
+      "action": "apt-get --fix-broken install",
+      "status": "OK",
+      "detail": "Reading package lists...\nBuilding dependency tree...\nReading state information...\n0 upgraded, 0 newly installed, 0 to remove and 52 not upgraded."
+    },
+    {
+      "action": "dpkg --audit (re-run)",
+      "status": "OK",
+      "detail": "clean"
+    }
+  ],
+  "final_state": {
+    "dpkg_audit_raw": "",
+    "remaining_broken_packages": [],
+    "service_restarts": []
+  },
+  "recovered": true,
+  "duration_seconds": 1,
+  "refused": false
+}
