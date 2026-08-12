@@ -1,0 +1,80 @@
+{
+  "started_at": "2026-08-12T19:01:44Z",
+  "finished_at": "2026-08-12T19:01:46Z",
+  "hostname": "billing-srv-01",
+  "plan_source_hash": "1d56260b18b6d157b76c35a36ca2457f3133260788bc5768f300a225788cbf4e",
+  "entries": [
+    {
+      "package": "snapd",
+      "bucket": "scheduled",
+      "status": "succeeded",
+      "pre": {
+        "installed_version": "2.76+ubuntu22.04.1",
+        "services": []
+      },
+      "post": {
+        "installed_version": "2.76+ubuntu22.04.1",
+        "services": []
+      },
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "stdout_tail": "Reading package lists...\nBuilding dependency tree...\nReading state information...\nsnapd is already the newest version (2.76+ubuntu22.04.1).\n0 upgraded, 0 newly installed, 0 to remove and 52 not upgraded.",
+      "stderr_tail": "",
+      "restarts": []
+    },
+    {
+      "package": "ubuntu-advantage-tools",
+      "bucket": "scheduled",
+      "status": "succeeded",
+      "pre": {
+        "installed_version": "37.2ubuntu~22.04.1",
+        "services": []
+      },
+      "post": {
+        "installed_version": "37.2ubuntu~22.04.1",
+        "services": []
+      },
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "stdout_tail": "Reading package lists...\nBuilding dependency tree...\nReading state information...\nubuntu-advantage-tools is already the newest version (37.2ubuntu~22.04.1).\n0 upgraded, 0 newly installed, 0 to remove and 52 not upgraded.",
+      "stderr_tail": "",
+      "restarts": []
+    },
+    {
+      "package": "ubuntu-pro-client",
+      "bucket": "scheduled",
+      "status": "succeeded",
+      "pre": {
+        "installed_version": "37.2ubuntu~22.04.1",
+        "services": []
+      },
+      "post": {
+        "installed_version": "37.2ubuntu~22.04.1",
+        "services": []
+      },
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "stdout_tail": "Reading package lists...\nBuilding dependency tree...\nReading state information...\nubuntu-pro-client is already the newest version (37.2ubuntu~22.04.1).\n0 upgraded, 0 newly installed, 0 to remove and 52 not upgraded.",
+      "stderr_tail": "",
+      "restarts": []
+    },
+    {
+      "package": "ubuntu-pro-client-l10n",
+      "bucket": "scheduled",
+      "status": "succeeded",
+      "pre": {
+        "installed_version": "37.2ubuntu~22.04.1",
+        "services": []
+      },
+      "post": {
+        "installed_version": "37.2ubuntu~22.04.1",
+        "services": []
+      },
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "stdout_tail": "Reading package lists...\nBuilding dependency tree...\nReading state information...\nubuntu-pro-client-l10n is already the newest version (37.2ubuntu~22.04.1).\n0 upgraded, 0 newly installed, 0 to remove and 52 not upgraded.",
+      "stderr_tail": "",
+      "restarts": []
+    }
+  ]
+}
