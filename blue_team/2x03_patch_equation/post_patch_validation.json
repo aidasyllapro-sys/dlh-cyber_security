@@ -1,0 +1,314 @@
+{
+  "total_checks": 51,
+  "passed": 51,
+  "failed": 0,
+  "verdict": "PASS",
+  "details": [
+    {
+      "check_type": "service_state",
+      "target": "apache2.service",
+      "status": "pass",
+      "detail": "ActiveState=active (was active)"
+    },
+    {
+      "check_type": "service_state",
+      "target": "apparmor.service",
+      "status": "pass",
+      "detail": "ActiveState=active (was active)"
+    },
+    {
+      "check_type": "service_state",
+      "target": "apport.service",
+      "status": "pass",
+      "detail": "ActiveState=active (was active)"
+    },
+    {
+      "check_type": "service_state",
+      "target": "auditd.service",
+      "status": "pass",
+      "detail": "ActiveState=active (was active)"
+    },
+    {
+      "check_type": "service_state",
+      "target": "cron.service",
+      "status": "pass",
+      "detail": "ActiveState=active (was active)"
+    },
+    {
+      "check_type": "service_state",
+      "target": "dbus.service",
+      "status": "pass",
+      "detail": "ActiveState=active (was active)"
+    },
+    {
+      "check_type": "service_state",
+      "target": "fwupd.service",
+      "status": "pass",
+      "detail": "ActiveState=active (was active)"
+    },
+    {
+      "check_type": "service_state",
+      "target": "getty@1.sercice.service",
+      "status": "pass",
+      "detail": "ActiveState=active (was active)"
+    },
+    {
+      "check_type": "service_state",
+      "target": "getty@tty2.service",
+      "status": "pass",
+      "detail": "ActiveState=active (was active)"
+    },
+    {
+      "check_type": "service_state",
+      "target": "kmod-static-nodes.service",
+      "status": "pass",
+      "detail": "ActiveState=active (was active)"
+    },
+    {
+      "check_type": "service_state",
+      "target": "lvm2-pvscan@8:3.service",
+      "status": "pass",
+      "detail": "ActiveState=active (was active)"
+    },
+    {
+      "check_type": "service_state",
+      "target": "mysql.service",
+      "status": "pass",
+      "detail": "ActiveState=active (was active)"
+    },
+    {
+      "check_type": "service_state",
+      "target": "packagekit.service",
+      "status": "pass",
+      "detail": "ActiveState=active (was active)"
+    },
+    {
+      "check_type": "service_state",
+      "target": "plymouth-quit-wait.service",
+      "status": "pass",
+      "detail": "ActiveState=active (was active)"
+    },
+    {
+      "check_type": "service_state",
+      "target": "plymouth-quit.service",
+      "status": "pass",
+      "detail": "ActiveState=active (was active)"
+    },
+    {
+      "check_type": "service_state",
+      "target": "plymouth-read-write.service",
+      "status": "pass",
+      "detail": "ActiveState=active (was active)"
+    },
+    {
+      "check_type": "service_state",
+      "target": "polkit.service",
+      "status": "pass",
+      "detail": "ActiveState=active (was active)"
+    },
+    {
+      "check_type": "service_state",
+      "target": "rsyslog.service",
+      "status": "pass",
+      "detail": "ActiveState=active (was active)"
+    },
+    {
+      "check_type": "service_state",
+      "target": "ssh.service",
+      "status": "pass",
+      "detail": "ActiveState=active (was active)"
+    },
+    {
+      "check_type": "service_state",
+      "target": "systemd-binfmt.service",
+      "status": "pass",
+      "detail": "ActiveState=active (was active)"
+    },
+    {
+      "check_type": "service_state",
+      "target": "systemd-fsck@dev-disk-by\\x2duuid-907d4524\\x2dc1c7\\x2d4387\\x2da530\\x2d8bfda4b27e0d.service",
+      "status": "pass",
+      "detail": "ActiveState=active (was active)"
+    },
+    {
+      "check_type": "service_state",
+      "target": "systemd-journal-flush.service",
+      "status": "pass",
+      "detail": "ActiveState=active (was active)"
+    },
+    {
+      "check_type": "service_state",
+      "target": "systemd-journald.service",
+      "status": "pass",
+      "detail": "ActiveState=active (was active)"
+    },
+    {
+      "check_type": "service_state",
+      "target": "systemd-logind.service",
+      "status": "pass",
+      "detail": "ActiveState=active (was active)"
+    },
+    {
+      "check_type": "service_state",
+      "target": "systemd-modules-load.service",
+      "status": "pass",
+      "detail": "ActiveState=active (was active)"
+    },
+    {
+      "check_type": "service_state",
+      "target": "systemd-networkd-wait-online.service",
+      "status": "pass",
+      "detail": "ActiveState=active (was active)"
+    },
+    {
+      "check_type": "service_state",
+      "target": "systemd-networkd.service",
+      "status": "pass",
+      "detail": "ActiveState=active (was active)"
+    },
+    {
+      "check_type": "service_state",
+      "target": "systemd-random-seed.service",
+      "status": "pass",
+      "detail": "ActiveState=active (was active)"
+    },
+    {
+      "check_type": "service_state",
+      "target": "systemd-remount-fs.service",
+      "status": "pass",
+      "detail": "ActiveState=active (was active)"
+    },
+    {
+      "check_type": "service_state",
+      "target": "systemd-resolved.service",
+      "status": "pass",
+      "detail": "ActiveState=active (was active)"
+    },
+    {
+      "check_type": "service_state",
+      "target": "systemd-sysctl.service",
+      "status": "pass",
+      "detail": "ActiveState=active (was active)"
+    },
+    {
+      "check_type": "service_state",
+      "target": "systemd-sysusers.service",
+      "status": "pass",
+      "detail": "ActiveState=active (was active)"
+    },
+    {
+      "check_type": "service_state",
+      "target": "systemd-timesyncd.service",
+      "status": "pass",
+      "detail": "ActiveState=active (was active)"
+    },
+    {
+      "check_type": "service_state",
+      "target": "systemd-tmpfiles-setup-dev.service",
+      "status": "pass",
+      "detail": "ActiveState=active (was active)"
+    },
+    {
+      "check_type": "service_state",
+      "target": "systemd-tmpfiles-setup.service",
+      "status": "pass",
+      "detail": "ActiveState=active (was active)"
+    },
+    {
+      "check_type": "service_state",
+      "target": "systemd-udev-trigger.service",
+      "status": "pass",
+      "detail": "ActiveState=active (was active)"
+    },
+    {
+      "check_type": "service_state",
+      "target": "systemd-udevd.service",
+      "status": "pass",
+      "detail": "ActiveState=active (was active)"
+    },
+    {
+      "check_type": "service_state",
+      "target": "systemd-update-utmp.service",
+      "status": "pass",
+      "detail": "ActiveState=active (was active)"
+    },
+    {
+      "check_type": "service_state",
+      "target": "systemd-user-sessions.service",
+      "status": "pass",
+      "detail": "ActiveState=active (was active)"
+    },
+    {
+      "check_type": "service_state",
+      "target": "udisks2.service",
+      "status": "pass",
+      "detail": "ActiveState=active (was active)"
+    },
+    {
+      "check_type": "service_state",
+      "target": "upower.service",
+      "status": "pass",
+      "detail": "ActiveState=active (was active)"
+    },
+    {
+      "check_type": "service_state",
+      "target": "user-runtime-dir@1000.service",
+      "status": "pass",
+      "detail": "ActiveState=active (was active)"
+    },
+    {
+      "check_type": "service_state",
+      "target": "user@1000.service",
+      "status": "pass",
+      "detail": "ActiveState=active (was active)"
+    },
+    {
+      "check_type": "listening_socket",
+      "target": "udp 127.0.0.53%lo:53",
+      "status": "pass",
+      "detail": "still listening"
+    },
+    {
+      "check_type": "listening_socket",
+      "target": "udp 192.168.74.130%ens34:68",
+      "status": "pass",
+      "detail": "still listening"
+    },
+    {
+      "check_type": "listening_socket",
+      "target": "tcp 0.0.0.0:22",
+      "status": "pass",
+      "detail": "still listening"
+    },
+    {
+      "check_type": "listening_socket",
+      "target": "tcp 127.0.0.1:33060",
+      "status": "pass",
+      "detail": "still listening"
+    },
+    {
+      "check_type": "listening_socket",
+      "target": "tcp 0.0.0.0:3306",
+      "status": "pass",
+      "detail": "still listening"
+    },
+    {
+      "check_type": "listening_socket",
+      "target": "tcp 127.0.0.53%lo:53",
+      "status": "pass",
+      "detail": "still listening"
+    },
+    {
+      "check_type": "listening_socket",
+      "target": "tcp [::]:22",
+      "status": "pass",
+      "detail": "still listening"
+    },
+    {
+      "check_type": "listening_socket",
+      "target": "tcp *:80",
+      "status": "pass",
+      "detail": "still listening"
+    }
+  ]
+}
