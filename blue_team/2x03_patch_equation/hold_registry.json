@@ -1,0 +1,11 @@
+{
+  "holds": [
+    {
+      "package": "dmidecode",
+      "reason": "test hold for 10-version_hold.sh validation",
+      "owner": "analyst",
+      "review_date": "2026-09-13",
+      "pin_version": "3.3-3ubuntu0.2"
+    }
+  ]
+}
