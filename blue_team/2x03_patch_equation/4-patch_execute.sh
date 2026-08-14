@@ -45,6 +45,17 @@ if ! command -v jq >/dev/null 2>&1; then
     exit 2
 fi
  
+# PIPELINE_TEST=1 (set by 14-pipeline_test.sh) switches every apt-get call
+# below to --dry-run and skips real service restarts, so the pipeline can
+# be exercised end-to-end against a simulated advisory without touching
+# actual package state. Unset (the default) preserves exact prior
+# behavior - a real, applying run.
+if [[ "${PIPELINE_TEST:-}" == "1" ]]; then
+    DRY_RUN="true"
+else
+    DRY_RUN="false"
+fi
+ 
 if [[ ! -f "${PLAN_PATH}" ]]; then
     echo "patch_plan.json not found at ${PLAN_PATH}. Run 3-patch_plan.sh first." >&2
     exit 2
@@ -196,8 +207,12 @@ for idx in $(seq 0 $((entry_count - 1))); do
         #     none, in which case take the new version) instead of ever
         #     prompting - the same convention unattended-upgrades itself
         #     relies on for unattended security patching.
+        dry_run_flag=""
+        [[ "${DRY_RUN}" == "true" ]] && dry_run_flag="--dry-run"
+ 
+        # shellcheck disable=SC2086
         timeout "${APT_CALL_TIMEOUT}" env DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a \
-            apt-get install --only-upgrade -y \
+            apt-get install --only-upgrade -y ${dry_run_flag} \
             -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" \
             "${pkg}" \
             < /dev/null > "${apt_stdout_file}" 2> "${apt_stderr_file}"
@@ -253,16 +268,21 @@ for idx in $(seq 0 $((entry_count - 1))); do
             --argjson pre "${pre_block}" --argjson post "${post_block}" \
             --argjson duration "${duration_seconds}" --argjson exit_code "${apt_exit}" \
             --arg reason "${reason}" --arg stdout_tail "${stdout_tail}" --arg stderr_tail "${stderr_tail}" \
+            --argjson dry_run "${DRY_RUN}" \
             '{package: $pkg, bucket: $bucket, status: $status, pre: $pre, post: $post,
               duration_seconds: $duration, exit_code: $exit_code, reason: $reason,
-              stdout_tail: $stdout_tail, stderr_tail: $stderr_tail, restarts: []}')
+              stdout_tail: $stdout_tail, stderr_tail: $stderr_tail, restarts: [], dry_run: $dry_run}')
         ENTRY_LOGS+=("${entry}")
         continue
     fi
  
     status="succeeded"
     succeeded_count=$((succeeded_count + 1))
-    printf '[%s/%s] %-20s %-13s apt-get ... OK (%ss)\n' "${display_idx}" "${entry_count}" "${pkg}" "${bucket}" "${duration_seconds}"
+    if [[ "${DRY_RUN}" == "true" ]]; then
+        printf '[%s/%s] %-20s %-13s apt-get --dry-run ... OK (%ss)\n' "${display_idx}" "${entry_count}" "${pkg}" "${bucket}" "${duration_seconds}"
+    else
+        printf '[%s/%s] %-20s %-13s apt-get ... OK (%ss)\n' "${display_idx}" "${entry_count}" "${pkg}" "${bucket}" "${duration_seconds}"
+    fi
  
     # ---------------------------------------------------------------------
     # try-restart affected services, only if the plan calls for a restart
@@ -270,7 +290,16 @@ for idx in $(seq 0 $((entry_count - 1))); do
     # no sense when the whole system needs to come down anyway).
     # ---------------------------------------------------------------------
     RESTART_RESULTS=()
-    if [[ "${requires_restart}" == "true" && "${requires_reboot}" != "true" ]]; then
+    if [[ "${DRY_RUN}" == "true" ]]; then
+        if [[ "${requires_restart}" == "true" && "${requires_reboot}" != "true" ]]; then
+            mapfile -t restart_svcs < <(jq -r '.[]' <<< "${affected_services_json}" 2>/dev/null)
+            for svc in "${restart_svcs[@]}"; do
+                [[ -z "${svc}" || "${svc}" == "(kernel-wide)" ]] && continue
+                printf '      try-restart %-30s SIMULATED (dry-run - not actually restarted)\n' "${svc}"
+                RESTART_RESULTS+=("$(jq -n --arg s "${svc}" '{service: $s, result: "SIMULATED"}')")
+            done
+        fi
+    elif [[ "${requires_restart}" == "true" && "${requires_reboot}" != "true" ]]; then
         mapfile -t restart_svcs < <(jq -r '.[]' <<< "${affected_services_json}" 2>/dev/null)
         for svc in "${restart_svcs[@]}"; do
             [[ -z "${svc}" || "${svc}" == "(kernel-wide)" ]] && continue
@@ -290,10 +319,10 @@ for idx in $(seq 0 $((entry_count - 1))); do
         --argjson pre "${pre_block}" --argjson post "${post_block}" \
         --argjson duration "${duration_seconds}" --argjson exit_code "${apt_exit}" \
         --arg stdout_tail "${stdout_tail}" --arg stderr_tail "${stderr_tail}" \
-        --argjson restarts "${restarts_json}" \
+        --argjson restarts "${restarts_json}" --argjson dry_run "${DRY_RUN}" \
         '{package: $pkg, bucket: $bucket, status: $status, pre: $pre, post: $post,
           duration_seconds: $duration, exit_code: $exit_code,
-          stdout_tail: $stdout_tail, stderr_tail: $stderr_tail, restarts: $restarts}')
+          stdout_tail: $stdout_tail, stderr_tail: $stderr_tail, restarts: $restarts, dry_run: $dry_run}')
     ENTRY_LOGS+=("${entry}")
 done
  
