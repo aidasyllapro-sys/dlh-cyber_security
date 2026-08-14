@@ -42,6 +42,23 @@ OUTPUT_PATH="${SCRIPT_DIR}/maintenance_window.json"
 SEARCH_HORIZON_DAYS=35
 POLL_INTERVAL_SECONDS=30
  
+# Optional MW_AS_OF env var (any date -d-parseable string) lets a caller
+# evaluate this guard against an arbitrary historical or future instant
+# instead of the real current moment - added specifically so
+# 12-change_log.sh can call this script "against the event timestamp" as
+# its own instructions require, without duplicating window-decision logic.
+# Unset (the default) preserves the exact original behavior: evaluate
+# against the real current moment.
+if [[ -n "${MW_AS_OF:-}" ]]; then
+    NOW_EPOCH="$(date -d "${MW_AS_OF}" +%s 2>/dev/null || true)"
+    if [[ -z "${NOW_EPOCH}" ]]; then
+        echo "MW_AS_OF is set but not a valid date: '${MW_AS_OF}'" >&2
+        exit 20
+    fi
+else
+    NOW_EPOCH="$(date +%s)"
+fi
+ 
 if ! command -v jq >/dev/null 2>&1; then
     echo "jq not found. This script requires jq to read maintenance_windows.json and write the report. Install it (e.g. apt install jq) and re-run." >&2
     exit 20
@@ -140,9 +157,9 @@ window_matches() {
 # ---------------------------------------------------------------------------
 evaluate_now() {
     local day_abbrev day_of_month minutes i win name is_always
-    day_abbrev="$(TZ="${TZ_NAME}" date +%a)"
-    day_of_month="$(TZ="${TZ_NAME}" date +%-d)"
-    minutes="$(hm_to_minutes "$(TZ="${TZ_NAME}" date +%H:%M)")"
+    day_abbrev="$(TZ="${TZ_NAME}" date -d "@${NOW_EPOCH}" +%a)"
+    day_of_month="$(TZ="${TZ_NAME}" date -d "@${NOW_EPOCH}" +%-d)"
+    minutes="$(hm_to_minutes "$(TZ="${TZ_NAME}" date -d "@${NOW_EPOCH}" +%H:%M)")"
  
     ACTIVE_WINDOW_NAME=""
     EMERGENCY_ONLY="false"
@@ -180,7 +197,7 @@ find_next_window() {
     local i win is_always name start candidate_epoch wom wom_actual
     local best_epoch="" best_name=""
  
-    now_epoch="$(TZ="${TZ_NAME}" date +%s)"
+    now_epoch="${NOW_EPOCH}"
  
     for day_offset in $(seq 0 "${SEARCH_HORIZON_DAYS}"); do
         candidate_date="$(TZ="${TZ_NAME}" date -d "+${day_offset} days" +%Y-%m-%d)"
@@ -229,8 +246,8 @@ find_next_window() {
 # ---------------------------------------------------------------------------
 emit_result() {
     local now_display now_epoch decision exit_code seconds_until_next next_display active_json next_name_json next_ts_json seconds_json
-    now_display="$(TZ="${TZ_NAME}" date +"%Y-%m-%d %H:%M")"
-    now_epoch="$(TZ="${TZ_NAME}" date +%s)"
+    now_display="$(TZ="${TZ_NAME}" date -d "@${NOW_EPOCH}" +"%Y-%m-%d %H:%M")"
+    now_epoch="${NOW_EPOCH}"
  
     evaluate_now
  
@@ -260,7 +277,7 @@ emit_result() {
     fi
  
     if [[ "${MODE}" != "report" ]]; then
-        echo "now:            ${now_display} ${TZ_NAME} ($(TZ="${TZ_NAME}" date +%a))"
+        echo "now:            ${now_display} ${TZ_NAME} ($(TZ="${TZ_NAME}" date -d "@${NOW_EPOCH}" +%a))"
         if [[ -n "${ACTIVE_WINDOW_NAME}" ]]; then
             echo "active window:  ${ACTIVE_WINDOW_NAME}"
         else
@@ -284,7 +301,7 @@ emit_result() {
  
     {
         printf '{'
-        printf '"now":"%s",' "$(TZ="${TZ_NAME}" date -Iseconds)"
+        printf '"now":"%s",' "$(TZ="${TZ_NAME}" date -d "@${NOW_EPOCH}" -Iseconds)"
         printf '"timezone":"%s",' "$(json_escape "${TZ_NAME}")"
         printf '"active_window":%s,' "${active_json}"
         printf '"next_window":{"name":%s,"at":%s},' "${next_name_json}" "${next_ts_json}"
