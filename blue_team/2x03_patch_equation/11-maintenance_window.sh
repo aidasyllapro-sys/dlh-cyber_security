@@ -13,6 +13,15 @@
 #               window opens or timeout), and --report (JSON only).
 # author      : Aïda Sylla
 # date        : 2026-08-12
+#
+# MedDefense's declared window names (see maintenance_windows.json): the
+# "standard" weekly window (Saturday 02:00-06:00), the "extended" window
+# (Saturday 00:00-08:00, first week of the month only), and the "emergency"
+# always-on escape hatch. This script itself never hardcodes logic around
+# these three specific names - every window is evaluated generically from
+# whatever entries are declared in the "windows" array of that JSON - but
+# "standard", "extended", and "emergency" are the names this project's own
+# config actually uses, and are referenced here for clarity.
  
 set -uo pipefail
 # NOTE: deliberately not using -e. Being outside every window, or only the

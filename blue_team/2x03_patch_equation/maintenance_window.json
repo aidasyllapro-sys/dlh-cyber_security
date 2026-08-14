@@ -1,11 +1,11 @@
 {
-  "now": "2026-08-14T14:38:03+02:00",
+  "now": "2026-08-14T14:50:47+02:00",
   "timezone": "Europe/Paris",
   "active_window": null,
   "next_window": {
     "name": "standard",
     "at": "2026-08-15T02:00:00+02:00"
   },
-  "seconds_until_next": 40919,
+  "seconds_until_next": 40154,
   "decision": "blocked (emergency override required: set MEDDEFENSE_EMERGENCY=1)"
 }
