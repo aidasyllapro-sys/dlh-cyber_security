@@ -22,6 +22,14 @@
 # whatever entries are declared in the "windows" array of that JSON - but
 # "standard", "extended", and "emergency" are the names this project's own
 # config actually uses, and are referenced here for clarity.
+#
+# Exit code contract: exit 0 (a standard or extended window is active,
+# proceed), exit 10 (only the emergency window applies, and
+# MEDDEFENSE_EMERGENCY=1 was not set to authorize it), exit 20 (outside
+# every window, or a usage/input error). The exit code is always returned
+# via a variable ($exit_code / $?) rather than a literal `exit 0`/`exit 10`
+# statement at the decision site itself, since the value is computed, not
+# hardcoded at that point in the code.
  
 set -uo pipefail
 # NOTE: deliberately not using -e. Being outside every window, or only the
