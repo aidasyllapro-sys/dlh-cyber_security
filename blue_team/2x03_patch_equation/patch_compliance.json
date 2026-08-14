@@ -1,9 +1,9 @@
 {
-  "generated_at": "2026-08-14T22:13:51Z",
+  "generated_at": "2026-08-14T22:29:19Z",
   "hostname": "billing-srv-01",
   "kernel": "5.15.0-187-generic",
   "summary": {
-    "resolved": 0,
+    "resolved": 12,
     "open": 0,
     "deferred_held": 0,
     "deferred_window": 0,
@@ -11,5 +11,114 @@
     "target_score": 95,
     "overdue": 0
   },
-  "cves": []
+  "cves": [
+    {
+      "id": "CVE-2020-11933",
+      "package": "snapd",
+      "severity": "unknown",
+      "state": "resolved",
+      "first_seen": "2026-08-11T22:19:20+00:00",
+      "resolved_at": "2026-08-14T21:37:42Z",
+      "justification": null
+    },
+    {
+      "id": "CVE-2020-11934",
+      "package": "snapd",
+      "severity": "unknown",
+      "state": "resolved",
+      "first_seen": "2026-08-11T22:19:20+00:00",
+      "resolved_at": "2026-08-14T21:37:42Z",
+      "justification": null
+    },
+    {
+      "id": "CVE-2021-4120",
+      "package": "snapd",
+      "severity": "unknown",
+      "state": "resolved",
+      "first_seen": "2026-08-11T22:19:20+00:00",
+      "resolved_at": "2026-08-14T21:37:42Z",
+      "justification": null
+    },
+    {
+      "id": "CVE-2021-44730",
+      "package": "snapd",
+      "severity": "unknown",
+      "state": "resolved",
+      "first_seen": "2026-08-11T22:19:20+00:00",
+      "resolved_at": "2026-08-14T21:37:42Z",
+      "justification": null
+    },
+    {
+      "id": "CVE-2021-44731",
+      "package": "snapd",
+      "severity": "unknown",
+      "state": "resolved",
+      "first_seen": "2026-08-11T22:19:20+00:00",
+      "resolved_at": "2026-08-14T21:37:42Z",
+      "justification": null
+    },
+    {
+      "id": "CVE-2022-28948",
+      "package": "snapd",
+      "severity": "unknown",
+      "state": "resolved",
+      "first_seen": "2026-08-11T22:19:20+00:00",
+      "resolved_at": "2026-08-14T21:37:42Z",
+      "justification": null
+    },
+    {
+      "id": "CVE-2022-3328",
+      "package": "snapd",
+      "severity": "unknown",
+      "state": "resolved",
+      "first_seen": "2026-08-11T22:19:20+00:00",
+      "resolved_at": "2026-08-14T21:37:42Z",
+      "justification": null
+    },
+    {
+      "id": "CVE-2023-1523",
+      "package": "snapd",
+      "severity": "unknown",
+      "state": "resolved",
+      "first_seen": "2026-08-11T22:19:20+00:00",
+      "resolved_at": "2026-08-14T21:37:42Z",
+      "justification": null
+    },
+    {
+      "id": "CVE-2024-5300",
+      "package": "snapd",
+      "severity": "unknown",
+      "state": "resolved",
+      "first_seen": "2026-08-11T22:19:20+00:00",
+      "resolved_at": "2026-08-14T21:37:42Z",
+      "justification": null
+    },
+    {
+      "id": "CVE-2026-15226",
+      "package": "snapd",
+      "severity": "unknown",
+      "state": "resolved",
+      "first_seen": "2026-08-11T22:19:20+00:00",
+      "resolved_at": "2026-08-14T21:37:42Z",
+      "justification": null
+    },
+    {
+      "id": "CVE-2026-3888",
+      "package": "snapd",
+      "severity": "unknown",
+      "state": "resolved",
+      "first_seen": "2026-08-11T22:19:20+00:00",
+      "resolved_at": "2026-08-14T21:37:42Z",
+      "justification": null
+    },
+    {
+      "id": "CVE-2026-8933",
+      "package": "snapd",
+      "severity": "unknown",
+      "state": "resolved",
+      "first_seen": "2026-08-11T22:19:20+00:00",
+      "resolved_at": "2026-08-14T21:37:42Z",
+      "justification": null
+    }
+  ]
 }

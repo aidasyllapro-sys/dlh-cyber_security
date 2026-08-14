@@ -101,7 +101,7 @@ snapshot_idx=0
 LATEST_SNAPSHOT_TS=""
 for snap in "${SNAPSHOT_FILES[@]}"; do
     [[ ! -f "${snap}" ]] && continue
-    jq -e empty "${snap}" >/dev/null 2>&1 || continue
+    jq empty "${snap}" >/dev/null 2>&1 || continue
     snap_ts="$(jq -r '.generated // .timestamp // empty' "${snap}" 2>/dev/null)"
     [[ -z "${snap_ts}" ]] && snap_ts="$(date -u -r "${snap}" -Iseconds 2>/dev/null || echo "")"
     [[ "${snap}" == "${VULN_PATH}" ]] && LATEST_SNAPSHOT_TS="${snap_ts}"
