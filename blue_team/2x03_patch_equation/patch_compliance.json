@@ -1,0 +1,15 @@
+{
+  "generated_at": "2026-08-14T22:05:19Z",
+  "hostname": "billing-srv-01",
+  "kernel": "5.15.0-187-generic",
+  "summary": {
+    "resolved": 0,
+    "open": 0,
+    "deferred_held": 0,
+    "deferred_window": 0,
+    "score": 100,
+    "target_score": 95,
+    "overdue": 0
+  },
+  "cves": []
+}
