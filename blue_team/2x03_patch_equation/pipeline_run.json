@@ -1,0 +1,89 @@
+{
+  "started_at": "2026-08-14T20:49:16Z",
+  "finished_at": "2026-08-14T20:51:31Z",
+  "hostname": "billing-srv-01",
+  "pipeline_status": "deferred",
+  "duration_seconds": 134.5,
+  "stages": [
+    {
+      "stage": "0-vuln_inventory.sh",
+      "status": "ok",
+      "exit_code": 0,
+      "duration_seconds": 6.1,
+      "stdout_tail": "[*] Enumerating installed packages...\n    799 installed packages found.\n[*] Cross-referencing against apt list --upgradable...\n    0 upgradable packages found.\n[*] Extracting CVEs and scoring severity for security-pocket upgrades...\n    0 security-pocket packages processed, 0 vulnerability entries recorded.\nVulnerability inventory saved to: /home/analyst/vulnerability_inventory.json",
+      "stderr_tail": "Warning: /home/analyst/cve_feed.json not found. CVSS scoring and CISA KEV flags will be unavailable for every package (per the task's own note, this must not stop the script)."
+    },
+    {
+      "stage": "1-service_deps.sh",
+      "status": "ok",
+      "exit_code": 0,
+      "duration_seconds": 61.3,
+      "stdout_tail": "[*] Listing active systemd services...\n    41 active services found.\n[*] Resolving executables, packages and library dependencies...\n    36/41 services resolved to an executable, 36 entries recorded.\nService dependency map saved to: /home/analyst/service_dependency_map.json",
+      "stderr_tail": "Warning: /home/analyst/service_criticality.json not found. Every service will default to 'low' criticality (per this task's own default rule)."
+    },
+    {
+      "stage": "2-pre_patch_snapshot.sh",
+      "status": "ok",
+      "exit_code": 0,
+      "duration_seconds": 17.3,
+      "stdout_tail": "[*] Capturing pre-patch state...\n    799 packages recorded.\n    41 active services recorded.\n    8 listening sockets recorded.\n    1007 tracked conffiles hashed.\nSnapshot: pre_patch_state.json\nSize: 218 KB\nKernel: 5.15.0-187-generic\nReboot required: false",
+      "stderr_tail": ""
+    },
+    {
+      "stage": "3-patch_plan.sh",
+      "status": "ok",
+      "exit_code": 0,
+      "duration_seconds": 0.2,
+      "stdout_tail": "[*] Building patch plan from vulnerability_inventory.json and service_dependency_map.json...\n[*] Ranking 0 vulnerable packages...\nEmergency: 0   Urgent: 0   Scheduled: 0\nReboot required by plan: no\nReport saved to: patch_plan.json",
+      "stderr_tail": ""
+    },
+    {
+      "stage": "11-maintenance_window.sh",
+      "status": "deferred",
+      "exit_code": 10,
+      "duration_seconds": 1.9,
+      "stdout_tail": "now:            2026-08-14 22:50 Europe/Paris (Fri)\nactive window:  (none)\nnext window:    standard  at 2026-08-15 02:00\nseconds until:  11359\ndecision:       blocked (emergency override required: set MEDDEFENSE_EMERGENCY=1)\nReport saved to: maintenance_window.json",
+      "stderr_tail": ""
+    },
+    {
+      "stage": "4-patch_execute.sh",
+      "status": "skipped",
+      "exit_code": null,
+      "duration_seconds": 0,
+      "reason": "deferred: maintenance window guard exit 10"
+    },
+    {
+      "stage": "5-post_patch_validate.sh",
+      "status": "skipped",
+      "exit_code": null,
+      "duration_seconds": 0,
+      "reason": "deferred: maintenance window guard exit 10"
+    },
+    {
+      "stage": "6-config_drift.sh",
+      "status": "skipped",
+      "exit_code": null,
+      "duration_seconds": 0,
+      "reason": "deferred: maintenance window guard exit 10"
+    },
+    {
+      "stage": "12-change_log.sh",
+      "status": "ok",
+      "exit_code": 0,
+      "duration_seconds": 47.5,
+      "stdout_tail": "[*] Parsing /var/log/apt/history.log*...\n    200 transactions parsed.\n[*] Grouping into change events (15-minute proximity)...\n    9 change events.\n[*] Enriching events (window check, execution log link, CVE cross-reference)...\nTotal events: 9   Inside window: 0   Outside window: 9\nReport saved to: patch_change_log.json",
+      "stderr_tail": ""
+    }
+  ],
+  "artifacts": {
+    "0-vuln_inventory.sh": "/home/analyst/vulnerability_inventory.json",
+    "1-service_deps.sh": "/home/analyst/service_dependency_map.json",
+    "2-pre_patch_snapshot.sh": "/home/analyst/pre_patch_state.json",
+    "3-patch_plan.sh": "/home/analyst/patch_plan.json",
+    "11-maintenance_window.sh": "/home/analyst/maintenance_window.json",
+    "4-patch_execute.sh": "/home/analyst/patch_execution_log.json",
+    "5-post_patch_validate.sh": "/home/analyst/post_patch_validation.json",
+    "6-config_drift.sh": "/home/analyst/config_drift.json",
+    "12-change_log.sh": "/home/analyst/patch_change_log.json"
+  }
+}
