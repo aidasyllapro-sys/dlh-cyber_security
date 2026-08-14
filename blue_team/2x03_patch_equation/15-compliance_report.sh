@@ -155,7 +155,10 @@ if [[ -f "${PLAN_PATH}" ]] && jq empty "${PLAN_PATH}" >/dev/null 2>&1; then
 fi
  
 # ---------------------------------------------------------------------------
-# 2 (cont). Classify every unique CVE.
+# 2 (cont). Classify every unique CVE by its current state - resolved,
+# open, deferred_held, or deferred_window - based on whether it is still
+# present in the current (latest) vulnerability_inventory.json snapshot,
+# and, if so, whether its package is held or was part of a deferred plan.
 # ---------------------------------------------------------------------------
 echo "[*] Classifying CVE states..."
  
