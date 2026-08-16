@@ -16,6 +16,22 @@
  
 set -uo pipefail
  
+# ---------------------------------------------------------------------------
+# The minimum required flows this script encodes, quoted verbatim from the
+# task's own instructions, for direct traceability between this contract
+# and the requirement it satisfies:
+#   - MGMT to INTERNAL on tcp/22 for administration
+#   - MGMT to DMZ on tcp/22 for administration
+#   - INTERNAL clinical workstations to INTERNAL server hosts on tcp/443 and tcp/3306
+#   - DMZ to INTERNAL databases on tcp/3306 only from named DMZ application hosts
+#   - MEDDEV to INTERNAL hosts on tcp/4242 (DICOM) and tcp/443 (EHR web)
+#     only
+#   - ALL to MGMT resolver on udp/53 and tcp/53
+#   - No flows from MEDDEV to DMZ or the public Internet
+#   - No flows from any zone into MEDDEV except MGMT on tcp/22 and
+#     tcp/4242
+# ---------------------------------------------------------------------------
+ 
 if ! command -v jq >/dev/null 2>&1; then
     echo "jq not found. This script requires jq to assemble segmentation_rules.json. Install it (e.g. apt install jq) and re-run." >&2
     exit 1
