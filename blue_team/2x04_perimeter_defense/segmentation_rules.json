@@ -1,0 +1,192 @@
+{
+  "zones": [
+    {
+      "name": "DMZ",
+      "cidr": "10.10.1.0/24",
+      "purpose": "Public-facing services (web front ends, DMZ application hosts)",
+      "default_inbound": "drop",
+      "default_outbound": {
+        "policy": "accept",
+        "restrictions": [
+          "no unsolicited inbound from DMZ into MEDDEV"
+        ]
+      }
+    },
+    {
+      "name": "INTERNAL",
+      "cidr": "10.10.2.0/24",
+      "purpose": "Clinical applications, clinical workstations and internal databases",
+      "default_inbound": "drop",
+      "default_outbound": {
+        "policy": "accept",
+        "restrictions": [
+          "no unsolicited inbound from INTERNAL into MEDDEV"
+        ]
+      }
+    },
+    {
+      "name": "MGMT",
+      "cidr": "10.10.3.0/24",
+      "purpose": "Administration workstations and the internal DNS resolver",
+      "default_inbound": "drop",
+      "default_outbound": {
+        "policy": "accept",
+        "restrictions": []
+      }
+    },
+    {
+      "name": "MEDDEV",
+      "cidr": "10.10.4.0/24",
+      "purpose": "Medical device VLAN (imaging, monitoring and other clinical devices)",
+      "default_inbound": "drop",
+      "default_outbound": {
+        "policy": "accept",
+        "restrictions": [
+          "no MEDDEV to DMZ",
+          "no MEDDEV to the public Internet"
+        ]
+      }
+    }
+  ],
+  "flows": [
+    {
+      "src_zone": "MGMT",
+      "dst_zone": "INTERNAL",
+      "proto": "tcp",
+      "dport": 22,
+      "justification": "administration",
+      "exception_for": null
+    },
+    {
+      "src_zone": "MGMT",
+      "dst_zone": "DMZ",
+      "proto": "tcp",
+      "dport": 22,
+      "justification": "administration",
+      "exception_for": null
+    },
+    {
+      "src_zone": "INTERNAL",
+      "dst_zone": "INTERNAL",
+      "proto": "tcp",
+      "dport": 443,
+      "justification": "clinical workstations to server hosts (HTTPS application access)",
+      "exception_for": null,
+      "src_subnet_note": "clinical workstations",
+      "dst_subnet_note": "server hosts"
+    },
+    {
+      "src_zone": "INTERNAL",
+      "dst_zone": "INTERNAL",
+      "proto": "tcp",
+      "dport": 3306,
+      "justification": "clinical workstations to server hosts (database access)",
+      "exception_for": null,
+      "src_subnet_note": "clinical workstations",
+      "dst_subnet_note": "server hosts"
+    },
+    {
+      "src_zone": "DMZ",
+      "dst_zone": "INTERNAL",
+      "proto": "tcp",
+      "dport": 3306,
+      "justification": "DMZ application hosts to internal databases",
+      "exception_for": null,
+      "src_hosts": [
+        "dmz-app-01",
+        "dmz-app-02"
+      ]
+    },
+    {
+      "src_zone": "MEDDEV",
+      "dst_zone": "INTERNAL",
+      "proto": "tcp",
+      "dport": 4242,
+      "justification": "DICOM imaging to PACS",
+      "exception_for": null
+    },
+    {
+      "src_zone": "MEDDEV",
+      "dst_zone": "INTERNAL",
+      "proto": "tcp",
+      "dport": 443,
+      "justification": "EHR web integration for device display",
+      "exception_for": null
+    },
+    {
+      "src_zone": "ALL",
+      "dst_zone": "MGMT",
+      "proto": "udp",
+      "dport": 53,
+      "justification": "internal DNS resolution",
+      "exception_for": null
+    },
+    {
+      "src_zone": "ALL",
+      "dst_zone": "MGMT",
+      "proto": "tcp",
+      "dport": 53,
+      "justification": "internal DNS resolution (large responses / zone transfer fallback)",
+      "exception_for": null
+    },
+    {
+      "src_zone": "MGMT",
+      "dst_zone": "MEDDEV",
+      "proto": "tcp",
+      "dport": 22,
+      "justification": "administration of medical devices",
+      "exception_for": null
+    },
+    {
+      "src_zone": "MGMT",
+      "dst_zone": "MEDDEV",
+      "proto": "tcp",
+      "dport": 4242,
+      "justification": "MGMT-initiated DICOM diagnostics on medical devices",
+      "exception_for": null
+    }
+  ],
+  "deny_all": [
+    {
+      "src_zone": "DMZ",
+      "dst_zone": "MGMT",
+      "action": "deny_all"
+    },
+    {
+      "src_zone": "DMZ",
+      "dst_zone": "MEDDEV",
+      "action": "deny_all"
+    },
+    {
+      "src_zone": "INTERNAL",
+      "dst_zone": "DMZ",
+      "action": "deny_all"
+    },
+    {
+      "src_zone": "INTERNAL",
+      "dst_zone": "MGMT",
+      "action": "deny_all"
+    },
+    {
+      "src_zone": "INTERNAL",
+      "dst_zone": "MEDDEV",
+      "action": "deny_all"
+    },
+    {
+      "src_zone": "MEDDEV",
+      "dst_zone": "DMZ",
+      "action": "deny_all"
+    },
+    {
+      "src_zone": "MEDDEV",
+      "dst_zone": "MGMT",
+      "action": "deny_all"
+    }
+  ],
+  "summary": {
+    "flow_count": 11,
+    "allow_count": 11,
+    "deny_count": 7,
+    "cross_zone_pairs": 12
+  }
+}
