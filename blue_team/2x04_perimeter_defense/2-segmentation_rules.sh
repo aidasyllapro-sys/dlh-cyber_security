@@ -59,7 +59,7 @@ ZONES_JSON='[
     "cidr": "10.10.4.0/24",
     "purpose": "Medical device VLAN (imaging, monitoring and other clinical devices)",
     "default_inbound": "drop",
-    "default_outbound": {"policy": "accept", "restrictions": ["no MEDDEV to DMZ", "no MEDDEV to the public Internet"]}
+    "default_outbound": {"policy": "accept", "restrictions": ["no MEDDEV to DMZ", "no MEDDEV to the public Internet", "No flows from MEDDEV to DMZ or the public Internet"]}
   }
 ]'
  

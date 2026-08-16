@@ -43,7 +43,8 @@
         "policy": "accept",
         "restrictions": [
           "no MEDDEV to DMZ",
-          "no MEDDEV to the public Internet"
+          "no MEDDEV to the public Internet",
+          "No flows from MEDDEV to DMZ or the public Internet"
         ]
       }
     }
