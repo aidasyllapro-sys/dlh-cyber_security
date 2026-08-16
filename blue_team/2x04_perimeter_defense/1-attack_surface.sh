@@ -159,7 +159,11 @@ lookup_criticality() {
 # ---------------------------------------------------------------------------
 is_bound_all_interfaces() {
     local bind_addr="$1"
-    [[ "${bind_addr}" == "0.0.0.0" || "${bind_addr}" == "*" || "${bind_addr}" == "::" ]]
+    # "[::]" is the bracketed IPv6 all-interfaces form ss emits for a
+    # dual-stack listener (e.g. "[::]:22") - confirmed on a real host
+    # where sshd listens this way; "::" (unbracketed) is kept too in case
+    # a different ss/kernel version ever emits it without brackets.
+    [[ "${bind_addr}" == "0.0.0.0" || "${bind_addr}" == "*" || "${bind_addr}" == "::" || "${bind_addr}" == "[::]" ]]
 }
  
 compute_exposure_flags() {
@@ -282,3 +286,4 @@ jq -n \
  
 echo "Report saved to: $(basename "${OUTPUT_PATH}")"
 exit 0
+

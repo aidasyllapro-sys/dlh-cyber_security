@@ -1,0 +1,5 @@
+{
+  "mysqld": "critical",
+  "sshd": "high",
+  "apache2": "medium"
+}

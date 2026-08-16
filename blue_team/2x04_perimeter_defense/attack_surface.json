@@ -1,0 +1,116 @@
+{
+  "generated_at": "2026-08-16T20:27:03Z",
+  "hostname": "billing-srv-01",
+  "sockets": [
+    {
+      "proto": "udp",
+      "port": 53,
+      "bind_addr": "127.0.0.53%lo",
+      "process": "systemd-resolve",
+      "package": "",
+      "systemd_unit": "systemd-resolved.service",
+      "systemd_active_state": "active",
+      "function": "dns",
+      "criticality": "low",
+      "exposure_flags": []
+    },
+    {
+      "proto": "udp",
+      "port": 68,
+      "bind_addr": "192.168.74.130%ens34",
+      "process": "systemd-network",
+      "package": "",
+      "systemd_unit": "systemd-networkd.service",
+      "systemd_active_state": "active",
+      "function": "unknown",
+      "criticality": "low",
+      "exposure_flags": []
+    },
+    {
+      "proto": "tcp",
+      "port": 33060,
+      "bind_addr": "127.0.0.1",
+      "process": "mysqld",
+      "package": "mysql-server-core-8.0",
+      "systemd_unit": "mysql.service",
+      "systemd_active_state": "active",
+      "function": "unknown",
+      "criticality": "critical",
+      "exposure_flags": []
+    },
+    {
+      "proto": "tcp",
+      "port": 22,
+      "bind_addr": "0.0.0.0",
+      "process": "sshd",
+      "package": "openssh-server",
+      "systemd_unit": "ssh.service",
+      "systemd_active_state": "active",
+      "function": "ssh",
+      "criticality": "high",
+      "exposure_flags": []
+    },
+    {
+      "proto": "tcp",
+      "port": 53,
+      "bind_addr": "127.0.0.53%lo",
+      "process": "systemd-resolve",
+      "package": "",
+      "systemd_unit": "systemd-resolved.service",
+      "systemd_active_state": "active",
+      "function": "dns",
+      "criticality": "low",
+      "exposure_flags": []
+    },
+    {
+      "proto": "tcp",
+      "port": 3306,
+      "bind_addr": "0.0.0.0",
+      "process": "mysqld",
+      "package": "mysql-server-core-8.0",
+      "systemd_unit": "mysql.service",
+      "systemd_active_state": "active",
+      "function": "database",
+      "criticality": "critical",
+      "exposure_flags": [
+        "bound_0.0.0.0",
+        "database_exposed"
+      ]
+    },
+    {
+      "proto": "tcp",
+      "port": 80,
+      "bind_addr": "*",
+      "process": "apache2",
+      "package": "apache2-bin",
+      "systemd_unit": "apache2.service",
+      "systemd_active_state": "active",
+      "function": "web",
+      "criticality": "medium",
+      "exposure_flags": []
+    },
+    {
+      "proto": "tcp",
+      "port": 22,
+      "bind_addr": "[::]",
+      "process": "sshd",
+      "package": "openssh-server",
+      "systemd_unit": "ssh.service",
+      "systemd_active_state": "active",
+      "function": "ssh",
+      "criticality": "high",
+      "exposure_flags": []
+    }
+  ],
+  "summary": {
+    "total_sockets": 8,
+    "total_flagged": 1,
+    "flagged_by_severity": {
+      "critical": 1,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "unknown_function": 2
+  }
+}

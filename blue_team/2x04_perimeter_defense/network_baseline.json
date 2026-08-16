@@ -1,0 +1,157 @@
+{
+  "timestamp": "2026-08-16T20:12:11Z",
+  "hostname": "billing-srv-01",
+  "interfaces": [
+    {
+      "name": "lo",
+      "mac": "00:00:00:00:00:00",
+      "state": "UNKNOWN",
+      "addresses": [
+        {
+          "family": "inet",
+          "address": "127.0.0.1",
+          "prefixlen": 8
+        }
+      ]
+    },
+    {
+      "name": "ens34",
+      "mac": "00:0c:29:d1:3b:c7",
+      "state": "UP",
+      "addresses": [
+        {
+          "family": "inet",
+          "address": "192.168.74.130",
+          "prefixlen": 24
+        },
+        {
+          "family": "inet6",
+          "address": "fe80::20c:29ff:fed1:3bc7",
+          "prefixlen": 64
+        }
+      ]
+    }
+  ],
+  "routes": [
+    {
+      "destination": "default",
+      "gateway": "192.168.74.2",
+      "device": "ens34",
+      "protocol": "dhcp",
+      "metric": 100
+    },
+    {
+      "destination": "192.168.74.0/24",
+      "gateway": null,
+      "device": "ens34",
+      "protocol": "kernel",
+      "metric": 100
+    },
+    {
+      "destination": "192.168.74.2",
+      "gateway": null,
+      "device": "ens34",
+      "protocol": "dhcp",
+      "metric": 100
+    }
+  ],
+  "neighbors": [
+    {
+      "ip": "192.168.74.1",
+      "mac": "00:50:56:c0:00:08",
+      "device": "ens34",
+      "state": "REACHABLE"
+    },
+    {
+      "ip": "192.168.74.254",
+      "mac": "00:50:56:e2:f5:07",
+      "device": "ens34",
+      "state": "STALE"
+    },
+    {
+      "ip": "192.168.74.2",
+      "mac": "00:50:56:e6:dd:2f",
+      "device": "ens34",
+      "state": "STALE"
+    },
+    {
+      "ip": "192.168.74.128",
+      "mac": "00:0c:29:15:86:75",
+      "device": "ens34",
+      "state": "STALE"
+    }
+  ],
+  "listening_sockets": [
+    {
+      "protocol": "udp",
+      "local_address": "127.0.0.53%lo:53",
+      "process": "systemd-resolve",
+      "pid": 685
+    },
+    {
+      "protocol": "udp",
+      "local_address": "192.168.74.130%ens34:68",
+      "process": "systemd-network",
+      "pid": 560
+    },
+    {
+      "protocol": "tcp",
+      "local_address": "127.0.0.1:33060",
+      "process": "mysqld",
+      "pid": 837
+    },
+    {
+      "protocol": "tcp",
+      "local_address": "0.0.0.0:22",
+      "process": "sshd",
+      "pid": 779
+    },
+    {
+      "protocol": "tcp",
+      "local_address": "127.0.0.53%lo:53",
+      "process": "systemd-resolve",
+      "pid": 685
+    },
+    {
+      "protocol": "tcp",
+      "local_address": "0.0.0.0:3306",
+      "process": "mysqld",
+      "pid": 837
+    },
+    {
+      "protocol": "tcp",
+      "local_address": "*:80",
+      "process": "apache2",
+      "pid": 176992
+    },
+    {
+      "protocol": "tcp",
+      "local_address": "[::]:22",
+      "process": "sshd",
+      "pid": 779
+    }
+  ],
+  "established_connections": [
+    {
+      "protocol": "0",
+      "local_address": "users:((\"sshd\",pid=216928,fd=4),(\"sshd\",pid=216827,fd=4))",
+      "remote_address": "",
+      "process": "sshd",
+      "pid": 216928
+    },
+    {
+      "protocol": "0",
+      "local_address": "users:((\"sshd\",pid=4927,fd=4),(\"sshd\",pid=4869,fd=4))",
+      "remote_address": "",
+      "process": "sshd",
+      "pid": 4927
+    }
+  ],
+  "dns_resolvers": {
+    "resolv_conf_nameservers": [
+      "127.0.0.53"
+    ],
+    "systemd_resolved_active": true,
+    "resolvectl_status": "Global\n       Protocols: -LLMNR -mDNS -DNSOverTLS DNSSEC=no/unsupported\nresolv.conf mode: stub\n\nLink 2 (ens34)\n    Current Scopes: DNS\n         Protocols: +DefaultRoute +LLMNR -mDNS -DNSOverTLS DNSSEC=no/unsupported\nCurrent DNS Server: 192.168.74.2\n       DNS Servers: 192.168.74.2\n        DNS Domain: localdomain\n"
+  }
+}
