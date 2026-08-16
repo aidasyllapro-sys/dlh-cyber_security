@@ -120,6 +120,18 @@ resolve_systemd_unit() {
     echo "${unit}"
 }
  
+# Once a unit name is known (resolved above via systemctl status <pid>,
+# since systemctl show itself requires an already-known unit name and
+# cannot resolve a bare PID to a unit), systemctl show fetches that
+# unit's current properties - used here to confirm it is actually
+# active, not merely nominally associated with the process.
+resolve_systemd_active_state() {
+    local unit="$1"
+    [[ -z "${unit}" ]] && { echo ""; return; }
+    command -v systemctl >/dev/null 2>&1 || { echo ""; return; }
+    systemctl show "${unit}" -p ActiveState --value 2>/dev/null || echo ""
+}
+ 
 lookup_function() {
     local port="$1" process="$2" fn
     if [[ "${HAVE_CATALOG}" != true ]]; then
@@ -206,6 +218,7 @@ for entry in "${SOCKET_LINES[@]}"; do
     binary_path="$(resolve_binary_path "${pid}")"
     package="$(resolve_owning_package "${binary_path}")"
     systemd_unit="$(resolve_systemd_unit "${pid}")"
+    systemd_active_state="$(resolve_systemd_active_state "${systemd_unit}")"
  
     function_label="$(lookup_function "${port}" "${process}")"
     criticality="$(lookup_criticality "${process}")"
@@ -230,11 +243,12 @@ for entry in "${SOCKET_LINES[@]}"; do
     socket_entry=$(jq -n \
         --arg proto "${proto}" --argjson port "${port:-0}" --arg bind_addr "${bind_addr}" \
         --arg process "${process}" --arg package "${package}" --arg unit "${systemd_unit}" \
+        --arg active_state "${systemd_active_state}" \
         --arg function "${function_label}" --arg criticality "${criticality}" \
         --argjson flags "${flags_json}" \
         '{proto: $proto, port: $port, bind_addr: $bind_addr, process: $process,
-          package: $package, systemd_unit: $unit, function: $function,
-          criticality: $criticality, exposure_flags: $flags}')
+          package: $package, systemd_unit: $unit, systemd_active_state: $active_state,
+          function: $function, criticality: $criticality, exposure_flags: $flags}')
     SOCKETS_JSON_ENTRIES+=("${socket_entry}")
 done
  
