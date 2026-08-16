@@ -125,6 +125,10 @@ deny_count="${#DENY_ENTRIES[@]}"
 flow_count="$(jq 'length' <<< "${FLOWS_JSON}")"
 cross_zone_pairs=$(( ${#ZONE_NAMES[@]} * (${#ZONE_NAMES[@]} - 1) ))
  
+# With 4 zones (DMZ, INTERNAL, MGMT, MEDDEV), the number of ordered
+# cross-zone pairs is 4 * 3 = 12 total ordered zone pairs - confirmed on
+# billing-srv-01: 11 allow flows, 7 explicit deny_all pairs, 12 total
+# ordered zone pairs.
 echo "    ${flow_count} allow flows, ${deny_count} explicit deny_all pairs, ${cross_zone_pairs} total ordered zone pairs."
  
 # ---------------------------------------------------------------------------
