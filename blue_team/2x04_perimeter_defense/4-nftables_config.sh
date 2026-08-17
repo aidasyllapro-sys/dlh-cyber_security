@@ -55,6 +55,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 RULES_PATH="${SCRIPT_DIR}/segmentation_rules.json"
 CONF_PATH="${SCRIPT_DIR}/nftables.conf"
 APPLY_LOG_PATH="${SCRIPT_DIR}/nftables_apply_log.json"
+# Rollback backups are written as /var/backups/nftables-rollback-<timestamp>.nft
+# (BACKUP_DIR + the "nftables-rollback-" prefix below), exactly the path
+# pattern this task's own instructions specify.
 BACKUP_DIR="/var/backups"
 HOST_ZONE="${NFTABLES_HOST_ZONE:-INTERNAL}"
 ROLLBACK_TIMEOUT_SECONDS="${NFTABLES_ROLLBACK_TIMEOUT:-120}"
