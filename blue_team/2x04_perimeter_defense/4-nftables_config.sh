@@ -188,11 +188,24 @@ backup_timestamp="$(date -u +"%Y%m%dT%H%M%SZ")"
 backup_path="${BACKUP_DIR}/nftables-rollback-${backup_timestamp}.nft"
  
 echo "[*] Backing up current ruleset to ${backup_path}..."
-if ! nft list ruleset > "${backup_path}" 2>/dev/null; then
+# Prefixing the backup with an explicit "flush ruleset" is critical: if
+# the live ruleset was already empty at backup time, `nft list ruleset`
+# alone produces an empty file, and loading an empty file with `nft -f`
+# later applies zero instructions - it does NOT clear whatever new
+# ruleset is active by then. Found the hard way on billing-srv-01: the
+# backup was empty, `nft -f <empty backup>` after a lockout did nothing,
+# and only an explicit `nft flush ruleset` actually restored access. The
+# flush line makes this backup file self-sufficient as a real rollback
+# regardless of what the live ruleset looked like when it was captured.
+{
+    echo "flush ruleset"
+    nft list ruleset 2>/dev/null
+} > "${backup_path}"
+if [[ ! -s "${backup_path}" ]]; then
     echo "FAILED: could not back up the current ruleset. Refusing to apply without a rollback path." >&2
     exit 1
 fi
-echo "    OK ($(wc -l < "${backup_path}") lines backed up)."
+echo "    OK ($(wc -l < "${backup_path}") lines backed up, including the leading flush)."
  
 # ---------------------------------------------------------------------------
 # Safety net: schedule an automatic, unattended rollback that fires on its
