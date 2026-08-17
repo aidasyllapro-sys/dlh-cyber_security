@@ -9,22 +9,23 @@
 #               config-only syntax check, then a real smoke-test replay
 #               against a small sample PCAP to confirm the whole chain -
 #               install, rules, config - actually produces at least one
-#               alert before Tasks 9-11 build on top of it. The
-#               suricata.service systemd unit is never started - this
-#               project only ever invokes the binary directly with -r.
+#               alert before Tasks 9-11 build on top of it. Per this
+#               task's own hint: do not start the suricata.service
+#               systemd unit - this project only ever invokes the
+#               binary directly with -r, never as a live daemon.
 # author      : Aïda Sylla
 # date        : 2026-08-17
-
+ 
 set -uo pipefail
 # NOTE: deliberately not using -e. A config-test failure or a smoke PCAP
 # producing zero alerts are expected, meaningful outcomes this script
 # must detect and report - not script bugs.
-
+ 
 if [[ "${EUID}" -ne 0 ]]; then
     echo "This script must be run as root (it installs packages and writes to /var/lib/suricata and /var/log/suricata). Try: sudo $0" >&2
     exit 1
 fi
-
+ 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LAB_RULES_DIR="/home/analyst/MedDefense_Lab/suricata/rules"
 LAB_PCAP_DIR="/home/analyst/MedDefense_Lab/PCAPs"
@@ -34,18 +35,18 @@ SURICATA_LOG_DIR="/var/log/suricata"
 CONFIG_PATH="${SCRIPT_DIR}/suricata.yaml"
 OUTPUT_PATH="${SCRIPT_DIR}/setup_verification.json"
 SMOKE_OUT_DIR="/tmp/suricata-smoke"
-
+ 
 json_escape() {
     local s="$1"
     s="${s//\\/\\\\}"; s="${s//\"/\\\"}"; s="${s//$'\t'/\\t}"; s="${s//$'\r'/\\r}"
     printf '%s' "${s}"
 }
-
+ 
 # ---------------------------------------------------------------------------
 # 1. Idempotent install of suricata and jq.
 # ---------------------------------------------------------------------------
 echo "[*] Checking suricata and jq installation..."
-
+ 
 install_if_missing() {
     local pkg="$1"
     if command -v "${pkg}" >/dev/null 2>&1; then
@@ -63,49 +64,49 @@ install_if_missing() {
     echo "    ${pkg}: installed."
     return 0
 }
-
+ 
 if ! command -v jq >/dev/null 2>&1 || ! command -v suricata >/dev/null 2>&1; then
     timeout 300 env DEBIAN_FRONTEND=noninteractive apt-get update < /dev/null > /tmp/apt_update.log 2>&1 || true
 fi
-
+ 
 install_if_missing jq || exit 1
 install_if_missing suricata || exit 1
-
+ 
 installed_version="$(suricata --build-info 2>/dev/null | grep -oP 'This is Suricata version \K[0-9.]+' || suricata -V 2>/dev/null | grep -oP '[0-9]+\.[0-9]+\.[0-9]+' | head -1 || echo "unknown")"
 echo "    suricata version: ${installed_version}"
-
+ 
 # ---------------------------------------------------------------------------
 # 2. Copy the provided ruleset into the standard rule directory.
 # ---------------------------------------------------------------------------
 echo "[*] Copying ruleset..."
-
+ 
 if [[ ! -d "${LAB_RULES_DIR}" ]]; then
     echo "FAILED: rule source directory not found at ${LAB_RULES_DIR}. Cannot proceed without the project-supplied ruleset." >&2
     exit 1
 fi
-
+ 
 mkdir -p "${SURICATA_RULES_DIR}"
-
+ 
 mapfile -t SOURCE_RULE_FILES < <(find "${LAB_RULES_DIR}" -maxdepth 1 -name '*.rules' -type f 2>/dev/null | sort)
 source_count="${#SOURCE_RULE_FILES[@]}"
-
+ 
 if [[ "${source_count}" -eq 0 ]]; then
     echo "FAILED: no .rules files found in ${LAB_RULES_DIR}." >&2
     exit 1
 fi
-
+ 
 for f in "${SOURCE_RULE_FILES[@]}"; do
     cp -f "${f}" "${SURICATA_RULES_DIR}/"
 done
-
+ 
 mapfile -t DEST_RULE_FILES < <(find "${SURICATA_RULES_DIR}" -maxdepth 1 -name '*.rules' -type f 2>/dev/null | sort)
 dest_count="${#DEST_RULE_FILES[@]}"
-
+ 
 echo "    ${source_count} rule files in source, ${dest_count} present in ${SURICATA_RULES_DIR} after copy."
 if [[ "${dest_count}" -lt "${source_count}" ]]; then
     echo "WARNING: fewer rule files present after copy than in source - some copies may have failed." >&2
 fi
-
+ 
 # meddefense.rules is a project-authored placeholder (Task 9's custom
 # rules land here) - create it empty if it doesn't already exist, so
 # suricata.yaml's rule-files list references a file that actually exists
@@ -116,7 +117,7 @@ if [[ ! -f "${MEDDEFENSE_RULES_PATH}" ]]; then
     echo "# MedDefense custom Suricata rules - populated by Task 9." > "${MEDDEFENSE_RULES_PATH}"
     echo "    Created empty placeholder: meddefense.rules"
 fi
-
+ 
 rule_count=0
 for f in "${SURICATA_RULES_DIR}"/*.rules; do
     [[ -f "${f}" ]] || continue
@@ -133,22 +134,25 @@ for f in "${SURICATA_RULES_DIR}"/*.rules; do
     rule_count=$((rule_count + count))
 done
 echo "    ${rule_count} total rule lines counted across all loaded rule files."
-
+ 
 # ---------------------------------------------------------------------------
 # 3. Render suricata.yaml.
 # ---------------------------------------------------------------------------
 echo "[*] Rendering suricata.yaml..."
-
+ 
 mkdir -p "${SURICATA_LOG_DIR}"
-
+ 
 RULE_FILE_NAMES=()
 for f in "${DEST_RULE_FILES[@]}"; do
     RULE_FILE_NAMES+=("$(basename "${f}")")
 done
+# meddefense.rules is always listed even if it wasn't in DEST_RULE_FILES
+# at this exact point (it was just created above, so it should already be
+# there - this is a defensive de-duplication in case it's already listed).
 if [[ ! " ${RULE_FILE_NAMES[*]} " == *" meddefense.rules "* ]]; then
     RULE_FILE_NAMES+=("meddefense.rules")
 fi
-
+ 
 CONF_TMP="$(mktemp)"
 {
     echo "%YAML 1.1"
@@ -213,23 +217,23 @@ CONF_TMP="$(mktemp)"
     echo "    dns:"
     echo "      enabled: yes"
 } > "${CONF_TMP}"
-
+ 
 mv "${CONF_TMP}" "${CONFIG_PATH}"
 chmod 644 "${CONFIG_PATH}"
 echo "    $(wc -l < "${CONFIG_PATH}") lines rendered."
-
+ 
 # ---------------------------------------------------------------------------
 # 4. Config-only test.
 # ---------------------------------------------------------------------------
 echo "[*] Running config test (suricata -T)..."
-
+ 
 config_test_output="$(mktemp)"
 suricata -T -c "${CONFIG_PATH}" -v > "${config_test_output}" 2>&1
 config_test_exit=$?
 tail -n 15 "${config_test_output}"
 rm -f "${config_test_output}"
 echo "    config test exit code: ${config_test_exit}"
-
+ 
 # ---------------------------------------------------------------------------
 # 5. Smoke test: replay a small sample PCAP and confirm at least one alert.
 # ---------------------------------------------------------------------------
@@ -244,19 +248,19 @@ else
     mkdir -p "${SMOKE_OUT_DIR}"
     suricata -c "${CONFIG_PATH}" -r "${SMOKE_PCAP}" -l "${SMOKE_OUT_DIR}/" > /tmp/suricata_smoke_run.log 2>&1
     smoke_run_exit=$?
-
+ 
     eve_path="${SMOKE_OUT_DIR}/eve.json"
     if [[ -f "${eve_path}" ]]; then
         smoke_alerts="$(jq -r 'select(.event_type == "alert")' "${eve_path}" 2>/dev/null | jq -s 'length' 2>/dev/null || echo 0)"
     fi
     echo "    smoke test exit: ${smoke_run_exit}   alerts found: ${smoke_alerts}"
 fi
-
+ 
 # ---------------------------------------------------------------------------
 # 6. Emit setup_verification.json
 # ---------------------------------------------------------------------------
 RULE_FILES_JSON="[$(for rf in "${RULE_FILE_NAMES[@]}"; do printf '"%s",' "$(json_escape "${rf}")"; done | sed 's/,$//')]"
-
+ 
 jq -n \
     --arg version "${installed_version}" \
     --argjson rule_files "${RULE_FILES_JSON}" \
@@ -272,9 +276,9 @@ jq -n \
         smoke_pcap: $smoke_pcap,
         smoke_alerts: $smoke_alerts
     }' > "${OUTPUT_PATH}"
-
+ 
 echo "Report saved to: $(basename "${OUTPUT_PATH}")"
-
+ 
 if [[ "${config_test_exit}" -eq 0 ]]; then
     exit 0
 else
