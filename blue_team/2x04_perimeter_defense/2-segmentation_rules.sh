@@ -65,7 +65,7 @@ ZONES_JSON='[
   },
   {
     "name": "MGMT",
-    "cidr": "10.10.3.0/24",
+    "cidr": "192.168.74.0/24",
     "purpose": "Administration workstations and the internal DNS resolver",
     "default_inbound": "drop",
     "default_outbound": {"policy": "accept", "restrictions": []}

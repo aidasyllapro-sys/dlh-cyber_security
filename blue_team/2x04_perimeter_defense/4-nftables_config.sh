@@ -24,6 +24,13 @@
 # meant for THIS host, or admit traffic that was never meant for it.
  
 set -uo pipefail
+ 
+# This script is intentionally zone-name-agnostic - it never hardcodes
+# DMZ, INTERNAL, MGMT or MEDDEV anywhere in its logic, and instead reads
+# every zone name, CIDR and flow directly from segmentation_rules.json
+# (Task 2), so it renders correctly however many zones that file defines
+# or however they're named. For MedDefense specifically, that currently
+# means the four zones DMZ, INTERNAL, MGMT and MEDDEV.
 # NOTE: deliberately not using -e. A check-only parse failure, a missing
 # `at` scheduler (falls back to a backgrounded timer) or a rule-count
 # mismatch during verification are all expected, meaningful outcomes this
