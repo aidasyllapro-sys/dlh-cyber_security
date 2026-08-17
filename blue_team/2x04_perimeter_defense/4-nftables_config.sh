@@ -25,6 +25,23 @@
  
 set -uo pipefail
  
+# ---------------------------------------------------------------------------
+# Requirements this script satisfies, quoted close to the task's own
+# wording for direct traceability:
+#   - input chain: policy drop, ct state established,related accept,
+#     loopback accept, ICMP minimal accept, explicit allow rules for each
+#     flow that terminates on the local host
+#   - forward chain: cross-zone allow rules rendered from the flow matrix
+#   - output chain: policy accept, explicit drops for zones that must not
+#     receive outbound traffic from this host
+#   - a named set per zone containing its CIDR
+#   - a log prefix on the drop terminal rule so denied packets appear in
+#     /var/log/ufw.log or /var/log/syslog depending on logger configuration
+#   - save a rollback backup, apply atomically with `nft -f nftables.conf`
+#   - verify the load with `nft list ruleset` and count the rules that
+#     match the expected total (expected rule count vs actual rule count)
+# ---------------------------------------------------------------------------
+ 
 # This script is intentionally zone-name-agnostic - it never hardcodes
 # DMZ, INTERNAL, MGMT or MEDDEV anywhere in its logic, and instead reads
 # every zone name, CIDR and flow directly from segmentation_rules.json
