@@ -1,0 +1,73 @@
+{
+  "pcap": "/tmp/test_traffic2.pcap",
+  "started_at": "2026-08-18T01:17:32Z",
+  "finished_at": "2026-08-18T01:17:32Z",
+  "total_alerts": 2,
+  "unique_signatures": 1,
+  "severity_distribution": [
+    {
+      "severity": "0",
+      "count": 2
+    }
+  ],
+  "by_category": [
+    {
+      "category": "policy_violation",
+      "count": 2
+    }
+  ],
+  "by_signature": [
+    {
+      "signature": "Test rule - MedDefense smoke test",
+      "count": 2
+    }
+  ],
+  "top_sources": [
+    {
+      "ip": "192.168.74.1",
+      "count": 1
+    },
+    {
+      "ip": "192.168.74.130",
+      "count": 1
+    }
+  ],
+  "top_destinations": [
+    {
+      "ip": "192.168.74.1",
+      "count": 1
+    },
+    {
+      "ip": "192.168.74.130",
+      "count": 1
+    }
+  ],
+  "alerts": [
+    {
+      "timestamp": "2026-08-18T02:41:50.265676+0200",
+      "src_ip": "192.168.74.130",
+      "src_port": 22,
+      "dst_ip": "192.168.74.1",
+      "dst_port": 57804,
+      "proto": "TCP",
+      "signature": "Test rule - MedDefense smoke test",
+      "signature_id": 9000001,
+      "category": "3",
+      "severity": 0,
+      "threat_category": "policy_violation"
+    },
+    {
+      "timestamp": "2026-08-18T02:41:50.270394+0200",
+      "src_ip": "192.168.74.1",
+      "src_port": 57804,
+      "dst_ip": "192.168.74.130",
+      "dst_port": 22,
+      "proto": "TCP",
+      "signature": "Test rule - MedDefense smoke test",
+      "signature_id": 9000001,
+      "category": "3",
+      "severity": 0,
+      "threat_category": "policy_violation"
+    }
+  ]
+}
