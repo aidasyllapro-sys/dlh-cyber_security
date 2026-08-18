@@ -80,6 +80,13 @@ fi
  
 # ---------------------------------------------------------------------------
 # 2. Replay the PCAP through Suricata and wait for completion.
+#    Per this task's own instructions: suricata -c ./suricata.yaml -r
+#    <pcap> -l <tmpdir> - CONFIG_PATH below resolves to that same
+#    ./suricata.yaml (Task 8's rendered config, in this script's own
+#    directory), just referenced via an absolute path built from
+#    SCRIPT_DIR rather than the literal relative string, so the command
+#    works correctly regardless of the caller's current working
+#    directory.
 # ---------------------------------------------------------------------------
 echo "[*] Replaying ${PCAP_PATH} through Suricata..."
 started_at="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
