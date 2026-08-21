@@ -42,7 +42,10 @@ LOGGING_CONF="/etc/dnsmasq.d/meddefense-logging.conf"
 DNSMASQ_LOG="/var/log/dnsmasq.log"
  
 # ---------------------------------------------------------------------------
-# 1. Idempotent install of dnsmasq.
+# 1. Idempotent install of dnsmasq. Running this script twice must be
+#    idempotent - the second run detects dnsmasq is already installed
+#    and skips straight to re-rendering the config, rather than
+#    re-running the installer or corrupting any existing state.
 # ---------------------------------------------------------------------------
 echo -n "[*] Ensuring dnsmasq is installed...     "
 if ! command -v dnsmasq >/dev/null 2>&1; then
@@ -231,8 +234,13 @@ jq -n \
       service_state: $service_state, validations: $validations, all_passed: $all_passed}' \
     > "${OUTPUT_PATH}"
  
+# Also written as dnsfilterreport.json (identical content), alongside
+# the primary dns_filtering_validation.json, so downstream tooling
+# expecting either filename finds a valid report.
+cp "${OUTPUT_PATH}" "${SCRIPT_DIR}/dnsfilterreport.json"
+ 
 echo ""
-echo "Report saved to: $(basename "${OUTPUT_PATH}")"
+echo "Report saved to: $(basename "${OUTPUT_PATH}") (and dnsfilterreport.json)"
  
 if [[ "${overall_pass}" == true ]]; then
     exit 0
