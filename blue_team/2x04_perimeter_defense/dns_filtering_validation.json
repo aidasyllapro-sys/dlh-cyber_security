@@ -1,0 +1,27 @@
+{
+  "generated_at": "2026-08-21T19:53:42Z",
+  "dnsmasq_version": "2.90",
+  "blocklist_count": 2,
+  "service_state": "active",
+  "validations": [
+    {
+      "domain": "ubuntu.com",
+      "answer": "185.125.190.29",
+      "expected": "allow",
+      "result": "PASS"
+    },
+    {
+      "domain": "c2.crimson-tide-ops.xyz",
+      "answer": "0.0.0.0",
+      "expected": "sinkhole",
+      "result": "PASS"
+    },
+    {
+      "domain": "ubuntu.com",
+      "answer": "185.125.190.29",
+      "expected": "allow",
+      "result": "PASS"
+    }
+  ],
+  "all_passed": true
+}
