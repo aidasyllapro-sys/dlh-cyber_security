@@ -24,6 +24,11 @@
 # this project touches (suricata, tshark) needed live correction.
  
 set -uo pipefail
+ 
+# Per this task's own explicit note: do not rewrite /etc/resolv.conf.
+# This script configures dnsmasq on the loopback only and never touches
+# /etc/resolv.conf anywhere below - routing traffic through this
+# resolver is a deployment-step decision outside this project's scope.
 # NOTE: deliberately not using -e. A validation query that returns the
 # wrong answer is an expected, meaningful outcome this script exists to
 # catch and report - not a script bug.
