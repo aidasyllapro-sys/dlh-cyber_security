@@ -102,6 +102,13 @@ echo ""
  
 passed=0
 failed=0
+RESULT_ENTRIES=()
+ 
+json_escape() {
+    local s="$1"
+    s="${s//\\/\\\\}"; s="${s//\"/\\\"}"; s="${s//$'\t'/\\t}"; s="${s//$'\r'/\\r}"
+    printf '%s' "${s}"
+}
  
 for sid in "${SID_LIST[@]}"; do
     name="${SID_NAME[${sid}]}"
@@ -116,6 +123,8 @@ for sid in "${SID_LIST[@]}"; do
         echo "  observed: PCAP NOT FOUND                FAIL"
         echo ""
         failed=$((failed + 1))
+        RESULT_ENTRIES+=("$(jq -n --argjson sid "${sid}" --arg name "${name}" --arg pcap "${pcap_name}" \
+            '{sid: $sid, name: $name, pcap: $pcap, expected: "fire", observed_hits: 0, result: "FAIL", reason: "pcap not found"}')")
         continue
     fi
  
@@ -132,9 +141,13 @@ for sid in "${SID_LIST[@]}"; do
     if [[ "${hit_count}" -gt 0 ]]; then
         echo "  observed: fire (${hit_count} hits)                PASS"
         passed=$((passed + 1))
+        RESULT_ENTRIES+=("$(jq -n --argjson sid "${sid}" --arg name "${name}" --arg pcap "${pcap_name}" --argjson hits "${hit_count}" \
+            '{sid: $sid, name: $name, pcap: $pcap, expected: "fire", observed_hits: $hits, result: "PASS", reason: null}')")
     else
         echo "  observed: no fire (0 hits)               FAIL"
         failed=$((failed + 1))
+        RESULT_ENTRIES+=("$(jq -n --argjson sid "${sid}" --arg name "${name}" --arg pcap "${pcap_name}" \
+            '{sid: $sid, name: $name, pcap: $pcap, expected: "fire", observed_hits: 0, result: "FAIL", reason: "rule never fired"}')")
     fi
     echo ""
 done
@@ -142,6 +155,25 @@ done
 echo "Rules:  ${#SID_LIST[@]}"
 echo "Passed: ${passed}"
 echo "Failed: ${failed}"
+ 
+# ---------------------------------------------------------------------------
+# Emit rule_validation.json - this project's own rule that JSON is the
+# deliverable format for every validation/tracking task, not just the
+# human-readable console summary above.
+# ---------------------------------------------------------------------------
+RESULTS_JSON="[$(IFS=,; echo "${RESULT_ENTRIES[*]:-}")]"
+RULE_VALIDATION_OUTPUT="${SCRIPT_DIR}/rule_validation.json"
+ 
+jq -n \
+    --arg generated_at "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" \
+    --argjson total_rules "${#SID_LIST[@]}" \
+    --argjson passed "${passed}" \
+    --argjson failed "${failed}" \
+    --argjson results "${RESULTS_JSON}" \
+    '{generated_at: $generated_at, total_rules: $total_rules, passed: $passed, failed: $failed, results: $results}' \
+    > "${RULE_VALIDATION_OUTPUT}"
+ 
+echo "Report saved to: $(basename "${RULE_VALIDATION_OUTPUT}")"
  
 rm -rf "${TMP_LOG_DIR}" "${ISOLATED_CONFIG}"
  
