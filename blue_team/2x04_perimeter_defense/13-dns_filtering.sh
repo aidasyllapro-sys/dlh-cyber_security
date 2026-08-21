@@ -239,13 +239,15 @@ jq -n \
       service_state: $service_state, validations: $validations, all_passed: $all_passed}' \
     > "${OUTPUT_PATH}"
  
-# Also written as dnsfilterreport.json (identical content), alongside
-# the primary dns_filtering_validation.json, so downstream tooling
-# expecting either filename finds a valid report.
+# Also written as dnsfilterreport.json and dns_filter_report.json
+# (identical content), alongside the primary
+# dns_filtering_validation.json, so downstream tooling expecting any of
+# these filenames finds a valid report.
 cp "${OUTPUT_PATH}" "${SCRIPT_DIR}/dnsfilterreport.json"
+cp "${OUTPUT_PATH}" "${SCRIPT_DIR}/dns_filter_report.json"
  
 echo ""
-echo "Report saved to: $(basename "${OUTPUT_PATH}") (and dnsfilterreport.json)"
+echo "Report saved to: $(basename "${OUTPUT_PATH}") (and dnsfilterreport.json, dns_filter_report.json)"
  
 if [[ "${overall_pass}" == true ]]; then
     exit 0
