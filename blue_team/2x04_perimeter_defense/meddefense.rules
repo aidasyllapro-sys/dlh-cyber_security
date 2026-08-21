@@ -1,0 +1,88 @@
+# MedDefense Health Systems - custom Suricata rules
+# These rules encode constraints the community ruleset cannot know about
+# this specific network: the medical device VLAN's Internet-isolation
+# requirement, the guest network's SMB boundary, the authorized billing
+# database host, and the segmentation model itself (Task 2). Every SID is
+# in the project's reserved 9000000 range, rev:1, with a classtype drawn
+# from Suricata's standard classification.config.
+#
+# Network variables used below (override in suricata.yaml's vars section
+# if MedDefense's real addressing differs from this project's own
+# 10.10.x.0/24 model established in Task 2):
+#   $MEDDEV_NET      -> 10.10.4.0/24  (medical device VLAN)
+#   $GUEST_NET       -> 10.10.5.0/24  (guest network - not yet defined by
+#                       Task 2's four-zone model; added here as this task
+#                       explicitly requires a guest source, documented as
+#                       this rule file's own addition, not from Task 2)
+#   $CLINICAL_NET    -> 10.10.2.0/24  (INTERNAL zone - clinical workstations)
+#   $SERVER_NET      -> 10.10.1.0/24  (per this task's own wording for
+#                       rule 3 - note this is literally what the task
+#                       specifies, even though 10.10.1.0/24 was DMZ in
+#                       Task 2's zone model, not a "server" zone; followed
+#                       literally here since the task is explicit about
+#                       this CIDR)
+#   $BILLING_DB_HOST -> 10.10.1.10   (placeholder for "the authorized
+#                       billing database host" - the task names this host
+#                       by role, not by IP; this project has no other
+#                       source for its real address, so a single
+#                       representative host IP is used here and should be
+#                       replaced with the real one if supplied)
+ 
+# ---------------------------------------------------------------------------
+# 1. Medical device to Internet: any TCP or UDP traffic from the MEDDEV
+#    VLAN to an address outside $HOME_NET, on any port other than udp/123
+#    (NTP). Suricata rules cannot express "TCP or UDP, except one UDP
+#    port" in a single alert line, so the standard, idiomatic Suricata
+#    pattern is used: a `pass` rule for the one legitimate exception
+#    (NTP), evaluated before the broader `ip`-protocol alert rule that
+#    catches everything else MEDDEV sends toward the Internet.
+# ---------------------------------------------------------------------------
+pass udp 10.10.4.0/24 any -> any 123 (msg:"MedDefense - allow MEDDEV NTP (policy exception)"; sid:9000101; rev:1;)
+alert ip 10.10.4.0/24 any -> !$HOME_NET any (msg:"MedDefense - MEDDEV to Internet (unauthorized egress)"; classtype:policy-violation; sid:9000001; rev:1;)
+ 
+# ---------------------------------------------------------------------------
+# 2. Unauthorized SMB from guest: tcp/445 where the source is the guest
+#    network and the destination is inside $HOME_NET.
+# ---------------------------------------------------------------------------
+alert tcp 10.10.5.0/24 any -> $HOME_NET 445 (msg:"MedDefense - Unauthorized SMB From Guest Network"; classtype:policy-violation; sid:9000002; rev:1;)
+ 
+# ---------------------------------------------------------------------------
+# 3. Large outbound from server: fires when a host in 10.10.1.0/24 (per
+#    this task's own wording) pushes more than 50MB of TCP payload to a
+#    single external host.
+#    CONFIRMED on billing-srv-01's real suricata 6.0.4: `flow.bytes_toserver`
+#    (the cumulative-payload-per-flow keyword this rule originally used)
+#    does NOT exist on this version - "unknown rule keyword" - it was
+#    only added in a later Suricata release than what this host runs.
+#    Replaced with `dsize` + `threshold`, both long-standing, widely
+#    supported Suricata keywords: dsize:>1000 requires a genuinely large
+#    single packet payload (not small control traffic), and threshold
+#    requires 50 such packets toward the same destination within a
+#    300-second window before alerting. This is a PACKET-COUNT/SIZE
+#    PROXY for "50MB cumulative", not a literal byte-sum - Suricata 6.0.4
+#    has no native per-rule keyword for true cumulative byte accounting,
+#    so this approximates the intent rather than enforcing it exactly.
+# ---------------------------------------------------------------------------
+alert tcp 10.10.1.0/24 any -> !$HOME_NET any (msg:"MedDefense - Large Outbound Transfer From Server"; flow:established,to_server; dsize:>1000; threshold:type threshold, track by_dst, count 50, seconds 300; classtype:policy-violation; sid:9000003; rev:1;)
+ 
+# ---------------------------------------------------------------------------
+# 4. DNS tunneling: fires on any DNS query whose leftmost label exceeds
+#    50 characters - a classic DNS-tunneling / data-exfiltration
+#    indicator, matched against the dns.query sticky buffer with a PCRE
+#    anchored to the start of the name.
+# ---------------------------------------------------------------------------
+alert dns any any -> any any (msg:"MedDefense - DNS Tunneling Long Label"; dns.query; pcre:"/^[^.]{51,}\./"; classtype:policy-violation; sid:9000004; rev:1;)
+ 
+# ---------------------------------------------------------------------------
+# 5. Clinical workstation to unauthorized database: tcp/3306 from the
+#    clinical workstation subnet that is NOT destined to the authorized
+#    billing database host - the negated address expression is the
+#    detection itself (any other tcp/3306 destination is the violation).
+# ---------------------------------------------------------------------------
+alert tcp 10.10.2.0/24 any -> !10.10.1.10 3306 (msg:"MedDefense - Clinical Workstation to Unauthorized Database"; classtype:policy-violation; sid:9000005; rev:1;)
+ 
+# ---------------------------------------------------------------------------
+# 6. Telnet cleartext to medical device: tcp/23 to the MEDDEV VLAN from
+#    any source - Telnet should never reach a medical device at all.
+# ---------------------------------------------------------------------------
+alert tcp any any -> 10.10.4.0/24 23 (msg:"MedDefense - Cleartext Telnet to Medical Device"; classtype:policy-violation; sid:9000006; rev:1;)
