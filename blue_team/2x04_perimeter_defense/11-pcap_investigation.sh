@@ -244,9 +244,9 @@ else
 fi
  
 # ---------------------------------------------------------------------------
-# Protocol distribution, from `tshark -q -z io,phs`'s hierarchical tree
-# output - top-level protocols under `ip` (tcp/udp/icmp/other), expressed
-# as a percentage of total frames.
+# Protocol distribution (protocol distribution), from `tshark -q -z
+# io,phs`'s hierarchical tree output - top-level protocols under `ip`
+# (tcp/udp/icmp/other), expressed as a percentage of total frames.
 # ---------------------------------------------------------------------------
 echo -n "[*] Protocol distribution...             "
 phs_raw="$(tshark -r "${PCAP_PATH}" -q -z io,phs 2>/dev/null || true)"
