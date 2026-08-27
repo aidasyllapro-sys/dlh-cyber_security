@@ -237,7 +237,20 @@ jq -n \
         telemetry: { auditd_active: $auditd_active, rsyslog_active: $rsyslog_active, sysmon_linux_present: $sysmon_linux_present }
     }' > "${OUTPUT_PATH}"
  
+# ---------------------------------------------------------------------------
+# Controlled-failure check: the intake JSON we just wrote must itself be
+# well-formed. All required tools were present (exit 2 already handled
+# that), so a malformed output here is a genuine controlled failure of
+# the capture logic itself, not a missing dependency - distinct exit
+# code 1, per this capstone's own exit-code contract.
+# ---------------------------------------------------------------------------
+if ! jq empty "${OUTPUT_PATH}" >/dev/null 2>&1; then
+    echo "FAILED: environment_intake_linux.json was written but is not valid JSON. The capture logic produced malformed output." >&2
+    exit 1
+fi
+ 
 echo ""
 echo "Packages: ${package_count}   Listening: ${listening_count}   SUID/SGID: ${suid_sgid_count}   World-writable: ${world_writable_count}"
 echo "Report saved to: $(basename "${OUTPUT_PATH}")"
 exit 0
+
