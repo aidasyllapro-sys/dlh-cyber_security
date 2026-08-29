@@ -48,6 +48,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BASELINE_DIR="${SCRIPT_DIR}/capstone/baseline"
 mkdir -p "${BASELINE_DIR}"
  
+# Per this task's own instructions, the full raw log is written to
+# capstone/baseline/lynis_baseline.log (BASELINE_DIR + the filename
+# below), and the JSON summary to capstone/baseline/baseline_linux.json.
 LOG_PATH="${BASELINE_DIR}/lynis_baseline.log"
 OUTPUT_PATH="${BASELINE_DIR}/baseline_linux.json"
 LYNIS_REPORT_DAT="/var/log/lynis-report.dat"
