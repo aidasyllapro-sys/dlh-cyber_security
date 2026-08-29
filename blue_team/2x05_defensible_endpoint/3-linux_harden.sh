@@ -52,6 +52,9 @@ EXEC_DIR="${CAPSTONE_DIR}/exec"
 BASELINE_DIR="${CAPSTONE_DIR}/baseline"
 mkdir -p "${EXEC_DIR}"
  
+# Per this task's own instructions, the full execution log is written to
+# capstone/exec/linux_harden.log (EXEC_DIR + the filename below), and the
+# JSON evidence summary to capstone/exec/linux_harden.json.
 LOG_PATH="${EXEC_DIR}/linux_harden.log"
 OUTPUT_PATH="${EXEC_DIR}/linux_harden.json"
 TARGET_STATE_PATH="${CAPSTONE_DIR}/target_state.json"
