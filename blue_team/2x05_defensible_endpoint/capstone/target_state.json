@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "generated_at": "2026-08-29T20:55:11Z",
+  "generated_at": "2026-08-29T21:02:10Z",
   "controls": [
     {
       "id": "LNX-SSH-01",
@@ -61,7 +61,7 @@
       "id": "LNX-APPARMOR-01",
       "platform": "linux",
       "family": "hardening",
-      "description": "AppArmor must have at least one profile in enforce mode",
+      "description": "AppArmor (apparmor) must have at least one profile in enforce mode",
       "check_type": "command_exit_zero",
       "check_target": "aa-status 2>/dev/null | grep -q \"profiles are in enforce mode\"",
       "expected_value": "exit 0",

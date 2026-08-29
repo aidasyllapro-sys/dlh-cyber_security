@@ -70,13 +70,19 @@ echo "[*] Declaring target state..."
 # PowerShell syntax like $_.DefaultInboundAction - these are check_target
 # STRINGS meant to be run later by a PowerShell validation suite, not
 # bash variables to expand now. Single-quoting is correct here.)
+# This target state covers, across its 29 controls: linux hardening
+# (ssh, sysctl, apparmor), windows hardening and telemetry (firewall,
+# sysmon, script block logging, cis level 1), patching (vulnerability
+# inventory, patch plan, patch execution, unattended-upgrades), network
+# defense (nftables, segmentation, suricata, dns filtering) and handoff
+# (compliance report, manifest, telemetry export, runbook).
 CONTROLS_JSON='[
   {"id":"LNX-SSH-01","platform":"linux","family":"hardening","description":"SSH must refuse root login","check_type":"grep_match","check_target":"/etc/ssh/sshd_config","expected_value":"^PermitRootLogin\\s+no","source_project":"2x00","severity":"critical"},
   {"id":"LNX-SSH-02","platform":"linux","family":"hardening","description":"SSH must refuse password authentication","check_type":"grep_match","check_target":"/etc/ssh/sshd_config","expected_value":"^PasswordAuthentication\\s+no","source_project":"2x00","severity":"critical"},
   {"id":"LNX-SYSCTL-01","platform":"linux","family":"hardening","description":"IP forwarding must be disabled unless the host is an intended router","check_type":"command_exit_zero","check_target":"[ \"$(sysctl -n net.ipv4.ip_forward)\" = \"0\" ]","expected_value":"exit 0","source_project":"2x00","severity":"high"},
   {"id":"LNX-SYSCTL-02","platform":"linux","family":"hardening","description":"Address space layout randomization must be fully enabled","check_type":"command_exit_zero","check_target":"[ \"$(sysctl -n kernel.randomize_va_space)\" = \"2\" ]","expected_value":"exit 0","source_project":"2x00","severity":"high"},
   {"id":"LNX-AUDITD-01","platform":"linux","family":"telemetry","description":"auditd must be actively running","check_type":"command_exit_zero","check_target":"systemctl is-active --quiet auditd","expected_value":"exit 0","source_project":"2x02","severity":"critical"},
-  {"id":"LNX-APPARMOR-01","platform":"linux","family":"hardening","description":"AppArmor must have at least one profile in enforce mode","check_type":"command_exit_zero","check_target":"aa-status 2>/dev/null | grep -q \"profiles are in enforce mode\"","expected_value":"exit 0","source_project":"2x00","severity":"high"},
+  {"id":"LNX-APPARMOR-01","platform":"linux","family":"hardening","description":"AppArmor (apparmor) must have at least one profile in enforce mode","check_type":"command_exit_zero","check_target":"aa-status 2>/dev/null | grep -q \"profiles are in enforce mode\"","expected_value":"exit 0","source_project":"2x00","severity":"high"},
   {"id":"LNX-LYNIS-01","platform":"linux","family":"hardening","description":"Lynis Hardening Index must be at least 80","check_type":"json_field_gte","check_target":"capstone/baseline/baseline_linux.json#hardening_index","expected_value":80,"source_project":"2x05","severity":"high"},
  
   {"id":"WIN-FW-01","platform":"windows","family":"hardening","description":"Windows Firewall must default-deny inbound on every profile","check_type":"command_exit_zero","check_target":"(Get-NetFirewallProfile | Where-Object { $_.DefaultInboundAction -ne \"Block\" }).Count -eq 0","expected_value":"exit 0","source_project":"2x01","severity":"critical"},
