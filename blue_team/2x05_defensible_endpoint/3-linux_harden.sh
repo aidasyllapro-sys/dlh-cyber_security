@@ -8,9 +8,10 @@
 #               capturing every sub-step's stdout and exit code as
 #               structured evidence, re-running Lynis to measure the
 #               real before/after delta, and mapping each step back to
-#               the specific target_state.json control IDs it is
-#               responsible for. This script does not reimplement any
-#               hardening logic itself - it composes and measures.
+#               the specific target_state.json (the target-state
+#               contract from Task 2) control IDs it is responsible for.
+#               This script does not reimplement any hardening logic
+#               itself - it composes and measures.
 # author      : Aïda Sylla
 # date        : 2026-08-22
 #
