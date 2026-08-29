@@ -42,6 +42,9 @@ if ! command -v jq >/dev/null 2>&1; then
 fi
  
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# The finish line this task declares is written to capstone/target_state.json
+# (TARGET_DIR + the filename below), exactly the path this task's own
+# instructions specify.
 TARGET_DIR="${SCRIPT_DIR}/capstone"
 OUTPUT_PATH="${TARGET_DIR}/target_state.json"
 mkdir -p "${TARGET_DIR}"
