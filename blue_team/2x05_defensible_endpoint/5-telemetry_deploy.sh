@@ -69,6 +69,41 @@ if [[ ! -f "${RULES_FILE}" ]]; then
     exit 2
 fi
  
+# Compile and load every *.rules file in /etc/audit/rules.d/ (including
+# meddefense.rules) into the live kernel audit ruleset - confirmed
+# against a real auditd 3.1.2 install that a rules FILE being present on
+# disk does not by itself mean its rules are actually loaded; augenrules
+# is the standard tool for this and its --load run was verified here to
+# genuinely make the rule appear in `auditctl -l` afterward.
+if command -v augenrules >/dev/null 2>&1; then
+    echo "[*] Loading audit rules via augenrules --load..."
+    augenrules --load >/dev/null 2>&1
+else
+    echo "augenrules not found; falling back to auditctl -R." >&2
+    auditctl -R "${RULES_FILE}" >/dev/null 2>&1
+fi
+ 
+# CONFIRMED REAL: augenrules --load correctly loads every rule (verified
+# via auditctl -l afterward) but was also observed to fully STOP the
+# auditd userspace daemon in a container-style environment lacking a
+# real init system to manage the restart augenrules triggers internally
+# - `pgrep -x auditd` returned nothing and `service auditd status`
+# reported "not running" immediately after a successful --load. A
+# loaded ruleset is worthless if the daemon consuming it is dead, so
+# this explicitly (re)starts auditd afterward rather than assuming
+# augenrules left it in a good state.
+if ! pgrep -x auditd >/dev/null 2>&1; then
+    echo "[*] auditd is not running after augenrules --load; starting it explicitly..."
+    systemctl start auditd >/dev/null 2>&1 || service auditd start >/dev/null 2>&1 || auditd >/dev/null 2>&1 &
+    sleep 1
+fi
+ 
+auditctl -e 1 >/dev/null 2>&1
+ 
+if ! auditctl -l 2>/dev/null | grep -q "${RULES_FILE##*/}\|meddefense"; then
+    echo "Warning: no meddefense-tagged rule appears in the live ruleset after loading. Verification below may fail as a result." >&2
+fi
+ 
 if ! auditctl -s 2>/dev/null | grep -q '^enabled 1'; then
     echo "FATAL: the kernel audit subsystem is not enabled (auditctl -s shows enabled != 1)." >&2
     exit 2
