@@ -316,7 +316,7 @@ ALT_OUTPUT_PATH="${SCRIPT_DIR}/capstone/validation.json"
 cp "${OUTPUT_PATH}" "${ALT_OUTPUT_PATH}"
  
 echo ""
-echo "Total controls: ${total}"
+echo "Total controls: ${total} (total controls evaluated)"
 echo "Report saved to: ${OUTPUT_PATH} (and capstone/validation.json)"
  
 if [[ "${fail_count}" -eq 0 && "${error_count}" -eq 0 ]]; then
