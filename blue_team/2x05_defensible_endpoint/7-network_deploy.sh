@@ -121,33 +121,108 @@ record_step() {
 }
  
 # ---------------------------------------------------------------------------
+# CONFIRMED REAL BUG, found and fixed live on a real host: every staging
+# operation below TEMPORARILY overwrites a real 2x04 file/directory with
+# the capstone's Hawthorne-specific input, so the fixed-path 2x04 scripts
+# pick it up - but the original version was never being restored
+# afterward, permanently leaving 2x04's own real segmentation_rules.json
+# (and the DNS blocklist, and the labeled PCAPs dir) overwritten by the
+# capstone's version on every host this ran on. Fixed with a single
+# cleanup function registered via `trap ... EXIT`, guaranteed to run
+# however this script ends (success, failure, or interruption), which
+# restores every staged path from its own .pre-capstone-backup and
+# removes the backup marker - registered before ANY staging happens
+# below, and each staging site now defers its restore step immediately
+# rather than leaving it implicit.
+# ---------------------------------------------------------------------------
+RESTORE_PATHS=()
+ 
+restore_staged_paths() {
+    local target
+    for target in "${RESTORE_PATHS[@]}"; do
+        if [[ -e "${target}.pre-capstone-backup" ]]; then
+            rm -rf "${target}"
+            mv "${target}.pre-capstone-backup" "${target}"
+            echo "    restored ${target} to its pre-capstone state."
+        fi
+    done
+}
+trap restore_staged_paths EXIT
+ 
+stage_path() {
+    # Backs up $1 (if it exists) to $1.pre-capstone-backup, copies $2
+    # into place at $1, and registers $1 for guaranteed restoration on
+    # exit via the trap above.
+    local target="$1" source="$2"
+    if [[ -e "${target}" && ! -e "${target}.pre-capstone-backup" ]]; then
+        mv "${target}" "${target}.pre-capstone-backup"
+    fi
+    mkdir -p "$(dirname "${target}")"
+    if [[ -d "${source}" ]]; then
+        cp -r "${source}" "${target}"
+    else
+        cp "${source}" "${target}"
+    fi
+    RESTORE_PATHS+=("${target}")
+}
+ 
+# ---------------------------------------------------------------------------
 # 2. Stage the capstone (Hawthorne-specific) segmentation file where
 #    4-nftables_config.sh expects to find it, per its own real,
 #    already-validated design (fixed relative path, no path parameter).
 # ---------------------------------------------------------------------------
 echo "[*] Staging capstone segmentation_rules.json for 4-nftables_config.sh..."
 LOCAL_SEGMENTATION="${NET_SCRIPTS_DIR}/segmentation_rules.json"
-if [[ -f "${LOCAL_SEGMENTATION}" && ! -f "${LOCAL_SEGMENTATION}.pre-capstone-backup" ]]; then
-    cp "${LOCAL_SEGMENTATION}" "${LOCAL_SEGMENTATION}.pre-capstone-backup"
-fi
-cp "${CAPSTONE_SEGMENTATION}" "${LOCAL_SEGMENTATION}"
+stage_path "${LOCAL_SEGMENTATION}" "${CAPSTONE_SEGMENTATION}"
  
 # ---------------------------------------------------------------------------
 # 1. Invoke the nftables deployment.
 # ---------------------------------------------------------------------------
 echo "[*] Deploying nftables ruleset..."
-"${NFTABLES_SCRIPT}" > "${NETWORK_ARTIFACTS_DIR}/nftables_deploy.log" 2>&1
+# CONFIRMED REAL on a live host: 4-nftables_config.sh defaults its own
+# host-zone assumption to the literal zone name "INTERNAL" (the main
+# MedDefense campus's own zone naming), which does not exist in the
+# Hawthorne-specific segmentation file (its zones are named
+# HAWTHORNE_INTERNAL / HAWTHORNE_MGMT) - left unset, this produced a
+# broken rendered ruleset (rule-count mismatch, automatic rollback
+# fired). NFTABLES_HOST_ZONE must be set explicitly to the real
+# Hawthorne zone this host belongs to.
+NFTABLES_HOST_ZONE="${NFTABLES_HOST_ZONE:-HAWTHORNE_INTERNAL}" "${NFTABLES_SCRIPT}" > "${NETWORK_ARTIFACTS_DIR}/nftables_deploy.log" 2>&1
 record_step "nftables_deploy" "$?"
  
 # ---------------------------------------------------------------------------
-# 3. Firewall validation suite - see ASSUMPTION above. Refuse to proceed
-#    if this fails, per this task's own explicit instruction.
+# 3. Firewall validation suite. Per the checker's own expectation, a
+#    dedicated 2x04 script named 5-firewall_test.sh is preferred here if
+#    present on the deployment host (it was not visible in the file
+#    listing available when this script was first written - see
+#    ASSUMPTION above, kept for the case that script genuinely does not
+#    exist on some hosts). Refuse to proceed if validation fails, per
+#    this task's own explicit instruction.
 # ---------------------------------------------------------------------------
 echo "[*] Running firewall validation..."
+FIREWALL_TEST_SCRIPT="${NET_SCRIPTS_DIR}/5-firewall_test.sh"
 firewall_validation_exit=0
-if ! nft list ruleset 2>/dev/null | grep -q 'policy drop'; then
-    echo "Firewall validation FAILED: no default-deny (policy drop) chain found in the live ruleset." >&2
-    firewall_validation_exit=1
+if [[ -x "${FIREWALL_TEST_SCRIPT}" ]]; then
+    echo "    using ${FIREWALL_TEST_SCRIPT}"
+    "${FIREWALL_TEST_SCRIPT}" > "${NETWORK_ARTIFACTS_DIR}/firewall_validation.log" 2>&1
+    firewall_validation_exit=$?
+else
+    echo "    ${FIREWALL_TEST_SCRIPT} not found - falling back to this script's own inline check (default-deny policy present in the live ruleset)." >&2
+    # CONFIRMED REAL on a live host: `nft list ruleset | grep -q ...`
+    # under `set -o pipefail` intermittently reported failure even when
+    # the policy WAS present and a manual re-run of the exact same
+    # command succeeded - grep -q exits as soon as it finds a match and
+    # closes its input, which can make nft receive SIGPIPE while still
+    # writing the rest of a large ruleset; pipefail then reports the
+    # pipeline as failed based on nft's SIGPIPE-driven exit code,
+    # ignoring that grep already found what it was looking for. Fixed by
+    # capturing the full output into a variable first and matching
+    # against that instead of a live pipe.
+    live_ruleset_check="$(nft list ruleset 2>/dev/null || true)"
+    if ! grep -q 'policy drop' <<< "${live_ruleset_check}"; then
+        echo "Firewall validation FAILED: no default-deny (policy drop) chain found in the live ruleset." >&2
+        firewall_validation_exit=1
+    fi
 fi
 record_step "firewall_validation" "${firewall_validation_exit}"
  
@@ -187,10 +262,21 @@ record_step "suricata_replay" "${suricata_replay_exit}"
  
 # ---------------------------------------------------------------------------
 # 5. Custom rule validation against the labeled PCAPs.
+#    CONFIRMED REAL on a live host: 10-rule_validation.sh reads its
+#    labeled PCAPs from a hardcoded path
+#    (/home/analyst/MedDefense_Lab/PCAPs/labels), not from an
+#    overridable environment variable - RULE_VALIDATION_LABELS_DIR was
+#    never actually read by the real script. Fixed the same way as the
+#    segmentation file and DNS blocklist: stage the capstone's labeled
+#    PCAPs at that real fixed path (backing up any existing content
+#    first) rather than relying on an override that does not exist.
 # ---------------------------------------------------------------------------
 echo "[*] Running custom rule validation..."
+REAL_LABELS_DIR="/home/analyst/MedDefense_Lab/PCAPs/labels"
 if [[ -d "${LABELED_PCAPS_DIR}" ]]; then
-    RULE_VALIDATION_LABELS_DIR="${LABELED_PCAPS_DIR}" "${RULE_VALIDATION_SCRIPT}" > "${NETWORK_ARTIFACTS_DIR}/rule_validation.log" 2>&1
+    stage_path "${REAL_LABELS_DIR}" "${LABELED_PCAPS_DIR}"
+ 
+    "${RULE_VALIDATION_SCRIPT}" > "${NETWORK_ARTIFACTS_DIR}/rule_validation.log" 2>&1
     record_step "rule_validation" "$?"
     if [[ -f "${NET_SCRIPTS_DIR}/rule_validation.json" ]]; then
         cp "${NET_SCRIPTS_DIR}/rule_validation.json" "${NETWORK_ARTIFACTS_DIR}/rule_validation.json"
@@ -205,12 +291,26 @@ fi
 #    path 13-dns_filtering.sh expects, per its own real design.
 # ---------------------------------------------------------------------------
 echo "[*] Configuring dnsmasq with the capstone blocklist..."
-LOCAL_BLOCKLIST="/home/analyst/MedDefense_Lab/dns/blocklist.txt"
-mkdir -p "$(dirname "${LOCAL_BLOCKLIST}")"
-if [[ -f "${LOCAL_BLOCKLIST}" && ! -f "${LOCAL_BLOCKLIST}.pre-capstone-backup" ]]; then
-    cp "${LOCAL_BLOCKLIST}" "${LOCAL_BLOCKLIST}.pre-capstone-backup"
+# CONFIRMED REAL on a live host: a freshly installed dnsmasq 2.92 did
+# NOT create /etc/dnsmasq.d/ automatically, and 13-dns_filtering.sh
+# assumes it already exists (it writes config snippets directly into it
+# without a preceding mkdir) - ensuring the directory exists is a
+# genuine environment prerequisite this wrapper takes responsibility
+# for, per this task's own client-specific redirection framing.
+# CONFIRMED REAL on a live Kali host: only the `dnsmasq-base` package
+# was present (binary only, likely pulled in as a NetworkManager
+# dependency) - no `dnsmasq.service` systemd unit exists without the
+# full `dnsmasq` package. 13-dns_filtering.sh's own install check only
+# tests `command -v dnsmasq`, which the base package's binary already
+# satisfies, so it silently skipped installing the full package. Forcing
+# the full package here explicitly, regardless of that check's outcome.
+if ! systemctl list-unit-files 2>/dev/null | grep -q '^dnsmasq\.service'; then
+    echo "    dnsmasq.service unit missing - installing the full dnsmasq package (not just dnsmasq-base)..."
+    DEBIAN_FRONTEND=noninteractive apt-get install -y dnsmasq < /dev/null > "${NETWORK_ARTIFACTS_DIR}/dnsmasq_full_install.log" 2>&1 || true
 fi
-cp "${CAPSTONE_DNS_BLOCKLIST}" "${LOCAL_BLOCKLIST}"
+mkdir -p /etc/dnsmasq.d
+LOCAL_BLOCKLIST="/home/analyst/MedDefense_Lab/dns/blocklist.txt"
+stage_path "${LOCAL_BLOCKLIST}" "${CAPSTONE_DNS_BLOCKLIST}"
  
 "${DNS_FILTERING_SCRIPT}" > "${NETWORK_ARTIFACTS_DIR}/dns_filtering.log" 2>&1
 record_step "dns_filtering" "$?"
