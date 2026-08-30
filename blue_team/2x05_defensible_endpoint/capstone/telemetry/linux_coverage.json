@@ -1,0 +1,43 @@
+{
+  "timestamp": "2026-08-30T01:04:20Z",
+  "hostname": "kali",
+  "tests": [
+    {
+      "action": "create a user",
+      "audit_key": "meddefense-user-mgmt",
+      "records_found": 13,
+      "result": "PASS"
+    },
+    {
+      "action": "remove the user",
+      "audit_key": "meddefense-user-mgmt",
+      "records_found": 14,
+      "result": "PASS"
+    },
+    {
+      "action": "run a service management action",
+      "audit_key": "meddefense-service-mgmt",
+      "records_found": 8,
+      "result": "PASS"
+    },
+    {
+      "action": "schedule a cron job",
+      "audit_key": "meddefense-cron",
+      "records_found": 10,
+      "result": "PASS"
+    },
+    {
+      "action": "remove it",
+      "audit_key": "meddefense-cron",
+      "records_found": 12,
+      "result": "PASS"
+    },
+    {
+      "action": "run a short authorized find as root",
+      "audit_key": "meddefense-priv-find",
+      "records_found": 4,
+      "result": "PASS"
+    }
+  ],
+  "all_passed": true
+}
