@@ -309,8 +309,15 @@ if ! jq empty "${OUTPUT_PATH}" >/dev/null 2>&1; then
     exit 1
 fi
  
+# Also written as capstone/validation.json (identical content), alongside
+# the primary capstone/exec/validation_report.json, so downstream
+# tooling expecting either filename finds a valid report.
+ALT_OUTPUT_PATH="${SCRIPT_DIR}/capstone/validation.json"
+cp "${OUTPUT_PATH}" "${ALT_OUTPUT_PATH}"
+ 
 echo ""
-echo "Report saved to: ${OUTPUT_PATH}"
+echo "Total controls: ${total}"
+echo "Report saved to: ${OUTPUT_PATH} (and capstone/validation.json)"
  
 if [[ "${fail_count}" -eq 0 && "${error_count}" -eq 0 ]]; then
     echo "READY: every control passed."
