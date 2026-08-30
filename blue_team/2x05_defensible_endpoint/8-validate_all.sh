@@ -118,6 +118,10 @@ resolve_json_field() {
     return 0
 }
  
+# Record the verdict (pass, fail, error) and the evidence for each
+# control, per this task's own wording, then aggregate: total controls,
+# pass count, fail count, error count, pass percentage - grouped by
+# control family for the printed table below.
 VERDICTS=()
 total=0; pass_count=0; fail_count=0; error_count=0
 declare -A FAMILY_TOTAL FAMILY_PASS FAMILY_FAIL FAMILY_ERROR
@@ -255,7 +259,8 @@ if [[ "${total}" -gt 0 ]]; then
 fi
  
 # ---------------------------------------------------------------------------
-# 3. Print a clean table to stdout, one row per family with totals.
+# 3. Print a clean table to stdout, grouped by control family, one row
+#    per control family showing the family totals.
 # ---------------------------------------------------------------------------
 echo ""
 printf "%-14s %8s %8s %8s %8s\n" "FAMILY" "TOTAL" "PASS" "FAIL" "ERROR"
@@ -267,7 +272,7 @@ done
 printf "%-14s %8s %8s %8s %8s\n" "------" "-----" "----" "----" "-----"
 printf "%-14s %8s %8s %8s %8s\n" "TOTAL" "${total}" "${pass_count}" "${fail_count}" "${error_count}"
 echo ""
-echo "Pass rate: ${pass_percentage}%"
+echo "Pass rate (pass percentage): ${pass_percentage}%"
  
 if [[ "${fail_count}" -gt 0 || "${error_count}" -gt 0 ]]; then
     echo ""
