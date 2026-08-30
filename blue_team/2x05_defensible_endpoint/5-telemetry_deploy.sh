@@ -174,17 +174,17 @@ echo "[*] Running controlled test sequence..."
 TEST_USER="meddefense_capstone_test"
 userdel -rf "${TEST_USER}" >/dev/null 2>&1 || true
  
-run_test_action "create user" "${KEY_USER_MGMT}" "useradd -m '${TEST_USER}'"
-run_test_action "remove user" "${KEY_USER_MGMT}" "userdel -r '${TEST_USER}'"
-run_test_action "service management action" "${KEY_SERVICE_MGMT}" "systemctl restart cron 2>/dev/null || service cron restart 2>/dev/null"
+run_test_action "create a user" "${KEY_USER_MGMT}" "useradd -m '${TEST_USER}'"
+run_test_action "remove the user" "${KEY_USER_MGMT}" "userdel -r '${TEST_USER}'"
+run_test_action "run a service management action" "${KEY_SERVICE_MGMT}" "systemctl restart cron 2>/dev/null || service cron restart 2>/dev/null"
  
 CRON_MARKER="# meddefense-capstone-test-marker"
-run_test_action "schedule cron job" "${KEY_CRON}" \
+run_test_action "schedule a cron job" "${KEY_CRON}" \
     "(crontab -l 2>/dev/null; echo '* * * * * /bin/true ${CRON_MARKER}') | crontab -"
-run_test_action "remove cron job" "${KEY_CRON}" \
+run_test_action "remove it" "${KEY_CRON}" \
     "crontab -l 2>/dev/null | grep -v '${CRON_MARKER}' | crontab -"
  
-run_test_action "authorized privileged find" "${KEY_PRIV_FIND}" \
+run_test_action "run a short authorized find as root" "${KEY_PRIV_FIND}" \
     "find /tmp -maxdepth 1 -name '*.meddefense-capstone-marker*'"
  
 TESTS_JSON="[$(IFS=,; echo "${RESULTS[*]:-}")]"
