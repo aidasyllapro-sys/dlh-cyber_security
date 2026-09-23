@@ -1,0 +1,11 @@
+{
+  "source_pcap": "full_timeline.pcap",
+  "generated_by": "5-vpn_pivot.sh",
+  "vpn_connection": {
+    "timestamp_epoch": "1776260722.000000000",
+    "source_ip": "154.118.42.89",
+    "source_port": "49872",
+    "destination_ip": "10.10.0.1"
+  },
+  "notes": "Geolocation requires outbound whois access on the machine running this script. Assigned-internal-IP and timeline-gap figures are heuristic/candidate findings, not directly read fields, and are labeled as such in the console output."
+}

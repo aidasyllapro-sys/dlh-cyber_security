@@ -1,0 +1,15 @@
+{
+  "generated_by": "6-kill_chain.sh",
+  "period_start_epoch": "1776178953.142000000",
+  "period_end_epoch": "1776292786.952494000",
+  "phase_status": {
+    "initial_access": "not available in this run",
+    "credential_harvesting": "confirmed packet evidence",
+    "beaconing": "confirmed packet evidence",
+    "vpn_pivot": "confirmed packet evidence",
+    "lateral_movement": "confirmed packet evidence",
+    "discovery": "PCAP present but no SMB2 tree-connect/create/query-directory activity found",
+    "exfiltration": "confirmed packet evidence"
+  },
+  "notes": "Each phase's status field distinguishes 'confirmed packet evidence', 'PCAP present but no matching activity found', and 'not available in this run' (source file missing). Phase 1 is never packet evidence by design, since no PCAP in this module records SMTP delivery."
+}

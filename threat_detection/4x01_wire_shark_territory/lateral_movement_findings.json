@@ -1,0 +1,10 @@
+{
+  "source_pcap": "lateral_movement.pcap",
+  "generated_by": "4-lateral_movement.sh",
+  "cross_subnet_connections": 3,
+  "unique_cross_subnet_pairs": 3,
+  "auth_events_count": 3,
+  "success_events": [],
+  "denied_events": [],
+  "notes": "Fields not exposed in plaintext at the packet level (e.g. RDP/NLA account names, which are TLS-wrapped) are reported as 'not visible in this capture' rather than guessed. MITRE techniques are reported only where this run found corresponding packet evidence."
+}

@@ -1,0 +1,29 @@
+{
+  "source_pcap": "dns_exfil.pcap",
+  "generated_by": "3-dns_tunnel.sh",
+  "classification": {
+    "total_queries": 487,
+    "normal_queries": 367,
+    "anomalous_queries": 120,
+    "anomalous_label_len_threshold": 20
+  },
+  "anomalous_pattern": {
+    "base_domain": "data-sync.meddefense-portal.com",
+    "label_len_min": "44",
+    "label_len_max": "60",
+    "label_len_avg": "52.2",
+    "encoding_guess": "base32-like charset (letters + digits 2-7 only)",
+    "interval_min_seconds": "10.0",
+    "interval_max_seconds": "15.0",
+    "first_query_time": "22:15:02.300",
+    "last_query_time": "22:39:46.952"
+  },
+  "exfiltration_estimate": {
+    "span_minutes": "24.7",
+    "rate_per_minute": "4.9",
+    "estimated_raw_bytes": "3915",
+    "estimated_bytes_per_minute": "158.5"
+  },
+  "baseline_comparison_source": "./baseline_clinical.json (live)",
+  "notes": "Subdomain labels are fragments of a larger stream; per-label decode failures are expected and documented rather than fabricated. Exfiltration volume is an estimate from average encoded length and base32 overhead ratio (8 chars -> 5 bytes), not a byte-exact measurement."
+}

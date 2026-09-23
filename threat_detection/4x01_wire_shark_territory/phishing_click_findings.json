@@ -1,0 +1,34 @@
+{
+  "source_pcap": "phishing_click.pcap",
+  "generated_by": "1-phishing_click.sh",
+  "dns_resolution": {
+    "query_time": "15:02:33.142",
+    "response_time": "15:02:33.287",
+    "resolved_ip": "91.234.99.107",
+    "ttl": "300"
+  },
+  "tls": {
+    "client_hello_time": "15:02:33.589",
+    "sni": "meddefense-portal.com",
+    "certificate_present": true,
+    "certificate_source": "plaintext_marker",
+    "certificate_subject": "CN=meddefense-portal.com",
+    "certificate_issuer": "C=US/O=Let's Encrypt/CN=R3",
+    "certificate_not_before": "2026-04-09",
+    "certificate_not_after": "2026-07-08",
+    "certificate_serial": "04:a3:f7:c9:12:8b:4e:7a:1d:3b:5f:92:c7:e8:a4:d6"
+  },
+  "data_exchange": {
+    "duration_seconds": "47.4",
+    "client_to_server_bytes": 1633,
+    "client_to_server_segments": 8,
+    "server_to_client_bytes": 14521,
+    "server_to_client_segments": 31
+  },
+  "post_click_real_portal_query": true,
+  "ioc_correlation": {
+    "domain_match": true,
+    "ip_match": true
+  },
+  "notes": "Data volumes are TLS application-data record bytes/segments, not raw frame totals, so header overhead is excluded. Credential-submission interpretation is metadata-based only; packet contents were not and cannot be read due to encryption."
+}
