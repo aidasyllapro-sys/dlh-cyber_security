@@ -321,6 +321,37 @@ def main():
 
     write_markdown(sources, raw_counts, total_raw, unique_indicators,
                     total_unique, multi_source, single_source)
+
+    export_consolidated_json(occurrence)
+
+
+# ---------------------------------------------------------------------
+# Machine-readable export used by downstream tasks (e.g. Task 1's
+# indicator triage). Short source keys so later scripts can join this
+# against commercial_feed_extract.json without re-implementing the
+# parsing/dedup logic above.
+# ---------------------------------------------------------------------
+SHORT_NAME = {
+    "HC3 Advisory": "HC3",
+    "Commercial Feed (Acme)": "Commercial",
+    "Researcher Blog": "Researcher",
+    "MedDefense 4x00": "MedDefense",
+}
+
+
+def export_consolidated_json(occurrence, path="consolidated_indicators.json"):
+    rows = []
+    for (itype, value), src_names in sorted(occurrence.items()):
+        rows.append({
+            "type": itype,
+            "value": value,
+            "sources": sorted(SHORT_NAME.get(s, s) for s in src_names),
+        })
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(rows, f, indent=2, ensure_ascii=False)
+        f.write("\n")
+    print(f"Wrote {len(rows)} consolidated indicators to {path} "
+          f"(used by 1-indicator_triage.sh).")
     print(f"\nWritten: {OUTFILE}")
 
 

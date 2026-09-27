@@ -1,0 +1,391 @@
+[
+  {
+    "type": "domain",
+    "value": "claims-verify-portal.net",
+    "sources": [
+      "Commercial"
+    ]
+  },
+  {
+    "type": "domain",
+    "value": "data-sync.healthbane-c2.net",
+    "sources": [
+      "Commercial",
+      "HC3"
+    ]
+  },
+  {
+    "type": "domain",
+    "value": "healthbane-c2.net",
+    "sources": [
+      "Commercial",
+      "HC3",
+      "Researcher"
+    ]
+  },
+  {
+    "type": "domain",
+    "value": "healthcare-login.com",
+    "sources": [
+      "Commercial"
+    ]
+  },
+  {
+    "type": "domain",
+    "value": "meddefense-benefits.org",
+    "sources": [
+      "Commercial",
+      "HC3",
+      "MedDefense"
+    ]
+  },
+  {
+    "type": "domain",
+    "value": "meddefense-portal.com",
+    "sources": [
+      "Commercial",
+      "HC3",
+      "MedDefense",
+      "Researcher"
+    ]
+  },
+  {
+    "type": "domain",
+    "value": "medequip-supplies.net",
+    "sources": [
+      "Commercial",
+      "HC3",
+      "MedDefense",
+      "Researcher"
+    ]
+  },
+  {
+    "type": "domain",
+    "value": "outlook-protection.com",
+    "sources": [
+      "Commercial",
+      "HC3",
+      "Researcher"
+    ]
+  },
+  {
+    "type": "domain",
+    "value": "portal-secure-meddefense.com",
+    "sources": [
+      "HC3",
+      "Researcher"
+    ]
+  },
+  {
+    "type": "domain",
+    "value": "rx-benefits-portal.com",
+    "sources": [
+      "Commercial"
+    ]
+  },
+  {
+    "type": "domain",
+    "value": "secure-insurance-login.com",
+    "sources": [
+      "Commercial"
+    ]
+  },
+  {
+    "type": "domain",
+    "value": "update-healthbane.net",
+    "sources": [
+      "Commercial",
+      "HC3"
+    ]
+  },
+  {
+    "type": "domain",
+    "value": "verify-health-portal.net",
+    "sources": [
+      "Commercial"
+    ]
+  },
+  {
+    "type": "email",
+    "value": "hr-notifications@meddefense-benefits.org",
+    "sources": [
+      "MedDefense"
+    ]
+  },
+  {
+    "type": "email",
+    "value": "invoices@medequip-supplies.net",
+    "sources": [
+      "MedDefense"
+    ]
+  },
+  {
+    "type": "email",
+    "value": "noreply@meddefense-portal.com",
+    "sources": [
+      "MedDefense"
+    ]
+  },
+  {
+    "type": "hash",
+    "value": "1122aabbccddeeff00112233445566778899aabbccddeeff0011223344556677",
+    "sources": [
+      "Commercial"
+    ]
+  },
+  {
+    "type": "hash",
+    "value": "2f4a6c8e0b1d3f5a7c9e1b3d5f7a9c1e3b5d7f9a1c3e5b7d9f1a3c5e7b9d1f",
+    "sources": [
+      "HC3",
+      "MedDefense",
+      "Researcher"
+    ]
+  },
+  {
+    "type": "hash",
+    "value": "3344556677889900aabbccddeeff00112233445566778899aabbccddeeff0011",
+    "sources": [
+      "Commercial"
+    ]
+  },
+  {
+    "type": "hash",
+    "value": "5566778899aabbccddeeff00112233445566778899aabbccddeeff0011223344",
+    "sources": [
+      "Commercial"
+    ]
+  },
+  {
+    "type": "hash",
+    "value": "7788990011223344556677aabbccddeeff0011223344556677aabbccddeeff00",
+    "sources": [
+      "Commercial"
+    ]
+  },
+  {
+    "type": "hash",
+    "value": "a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456",
+    "sources": [
+      "Commercial",
+      "HC3",
+      "Researcher"
+    ]
+  },
+  {
+    "type": "hash",
+    "value": "b9c8a7d6e5f4321098765432109876543210fedcba9876543210fedcba987654",
+    "sources": [
+      "Commercial",
+      "HC3"
+    ]
+  },
+  {
+    "type": "hash",
+    "value": "c7d6e5f4a3b291827364554637281900a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6",
+    "sources": [
+      "Commercial",
+      "HC3",
+      "Researcher"
+    ]
+  },
+  {
+    "type": "hash",
+    "value": "dd5efb6d1ab4c67890abcdef1234567890abcdef1234567890abcdef12345678",
+    "sources": [
+      "Commercial",
+      "HC3"
+    ]
+  },
+  {
+    "type": "hash",
+    "value": "ee1122334455667788990011223344556677889900aabbccddeeff0011223344",
+    "sources": [
+      "Commercial"
+    ]
+  },
+  {
+    "type": "hash",
+    "value": "ffaabbccdd0011223344556677889900aabbccddeeff00112233445566778899",
+    "sources": [
+      "Researcher"
+    ]
+  },
+  {
+    "type": "ip",
+    "value": "104.168.34.58",
+    "sources": [
+      "Commercial"
+    ]
+  },
+  {
+    "type": "ip",
+    "value": "104.21.35.7",
+    "sources": [
+      "Commercial"
+    ]
+  },
+  {
+    "type": "ip",
+    "value": "13.107.42.14",
+    "sources": [
+      "Commercial"
+    ]
+  },
+  {
+    "type": "ip",
+    "value": "159.89.112.45",
+    "sources": [
+      "Commercial"
+    ]
+  },
+  {
+    "type": "ip",
+    "value": "164.90.218.73",
+    "sources": [
+      "Commercial",
+      "HC3",
+      "MedDefense"
+    ]
+  },
+  {
+    "type": "ip",
+    "value": "167.71.222.30",
+    "sources": [
+      "Commercial",
+      "Researcher"
+    ]
+  },
+  {
+    "type": "ip",
+    "value": "172.67.192.40",
+    "sources": [
+      "Commercial"
+    ]
+  },
+  {
+    "type": "ip",
+    "value": "185.176.43.22",
+    "sources": [
+      "Commercial",
+      "HC3",
+      "MedDefense"
+    ]
+  },
+  {
+    "type": "ip",
+    "value": "192.99.207.114",
+    "sources": [
+      "Commercial"
+    ]
+  },
+  {
+    "type": "ip",
+    "value": "20.83.144.56",
+    "sources": [
+      "Commercial"
+    ]
+  },
+  {
+    "type": "ip",
+    "value": "23.94.138.222",
+    "sources": [
+      "Commercial"
+    ]
+  },
+  {
+    "type": "ip",
+    "value": "45.77.218.9",
+    "sources": [
+      "Commercial",
+      "HC3"
+    ]
+  },
+  {
+    "type": "ip",
+    "value": "51.38.42.17",
+    "sources": [
+      "Commercial",
+      "HC3"
+    ]
+  },
+  {
+    "type": "ip",
+    "value": "51.38.42.191",
+    "sources": [
+      "Commercial",
+      "HC3",
+      "Researcher"
+    ]
+  },
+  {
+    "type": "ip",
+    "value": "91.234.99.107",
+    "sources": [
+      "Commercial",
+      "HC3",
+      "MedDefense",
+      "Researcher"
+    ]
+  },
+  {
+    "type": "url",
+    "value": "https://healthbane-c2.net/api/ingest",
+    "sources": [
+      "Researcher"
+    ]
+  },
+  {
+    "type": "url",
+    "value": "https://healthbane-c2.net/update/svchost_update.exe",
+    "sources": [
+      "Commercial",
+      "HC3"
+    ]
+  },
+  {
+    "type": "url",
+    "value": "https://meddefense-benefits.org/enroll",
+    "sources": [
+      "Commercial",
+      "HC3"
+    ]
+  },
+  {
+    "type": "url",
+    "value": "https://meddefense-portal.com/verify/staff?id=<user>&token=<8hex>",
+    "sources": [
+      "HC3",
+      "Researcher"
+    ]
+  },
+  {
+    "type": "url",
+    "value": "https://meddefense-portal.com/verify/staff?id=<user>&token=<hex>",
+    "sources": [
+      "Commercial"
+    ]
+  },
+  {
+    "type": "url",
+    "value": "https://meddefense-portal.com/verify/staff?id=dmarsh&token=a8f3e2d1",
+    "sources": [
+      "MedDefense"
+    ]
+  },
+  {
+    "type": "url",
+    "value": "https://medequip-supplies.net/invoices/pay?id=inv-<yyyy-nnnnn>",
+    "sources": [
+      "Commercial",
+      "HC3"
+    ]
+  },
+  {
+    "type": "url",
+    "value": "https://outlook-protection.com/verify",
+    "sources": [
+      "Commercial"
+    ]
+  }
+]
