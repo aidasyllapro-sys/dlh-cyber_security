@@ -173,3 +173,4 @@ A single-source indicator is not automatically NOISE -- see Task 2 (Indicator Tr
 ## Summary
 
 Four sources contributed 89 raw indicator entries, reducing to 50 unique indicators after deduplication. 24 indicators are corroborated across 2 or more sources and form the highest-confidence starting set for Task 2 (Indicator Triage). Attribution remains explicitly unresolved across three different postures (unconfirmed / VITALSCORE / APT-MEDAGENT) and is carried forward, not settled, at this stage.
+
