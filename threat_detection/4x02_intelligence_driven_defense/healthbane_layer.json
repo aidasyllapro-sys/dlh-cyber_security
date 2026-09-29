@@ -1,0 +1,290 @@
+{
+  "name": "HEALTHBANE Campaign (4x02 Task 7)",
+  "versions": {
+    "attack": "15",
+    "navigator": "4.9.1",
+    "layer": "4.5"
+  },
+  "domain": "enterprise-attack",
+  "description": "OBSERVED vs INFERRED ATT&CK mapping for the HEALTHBANE campaign against MedDefense Health Systems, built from HC3-2026-HEALTHBANE-001, MD-2026-IR-0414-001, the Acme commercial feed and the independent researcher blog. Score 100 = OBSERVED (direct evidence in at least one source). Score 50 = INFERRED (reasoned from available evidence but not directly observed/confirmed by any source).",
+  "filters": {
+    "platforms": [
+      "Windows",
+      "PRE"
+    ]
+  },
+  "sorting": 0,
+  "layout": {
+    "layout": "side",
+    "aggregateFunction": "average",
+    "showID": true,
+    "showName": true,
+    "showAggregateScores": false,
+    "countUnscored": false
+  },
+  "hideDisabled": false,
+  "techniques": [
+    {
+      "techniqueID": "T1589.002",
+      "tactic": "reconnaissance",
+      "color": "#c0152f",
+      "comment": "[OBSERVED] Attacker identified specific staff email addresses at targeted healthcare organizations before crafting spear-phishing lures. (Source: HC3 Sec. 4; Phase: Pre-Stage 1)",
+      "enabled": true,
+      "score": 100,
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1583.001",
+      "tactic": "resource-development",
+      "color": "#c0152f",
+      "comment": "[OBSERVED] Lookalike domains (meddefense-portal.com et al.) registered at Namecheap 4-10 days before first email use. (Source: HC3 Sec. 4; corroborated by MedDefense F2 (exact registration dates) and researcher Sec. 3/4 (registrar); Phase: Pre-Stage 1)",
+      "enabled": true,
+      "score": 100,
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1585.002",
+      "tactic": "resource-development",
+      "color": "#c0152f",
+      "comment": "[OBSERVED] Attacker-controlled mailboxes (e.g. ops@healthbane-c2.net) used to receive harvested credentials and coordinate. (Source: HC3 Sec. 4; corroborated by researcher Sec. 2 (config.php SMTP forwarding); Phase: Pre-Stage 1)",
+      "enabled": true,
+      "score": 100,
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1587.001",
+      "tactic": "resource-development",
+      "color": "#c0152f",
+      "comment": "[OBSERVED] Custom phishing kit (index.php/handlers/config.php) and svchost_update.exe payload developed/maintained by the operator. (Source: HC3 Sec. 4; corroborated by researcher Sec. 2 (kit source recovered directly); Phase: Pre-Stage 1)",
+      "enabled": true,
+      "score": 100,
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1608.005",
+      "tactic": "resource-development",
+      "color": "#c0152f",
+      "comment": "[OBSERVED] Phishing landing pages staged and live at the lookalike domains prior to email delivery. (Source: HC3 Sec. 4; corroborated by MedDefense (ATT&CK Techniques Observed); Phase: Pre-Stage 1)",
+      "enabled": true,
+      "score": 100,
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1566.002",
+      "tactic": "initial-access",
+      "color": "#c0152f",
+      "comment": "[OBSERVED] Initial-access vector for Stage 1 at all 6 HC3-visible orgs; MedDefense's own E2/E5/E7 confirmed this vector locally. (Source: HC3 Sec. 2 Stage 1; MedDefense F1, F4 (dmarsh clicked); Phase: Stage 1)",
+      "enabled": true,
+      "score": 100,
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1566.001",
+      "tactic": "initial-access",
+      "color": "#c0152f",
+      "comment": "[OBSERVED] Stage 2 follow-up email carried the HEALTHBANE_S2_invoice.docm attachment. (Source: HC3 Sec. 2 Stage 2; Phase: Stage 2)",
+      "enabled": true,
+      "score": 100,
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1204.001",
+      "tactic": "execution",
+      "color": "#c0152f",
+      "comment": "[OBSERVED] Victim clicked the Stage 1 phishing link; at MedDefense this is the confirmed Diane Marsh click (2026-04-14 15:02:33 UTC). (Source: HC3 Sec. 2 Stage 1; MedDefense Scope, F5; Phase: Stage 1)",
+      "enabled": true,
+      "score": 100,
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1204.002",
+      "tactic": "execution",
+      "color": "#c0152f",
+      "comment": "[OBSERVED] Victim opened the Stage 2 macro-enabled .docm attachment, triggering the macro. (Source: HC3 Sec. 2 Stage 2; Phase: Stage 2)",
+      "enabled": true,
+      "score": 100,
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1059.005",
+      "tactic": "execution",
+      "color": "#c0152f",
+      "comment": "[OBSERVED] The .docm's VBA macro executes on open and pulls the Stage 2 executable. (Source: HC3 Sec. 2 Stage 2; Phase: Stage 2)",
+      "enabled": true,
+      "score": 100,
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1059.001",
+      "tactic": "execution",
+      "color": "#c0152f",
+      "comment": "[OBSERVED] HC3's own hunting guidance (Sec. 5.5) targets PowerShell execution with base64-encoded payloads >1024 characters, implying PowerShell is used post-macro. (Source: HC3 Sec. 4; Sec. 5.5; Phase: Stage 2)",
+      "enabled": true,
+      "score": 100,
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1053.005",
+      "tactic": "persistence",
+      "color": "#c0152f",
+      "comment": "[OBSERVED] Persistence via a scheduled task named \"HealthSync Update Service\", created by the Stage 2 executable. (Source: HC3 Sec. 2 Stage 2; Sec. 5.5 hunting guidance; Phase: Stage 2)",
+      "enabled": true,
+      "score": 100,
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1547.001",
+      "tactic": "persistence",
+      "color": "#c0152f",
+      "comment": "[OBSERVED] Persistence also established via a Registry Run key, alongside the scheduled task. (Source: HC3 Sec. 2 Stage 2; Phase: Stage 2)",
+      "enabled": true,
+      "score": 100,
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1056.003",
+      "tactic": "credential-access",
+      "color": "#c0152f",
+      "comment": "[OBSERVED] Credentials captured via the PHPMailer-served HTML form on the Stage 1 landing page and posted to attacker VPS infrastructure. (Source: HC3 Sec. 2 Stage 1; MedDefense (ATT&CK Techniques Observed, form POST); Phase: Stage 1)",
+      "enabled": true,
+      "score": 100,
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1071.004",
+      "tactic": "command-and-control",
+      "color": "#c0152f",
+      "comment": "[OBSERVED] Stage 3 C2/exfiltration channel: DNS TXT-record queries/responses to/from data-sync.healthbane-c2.net. (Source: HC3 Sec. 2 Stage 3; Phase: Stage 3)",
+      "enabled": true,
+      "score": 100,
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1071.001",
+      "tactic": "command-and-control",
+      "color": "#c0152f",
+      "comment": "[OBSERVED] Stage 2 payload download over HTTPS from healthbane-c2.net/update/svchost_update.exe. (Source: HC3 Sec. 2 Stage 2; corroborated by commercial feed (acme_confidence 90) and researcher's config.php EXFIL_ENDPOINT; Phase: Stage 2)",
+      "enabled": true,
+      "score": 100,
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1048.003",
+      "tactic": "exfiltration",
+      "color": "#c0152f",
+      "comment": "[OBSERVED] Patient/insurance data encoded in DNS TXT-record queries, a protocol distinct from the primary C2 channel. (Source: HC3 Sec. 2 Stage 3; Phase: Stage 3)",
+      "enabled": true,
+      "score": 100,
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1041",
+      "tactic": "exfiltration",
+      "color": "#c0152f",
+      "comment": "[OBSERVED] HC3 also lists exfiltration via the C2 channel itself (the DNS TXT responses carry both commands and, per HC3's Stage 3 narrative, are the same channel data is moved over). (Source: HC3 Sec. 2 Stage 3; Sec. 4; Phase: Stage 3)",
+      "enabled": true,
+      "score": 100,
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1078.004",
+      "tactic": "initial-access",
+      "color": "#ffb000",
+      "comment": "[INFERRED] HC3 states Stage 1 credentials were used to authenticate to the victim's own cloud email account to send Stage 2 emails -- functionally Valid Accounts (Cloud Accounts). HC3 itself names this technique (as T1078, unspecified) as LIKELY but excludes it from the OBSERVED table pending confirmation. Primary tactic shown here as Initial Access (re-entry point for Stage 2); the technique's full ATT&CK mapping also spans Defense Evasion, Persistence and Privilege Escalation. (Source: HC3 Sec. 2 Stage 2 narrative; Sec. 4 (explicitly named LIKELY, T1078); Phase: Stage 2)",
+      "enabled": true,
+      "score": 50,
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1021",
+      "tactic": "lateral-movement",
+      "color": "#ffb000",
+      "comment": "[INFERRED] HC3 names this as LIKELY but excludes it pending confirmation, without specifying which remote service. No source in this dataset identifies a specific protocol (RDP/SMB/SSH/etc.), and MedDefense's own F6 finding (no post-compromise authentication event observed locally) argues against assuming it occurred at every victim. (Source: HC3 Sec. 4 (explicitly named LIKELY, T1021); Phase: Stage 2/3 (unconfirmed))",
+      "enabled": true,
+      "score": 50,
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1534",
+      "tactic": "lateral-movement",
+      "color": "#ffb000",
+      "comment": "[INFERRED] HC3's own Stage 2 narrative describes the attacker sending follow-up phishing emails FROM the compromised victim's cloud account TO their colleagues -- this is the literal definition of Internal Spearphishing, but HC3 does not name this technique explicitly in its OBSERVED table. Classified INFERRED rather than OBSERVED because HC3's own table does not list it, even though the underlying behavior it describes is stated as directly observed. (Source: This project's analysis of HC3 Sec. 2 Stage 2 narrative (Task 6 kill chain); Phase: Stage 2)",
+      "enabled": true,
+      "score": 50,
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1583.003",
+      "tactic": "resource-development",
+      "color": "#ffb000",
+      "comment": "[INFERRED] The researcher's infrastructure fingerprinting identifies Hostinger/DigitalOcean/OVH VPS hosting for every phishing-LP and C2 domain. HC3's OBSERVED table only lists domain acquisition (T1583.001), not the VPS hosting layer underneath it, which the researcher's evidence supports as a distinct, deliberate infrastructure choice. (Source: Researcher Sec. 3, 4 (hosting providers per domain); Phase: Pre-Stage 1)",
+      "enabled": true,
+      "score": 50,
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1608.001",
+      "tactic": "resource-development",
+      "color": "#ffb000",
+      "comment": "[INFERRED] svchost_update.exe must have been staged on the download infrastructure (healthbane-c2.net) before Stage 2 delivery could pull it -- a necessary precursor step to the OBSERVED T1071.001 download, not itself directly observed or named by HC3. (Source: Inferred from HC3 Sec. 2 Stage 2 (download mechanism) -- this project's analysis; Phase: Pre-Stage 2)",
+      "enabled": true,
+      "score": 50,
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1132",
+      "tactic": "command-and-control",
+      "color": "#ffb000",
+      "comment": "[INFERRED] HC3 describes base32-encoded DNS subdomain labels and base64-encoded C2 response strings. This matches ATT&CK's Data Encoding technique description almost verbatim, but HC3's OBSERVED table does not name it separately from the DNS channel itself (T1071.004). Kept at the parent-technique level (not .001 Standard vs .002 Non-Standard) because base32 specifically is not one of the examples MITRE lists under Standard Encoding, and this project could not confirm which sub-technique the base32 labels fall under. (Source: HC3 Sec. 2 Stage 3 -- this project's analysis; Phase: Stage 3)",
+      "enabled": true,
+      "score": 50,
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1005",
+      "tactic": "collection",
+      "color": "#ffb000",
+      "comment": "[INFERRED] HC3 states Stage 3 exfiltrates \"patient and insurance records.\" Those records must have been located/collected from a local system or database before being tunneled out; no source describes this collection step directly, and Collection is otherwise a completely uncovered tactic in this campaign's evidence. (Source: Inferred from HC3 Sec. 2 Stage 3 (data targeted) -- this project's analysis; Phase: Stage 2/3 (unconfirmed))",
+      "enabled": true,
+      "score": 50,
+      "showSubtechniques": false
+    }
+  ],
+  "gradient": {
+    "colors": [
+      "#ffb000",
+      "#ffb000",
+      "#c0152f"
+    ],
+    "minValue": 0,
+    "maxValue": 100
+  },
+  "legendItems": [
+    {
+      "label": "OBSERVED (score 100) -- direct evidence in at least one source",
+      "color": "#c0152f"
+    },
+    {
+      "label": "INFERRED (score 50) -- reasoned from evidence, not directly confirmed",
+      "color": "#ffb000"
+    }
+  ],
+  "metadata": [
+    {
+      "name": "campaign",
+      "value": "HEALTHBANE"
+    },
+    {
+      "name": "project",
+      "value": "4x02 Intelligence-Driven Defense -- Task 7"
+    },
+    {
+      "name": "sources",
+      "value": "HC3-2026-HEALTHBANE-001; MD-2026-IR-0414-001; Acme ACME-HEALTH-2026-0426-117; researcher blog (Marcus Weller, 2026-04-24)"
+    }
+  ],
+  "showTacticRowBackground": true,
+  "tacticRowBackground": "#dddddd",
+  "selectTechniquesAcrossTactics": true,
+  "selectSubtechniquesWithParent": false
+}
