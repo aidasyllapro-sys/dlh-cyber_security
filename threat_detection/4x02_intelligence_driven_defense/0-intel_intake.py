@@ -69,6 +69,7 @@ def parse_hc3(path):
     tlp_m = re.search(r"Classification:\s+(TLP:\S+)", text)
 
     return {
+        "file": path,
         "name": "HC3 Sector Advisory HC3-2026-HEALTHBANE-001",
         "type": "government advisory",
         "date": date_m.group(1) if date_m else "UNKNOWN",
@@ -120,6 +121,7 @@ def parse_commercial(path):
     ]
 
     return {
+        "file": path,
         "name": f"{meta['provider']} (extract {meta['extract_id']})",
         "type": "commercial feed",
         "date": meta["extract_date"],
@@ -173,6 +175,7 @@ def parse_researcher(path):
     date_m = re.search(r"Published:\s+(\S+)", text)
 
     return {
+        "file": path,
         "name": "Marcus Weller research blog -- \"The Phishing Kit Behind "
                 "The HEALTHBANE Campaign\"",
         "type": "open-source research",
@@ -227,6 +230,7 @@ def parse_meddefense(path):
     date_m = re.search(r"Date:\s+(\S+)", text)
 
     return {
+        "file": path,
         "name": "MedDefense Internal Investigation MD-2026-IR-0414-001 "
                 "(4x00 extract)",
         "type": "internal investigation",
@@ -394,10 +398,12 @@ def write_markdown(sources, raw_counts, total_raw, unique_indicators,
 
     for name, s in sources.items():
         counts = count_by_type(s)
-        a(f"### {s['name']}")
+        a(f"### Source: `{s['file']}` -- {s['name']}")
         a("")
         a(f"| Field | Value |")
         a(f"|---|---|")
+        a(f"| Source file | `{s['file']}` |")
+        a(f"| Source name | {s['name']} |")
         a(f"| Source type | {s['type']} |")
         a(f"| Date published / report date | {s['date']} |")
         a(f"| TLP / distribution marking | {s['tlp']} |")
