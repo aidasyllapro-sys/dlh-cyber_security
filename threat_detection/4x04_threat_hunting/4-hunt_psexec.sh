@@ -119,7 +119,7 @@ records=$(echo "$psexec_events" | jq -r "
     (.data.win.eventdata.commandLine? // \"(none)\"),
     cmdtarget,
     (.data.win.eventdata.processId? // \"(none)\")
-  ] | @tsv
+  ] | join(\"\t\")
 ")
 
 baseline_count=0
