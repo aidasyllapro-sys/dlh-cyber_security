@@ -38,10 +38,16 @@ require_file "$SYSMON"
 
 # ---------------------------------------------------------------------
 # Both files are newline-delimited JSON (one Wazuh alert object per
-# line). The "complete SIEM export" is the two files combined.
+# line). wazuh_raw_sysmon_14d.json is NOT a separate set of events: it
+# is a full duplicate export of the Sysmon-sourced alerts that are
+# already present in wazuh_alerts_14d.json (verified: every record in
+# the raw-sysmon file shares its "id" field, byte-for-byte, with a
+# record in the alerts file). Combining the two files without
+# deduplicating would double-count every Sysmon event, so "combined"
+# dedupes on the "id" field, which jq's unique_by keeps deterministic.
 # ---------------------------------------------------------------------
 combined() {
-  cat "$ALERTS" "$SYSMON"
+  jq -s -c 'unique_by(.id)[]' "$ALERTS" "$SYSMON"
 }
 
 # ---------------------------------------------------------------------
@@ -129,7 +135,7 @@ echo "DATASET METADATA:"
 printf '  %-16s%s\n' "Total events:" "$total_events"
 printf '  %-16s%s to %s\n' "Time range:" "$first_event" "$last_event"
 printf '  %-16s%s days, %sh\n' "Duration:" "$duration_days" "$duration_rem_hours"
-printf '  %-16s%s\n' "Format:" "JSON Lines (newline-delimited JSON), 2 files"
+printf '  %-16s%s\n' "Format:" "JSON Lines, 2 files (deduplicated by event id - see README)"
 echo
 echo "TOP 10 EVENT TYPES (count, rule ID, description):"
 echo "$top_event_types"
