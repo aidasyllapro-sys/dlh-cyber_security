@@ -121,9 +121,10 @@ fallback_week_for_phase() {
   esac
 }
 
-# Content preview, read directly from the file: first non-blank line for
-# text, top-level JSON keys for JSON. This is a citation of the file's own
-# content, not a paraphrase of it.
+# Content preview, read directly from the file: first line that actually
+# carries alphanumeric content for text (skips blank lines AND decorative
+# separator lines like "====...===="), top-level JSON keys for JSON.
+# This is a citation of the file's own content, not a paraphrase of it.
 preview_content() {
   local f="$1"
   if [[ "$f" == *.json ]]; then
@@ -133,7 +134,7 @@ preview_content() {
       echo "(invalid/unparseable JSON)"
     fi
   else
-    grep -m1 -v '^[[:space:]]*$' "$f" 2>/dev/null || echo "(empty file)"
+    grep -m1 -E '[A-Za-z0-9]' "$f" 2>/dev/null | sed -E 's/^[[:space:]]+//' || echo "(empty file)"
   fi
 }
 
