@@ -2,12 +2,18 @@
 # 4-correlation_matrix.sh
 # HEALTHBANE Reconstruction - Task 4: Cross-Evidence Correlation
 #
-# Builds an IOC / timeline / ATT&CK correlation matrix across all 11
-# evidence files (previous_findings/ 4x00-4x04 + ir_evidence/ 4x05-IR +
-# reference/). The IOC matrix is computed live against the actual files
-# (grep for each IOC value across ir_evidence/), not a fixed table, so a
-# future edit to the evidence does not silently go stale here. The
-# timeline and technique narratives below are this script's own
+# Per the task instructions ("Reads the outputs of T0-T3 plus all
+# previous_findings/ summaries"), this script actually EXECUTES
+# 0-evidence_index.sh, 1-memory_analysis.sh, 2-disk_analysis.sh and
+# 3-firewall_analysis.sh and cross-references their live stdout for the
+# IOC correlation matrix, rather than re-reading the raw ir_evidence/
+# files those three tasks already analyze. ir_team_notes.txt is the one
+# ir_evidence/ file not owned by any single task (it is cross-cutting
+# analyst commentary, not raw host/network data), so it is still read
+# directly here -- Task 4 is the only place it gets synthesized.
+# previous_findings/ summaries (4x00-4x04) are read directly, per the
+# instructions' "plus all previous_findings/ summaries" clause.
+# The timeline and technique narratives below are this script's own
 # synthesis across sources and are written out as findings rather than
 # derived mechanically, because resolving a contradiction is a judgment
 # call, not a string match -- each one cites exactly which file and
@@ -37,6 +43,7 @@ require_cmd() {
 
 require_cmd jq
 require_cmd grep
+require_cmd bash
 
 BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PF_DIR="${BASE_DIR}/previous_findings"
@@ -45,10 +52,18 @@ REF_DIR="${BASE_DIR}/reference"
 IOC_FILE="${REF_DIR}/healthbane_ioc_master.json"
 NAV_4x02="${PF_DIR}/4x02_attack_mapping.json"
 NAV_80PCT="${REF_DIR}/attck_navigator_80pct.json"
+NOTES_FILE="${IR_DIR}/ir_team_notes.txt"
+
+# Task 0-3 scripts: their live stdout, not the raw files they each
+# already analyze, is what this script cross-references (see header).
+T0_SCRIPT="${BASE_DIR}/0-evidence_index.sh"
+T1_SCRIPT="${BASE_DIR}/1-memory_analysis.sh"
+T2_SCRIPT="${BASE_DIR}/2-disk_analysis.sh"
+T3_SCRIPT="${BASE_DIR}/3-firewall_analysis.sh"
+
 MEM_FILE="${IR_DIR}/memory_artifacts.txt"
 DISK_FILE="${IR_DIR}/disk_forensics_report.txt"
 FW_FILE="${IR_DIR}/firewall_sessions_ws_recv_03.json"
-NOTES_FILE="${IR_DIR}/ir_team_notes.txt"
 
 require_dir "$PF_DIR"
 require_dir "$IR_DIR"
@@ -56,14 +71,37 @@ require_dir "$REF_DIR"
 require_file "$IOC_FILE"
 require_file "$NAV_4x02"
 require_file "$NAV_80PCT"
+require_file "$NOTES_FILE"
 require_file "$MEM_FILE"
 require_file "$DISK_FILE"
 require_file "$FW_FILE"
-require_file "$NOTES_FILE"
+require_file "$T0_SCRIPT"
+require_file "$T1_SCRIPT"
+require_file "$T2_SCRIPT"
+require_file "$T3_SCRIPT"
 
-SOURCE_COUNT=$(( $(find "$PF_DIR" -maxdepth 1 -type f | wc -l) \
-                + $(find "$IR_DIR" -maxdepth 1 -type f | wc -l) \
-                + $(find "$REF_DIR" -maxdepth 1 -type f | wc -l) ))
+run_task() {
+  local script="$1" label="$2" out
+  if ! out="$(bash "$script" 2>&1)"; then
+    echo "ERROR: $label ($script) failed to run" >&2
+    exit 1
+  fi
+  printf '%s' "$out"
+}
+
+echo "Running Task 0 (0-evidence_index.sh), Task 1 (1-memory_analysis.sh)," >&2
+echo "Task 2 (2-disk_analysis.sh) and Task 3 (3-firewall_analysis.sh) to" >&2
+echo "cross-reference their live output (per task instructions)..." >&2
+T0_OUT="$(run_task "$T0_SCRIPT" "Task 0")"
+T1_OUT="$(run_task "$T1_SCRIPT" "Task 1")"
+T2_OUT="$(run_task "$T2_SCRIPT" "Task 2")"
+T3_OUT="$(run_task "$T3_SCRIPT" "Task 3")"
+
+# T0's own catalog line count is the authoritative evidence-file total
+# (it enumerates every file under previous_findings/, ir_evidence/ and
+# reference/ itself) -- used here instead of a separate find/wc count,
+# so the number printed is literally read FROM Task 0's output.
+SOURCE_COUNT="$(grep -c '^[[:space:]]*\[[0-9][0-9]\]' <<< "$T0_OUT")"
 
 echo "================================================================"
 echo "   CROSS-EVIDENCE CORRELATION MATRIX"
@@ -75,55 +113,52 @@ echo
 # IOC CORRELATION
 # For each of the 31 IOCs already catalogued in healthbane_ioc_master.json
 # (whose own "sources" field already records 4x00-4x04 attribution), this
-# grep-checks the IR evidence files to see if the IOC also surfaces in
-# 4x05-IR, and reclassifies CONVERGED/SINGLE-SOURCE accordingly -- live,
-# not a static copy of the master file's own counts.
+# checks whether the IOC also surfaces in Tasks 0-3's live stdout (the
+# primary IR-evidence cross-reference, per the task instructions) OR in
+# the raw IR evidence files directly. The two are not always the same --
+# a value can be present in the raw evidence yet never get echoed in the
+# owning task's own printed report. Both are checked so no real finding
+# is silently lost, and every such owning-task gap is listed afterwards
+# as its own finding, since "a report didn't mention something its own
+# source data contains" is itself a gap worth flagging, not hiding.
 # ---------------------------------------------------------------------------
 echo "IOC CORRELATION (31 pre-existing IOCs, 4x00-4x04 sources from"
-echo "healthbane_ioc_master.json, cross-checked live against IR evidence):"
+echo "healthbane_ioc_master.json, cross-checked live against the stdout of"
+echo "Tasks 0-3, with raw ir_evidence/ files as a completeness fallback):"
 printf '  %-10s %-14s %-45s %-10s %s\n' "ID" "Type" "Value" "Sources" "Status"
 
 CONVERGED_COUNT=0
 SINGLE_COUNT=0
-jq -r '.iocs[] | [.id, .type, .value, (.sources | join(","))] | @tsv' "$IOC_FILE" \
-  | while IFS=$'\t' read -r id type value srcs; do
-    ir_hit="no"
-    if grep -qiF -- "$value" "$MEM_FILE" "$DISK_FILE" "$NOTES_FILE" 2> /dev/null \
-       || jq -c . "$FW_FILE" 2> /dev/null | grep -qiF -- "$value"; then
-      ir_hit="yes"
-    fi
-    final_srcs="$srcs"
-    [[ "$ir_hit" == "yes" ]] && final_srcs="${srcs},IR"
-    n_sources=$(tr ',' '\n' <<< "$final_srcs" | wc -l)
-    if [[ "$n_sources" -ge 2 ]]; then
-      status="CONVERGED"
-    else
-      status="SINGLE-SOURCE"
-    fi
-    display_value="$value"
-    [[ ${#display_value} -gt 45 ]] && display_value="${display_value:0:42}..."
-    printf '  %-10s %-14s %-45s %-10s %s\n' "$id" "$type" "$display_value" "$final_srcs" "$status"
-  done
-
-# Recompute the two summary counts in this (non-subshell) scope so the
-# numbers printed below are accurate -- the loop above runs in a pipeline
-# subshell and cannot update CONVERGED_COUNT/SINGLE_COUNT in the parent shell.
-CONVERGED_COUNT=0
-SINGLE_COUNT=0
+TASK_OUTPUT_GAPS=()
 while IFS=$'\t' read -r id type value srcs; do
-  ir_hit="no"
-  if grep -qiF -- "$value" "$MEM_FILE" "$DISK_FILE" "$NOTES_FILE" 2> /dev/null \
+  ir_hit_task="no"
+  if grep -qiF -- "$value" <<< "$T0_OUT" \
+     || grep -qiF -- "$value" <<< "$T1_OUT" \
+     || grep -qiF -- "$value" <<< "$T2_OUT" \
+     || grep -qiF -- "$value" <<< "$T3_OUT"; then
+    ir_hit_task="yes"
+  fi
+  ir_hit_raw="no"
+  if grep -qiF -- "$value" "$NOTES_FILE" "$MEM_FILE" "$DISK_FILE" 2> /dev/null \
      || jq -c . "$FW_FILE" 2> /dev/null | grep -qiF -- "$value"; then
-    ir_hit="yes"
+    ir_hit_raw="yes"
+  fi
+  if [[ "$ir_hit_raw" == "yes" && "$ir_hit_task" == "no" ]]; then
+    TASK_OUTPUT_GAPS+=("$id ($value)")
   fi
   final_srcs="$srcs"
-  [[ "$ir_hit" == "yes" ]] && final_srcs="${srcs},IR"
+  [[ "$ir_hit_task" == "yes" || "$ir_hit_raw" == "yes" ]] && final_srcs="${srcs},IR"
   n_sources=$(tr ',' '\n' <<< "$final_srcs" | wc -l)
   if [[ "$n_sources" -ge 2 ]]; then
+    status="CONVERGED"
     CONVERGED_COUNT=$((CONVERGED_COUNT + 1))
   else
+    status="SINGLE-SOURCE"
     SINGLE_COUNT=$((SINGLE_COUNT + 1))
   fi
+  display_value="$value"
+  [[ ${#display_value} -gt 45 ]] && display_value="${display_value:0:42}..."
+  printf '  %-10s %-14s %-45s %-10s %s\n' "$id" "$type" "$display_value" "$final_srcs" "$status"
 done < <(jq -r '.iocs[] | [.id, .type, .value, (.sources | join(","))] | @tsv' "$IOC_FILE")
 
 echo
@@ -132,6 +167,18 @@ echo "  (no pre-existing IOC's VALUE is contradicted by another source --"
 echo "  the only real conflict in this evidence set is an ID-LABELING"
 echo "  conflict among the brand-new IR indicators, resolved below.)"
 echo
+if [[ ${#TASK_OUTPUT_GAPS[@]} -gt 0 ]]; then
+  echo "  TASK-REPORT GAP: ${#TASK_OUTPUT_GAPS[@]} of the above IOCs are present"
+  echo "  in the raw IR evidence files but are not echoed in Tasks 0-3's own"
+  echo "  printed reports (found instead by reading the raw file directly):"
+  for gap in "${TASK_OUTPUT_GAPS[@]}"; do
+    echo "    - $gap"
+  done
+  echo "  This does not change their CONVERGED/SINGLE-SOURCE status above,"
+  echo "  but it means a reader relying on Tasks 0-3's prose alone, without"
+  echo "  this script's own direct fallback to the raw files, would miss them."
+  echo
+fi
 
 echo "NEW IOCs FROM IR EVIDENCE (not in the 31-entry master database):"
 echo "  CONTRADICTION FOUND AND RESOLVED: the evidence files do not agree"
