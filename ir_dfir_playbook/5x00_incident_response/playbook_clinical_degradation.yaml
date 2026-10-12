@@ -1,0 +1,90 @@
+playbook_id: PB-003
+title: Clinical Service Degradation - Radiology Imaging Server
+owner_role: IR_Commander
+ 
+applies_to:
+  triggers:
+    - ED or radiology staff report delayed or failed image retrieval from the radiology imaging server
+    - Monitoring alert shows imaging server response time or resource utilization outside the historical baseline
+  indicators:
+    - 'Incident indicator: outbound network connections from the imaging server to unfamiliar external destinations'
+    - 'Incident indicator: new or modified local admin account, or unexpected authentication activity, on the imaging server'
+    - 'Performance indicator: elevated disk I/O matching a known scheduled job (e.g. nightly archive export), with no new processes or outbound connections'
+    - 'Performance indicator: resource utilization consistent with a previously documented capacity threshold, not a new deviation from baseline'
+ 
+severity_mapping:
+  initial: SEV3
+  escalate_if:
+    - Triage confirms malicious activity rather than a performance issue
+    - Image retrieval delay measurably affects ED patient disposition time
+    - Degradation spreads to a second clinical system beyond the imaging server
+ 
+immediate_actions:
+  - step: Begin triage against the incident-vs-performance indicators while the imaging server remains in service
+    owner: Technical_Lead
+    timebox_minutes: 10
+  - step: Notify the On-Call Clinical Lead that triage is underway and that ED image retrieval may be affected
+    owner: Technical_Lead
+    timebox_minutes: 5
+  - step: Brief IR_Commander if triage indicates a likely incident rather than a performance issue
+    owner: Technical_Lead
+    timebox_minutes: 15
+ 
+evidence_preservation:
+  - artifact: Imaging server process list and active network connections
+    method: Capture a live snapshot of running processes and active connections before any throttling or segmentation is applied
+    before_step: Network segmentation of the imaging server
+  - artifact: Authentication and account activity logs for the imaging server
+    method: Export local and domain authentication logs covering the degradation window
+    before_step: Account restriction on the imaging server
+  - artifact: Resource utilization history (CPU, memory, disk I/O)
+    method: Export monitoring metrics from the preceding 24 hours to compare against the degradation window
+    before_step: Service throttling of the imaging server
+ 
+containment_actions:
+  - step: Apply network segmentation to isolate the imaging server to essential clinical traffic only
+    owner: Technical_Lead
+    decision_point: Must notify and receive acknowledgment from the On-Call Clinical Lead before executing, since segmentation can further slow or interrupt image delivery to the ED
+    trade_off: Limits the server's exposure and potential attacker reach, but may further degrade the ED's ability to retrieve images while segmentation takes effect
+  - step: Restrict or suspend administrative accounts with access to the imaging server
+    owner: Technical_Lead
+    decision_point: N/A
+    trade_off: Removes a likely attack path through privileged access, but blocks legitimate administrative support from assisting with the server during the incident
+  - step: Throttle non-essential services on the imaging server to preserve bandwidth for active image retrieval
+    owner: Technical_Lead
+    decision_point: Investigate under full downtime (pull the server from clinical use), or continue service with elevated monitoring and constrained access; decided jointly by IR_Commander and the On-Call Clinical Lead based on current ED patient load
+    trade_off: Keeps imaging available for active ED patients, but accepts a slower, less complete investigation than a full offline forensic capture would allow
+ 
+eradication_actions:
+  - Remove any unauthorized process, scheduled task, or account identified during triage as the source of the degradation
+  - Patch or reconfigure the vulnerability or misconfiguration that allowed the unauthorized activity, if confirmed malicious
+  - Restore the imaging server's network and account configuration to its documented baseline
+ 
+recovery_validation:
+  - check: Confirm imaging server response time has returned to its documented performance baseline
+    criterion: Average image retrieval time matches the pre-incident baseline for at least one hour of sustained clinical use
+  - check: Confirm no unauthorized processes, accounts, or outbound connections remain active
+    criterion: Process list, account list, and active connections match the known-clean baseline captured during evidence preservation
+  - check: Confirm the On-Call Clinical Lead signs off that ED image retrieval is fully restored
+    criterion: Written confirmation from the On-Call Clinical Lead that no further clinical workaround is needed
+ 
+communication_plan:
+  - audience: On-Call Clinical Lead
+    trigger: Before any isolation action (network segmentation, account restriction, or throttling) is executed on the imaging server
+    template: clinical_coordination_notice.md
+  - audience: IR_Commander
+    trigger: As soon as triage indicates a likely incident rather than a performance issue
+    template: ir_commander_notification.md
+  - audience: ED Charge Nurse
+    trigger: When the On-Call Clinical Lead activates downtime procedures
+    template: downtime_procedure_notice.md
+ 
+escalation_triggers:
+  - Triage confirms malicious activity on the imaging server
+  - ED image retrieval delay crosses the threshold at which the On-Call Clinical Lead activates downtime procedures
+  - Containment actions fail to restore acceptable image retrieval performance within one hour
+ 
+post_incident_tasks:
+  - Document whether the event was ultimately classified as a security incident or a performance issue, and why
+  - Record which option was taken at the investigate-under-downtime-versus-continue-with-monitoring decision point, and its outcome
+  - Review imaging server capacity and alerting thresholds with Technical_Lead to reduce ambiguous triage calls in the future
