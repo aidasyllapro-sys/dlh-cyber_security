@@ -1,0 +1,99 @@
+roles:
+  IR_Commander:
+    primary: James Chen, SOC Lead
+    backup: Robert Kim, Infrastructure Lead
+    responsibilities:
+      - Owns the incident through closure
+      - Runs the incident bridge and timeline
+      - Authorizes containment actions within authority ceiling
+    authority_ceiling: SEV2
+ 
+  Technical_Lead:
+    primary: Robert Kim, Infrastructure Lead
+    backup: Mike Torres, Network Engineer
+    responsibilities:
+      - Directs technical investigation and containment work
+      - Coordinates evidence acquisition with the Scribe
+      - Validates eradication and recovery actions before execution
+    authority_ceiling: SEV3
+ 
+  Communications_Lead:
+    primary: Marcus Webb, Communications Director
+    backup: Sarah Park, IT Director
+    responsibilities:
+      - Drafts and approves internal and external incident messaging
+      - Coordinates with Legal_Liaison before any external statement
+      - Keeps staff and affected patients informed per the communication plan
+    authority_ceiling: SEV3
+ 
+  Legal_Liaison:
+    primary: Helena Reyes, General Counsel
+    backup: Dr. Patricia Morales, CISO
+    responsibilities:
+      - Assesses HIPAA and state breach notification obligations
+      - Authorizes litigation hold and evidence handling requirements
+      - Reviews all external communications before release
+    authority_ceiling: SEV2
+ 
+  Executive_Sponsor:
+    primary: Dr. Patricia Morales, CISO
+    backup: Helena Reyes, General Counsel
+    responsibilities:
+      - Holds final decision authority for the highest-severity incidents
+      - Reports incident status to the board and senior leadership
+      - Approves resource allocation beyond the IR Commander's authority
+    authority_ceiling: SEV1
+ 
+  Scribe:
+    primary: Sarah Park, IT Director
+    backup: Mike Torres, Network Engineer
+    responsibilities:
+      - Maintains the authoritative incident timeline and decision log
+      - Records attendance and actions from every incident bridge call
+      - Preserves the record used for the post-incident review
+    authority_ceiling: SEV4
+ 
+escalation:
+  SEV1:
+    on_detection:
+      - IR_Commander
+      - Technical_Lead
+      - Executive_Sponsor
+    on_confirmation:
+      - Communications_Lead
+      - Legal_Liaison
+      - Executive_Sponsor
+    on_scope_expansion:
+      - IR_Commander
+      - Executive_Sponsor
+    time_threshold_minutes_to_escalate: 30
+ 
+  SEV2:
+    on_detection:
+      - IR_Commander
+      - Technical_Lead
+    on_confirmation:
+      - Communications_Lead
+      - Legal_Liaison
+    on_scope_expansion:
+      - Executive_Sponsor
+    time_threshold_minutes_to_escalate: 60
+ 
+  SEV3:
+    on_detection:
+      - Technical_Lead
+      - Scribe
+    on_confirmation:
+      - IR_Commander
+    on_scope_expansion:
+      - Communications_Lead
+    time_threshold_minutes_to_escalate: 120
+ 
+  SEV4:
+    on_detection:
+      - Technical_Lead
+    on_confirmation:
+      - Scribe
+    on_scope_expansion:
+      - IR_Commander
+    time_threshold_minutes_to_escalate: 240
