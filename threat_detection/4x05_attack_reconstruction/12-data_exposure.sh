@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 #
 # 12-data_exposure.sh
 # HEALTHBANE / MedDefense Health Systems - Task 12: Data Exposure Assessment
@@ -22,13 +22,13 @@ NOTES_FILE="$BASE_DIR/ir_evidence/ir_team_notes.txt"
  
 require_file() {
   if [[ ! -f "$1" ]]; then
-    echo "ERREUR : fichier de preuve manquant : $1" >&2
+    echo "ERROR: missing evidence file: $1" >&2
     exit 1
   fi
 }
 require_cmd() {
   if ! command -v "$1" >/dev/null 2>&1; then
-    echo "ERREUR : commande requise absente : $1" >&2
+    echo "ERROR: required command not found: $1" >&2
     exit 1
   fi
 }
@@ -48,7 +48,8 @@ bold()  { printf '\033[1m%s\033[0m\n' "$1"; }
 line()  { printf '%s\n' "================================================================"; }
  
 # ---------------------------------------------------------------------------
-# 0. Divergence d'IP entre les 3 sources (a verifier AVANT toute attribution)
+# 0. IP divergence across the 3 reference/evidence sources (must be checked
+#    BEFORE any host attribution is trusted)
 # ---------------------------------------------------------------------------
 TOPO_HEALTHDB_IP=$(grep -oP 'SRV-HEALTH-DB\s+\K10\.10\.20\.\d+' "$TOPO_FILE")
 TOPO_INSDB_IP=$(grep -oP 'SRV-INS-DB\s+\K10\.10\.20\.\d+' "$TOPO_FILE")
@@ -61,9 +62,9 @@ FW_DC01_IP=$(jq -r '.metadata.iocs_relevant[]' "$FW_FILE" | grep -oP '10\.10\.20
 FW_FILE01_IP=$(jq -r '.metadata.iocs_relevant[]' "$FW_FILE" | grep -oP '10\.10\.20\.\d+(?=\s+SRV-FILE-01)')
  
 # ---------------------------------------------------------------------------
-# 1. Cartographie des hotes compromis -> inventaire des actifs
-#    (par NOM D'HOTE, pas par IP, car l'attribution Sysmon/4x04 utilise des
-#     noms NetBIOS/DNS via /node:<hote>, independants du litige d'IP ci-dessus)
+# 1. Compromised-host mapping to the asset inventory
+#    (by HOSTNAME, not IP -- the Sysmon/4x04 attribution uses NetBIOS/DNS
+#     names via /node:<host>, independent of the IP dispute above)
 # ---------------------------------------------------------------------------
 HUNT_TARGETS=$(grep -oP 'SRV-HEALTH-DB|SRV-INS-DB|SRV-DC-01|SRV-FILE-01' "$HUNT_FILE" | sort -u)
  
@@ -74,8 +75,8 @@ TOTAL_STAGED=$((D1_SIZE + D2_SIZE + D3_SIZE))
 TOTAL_STAGED_MB=$(awk -v b="$TOTAL_STAGED" 'BEGIN{printf "%.1f", b/1000000}')
  
 # ---------------------------------------------------------------------------
-# 2. Statut d'exfiltration : correspondance octet-pres entre D1/D2/D3 et les
-#    sessions EXFIL_BURST du pare-feu
+# 2. Exfiltration status: byte-exact match between D1/D2/D3 and the
+#    firewall's EXFIL_BURST sessions
 # ---------------------------------------------------------------------------
 EXFIL_DEST_IP=$(jq -r '[.sessions[]? | select(.classification? == "EXFIL_BURST") | .dst_ip] | unique[0]' "$FW_FILE")
 EXFIL_DEST_PORT=$(jq -r '[.sessions[]? | select(.classification? == "EXFIL_BURST") | .dst_port] | unique[0]' "$FW_FILE")
@@ -91,8 +92,9 @@ MATCH_D1=$([[ "$BURST1_BYTES" == "$D1_SIZE" ]] && echo "EXACT" || echo "DIVERGEN
 MATCH_D2=$([[ "$BURST2_BYTES" == "$D2_SIZE" ]] && echo "EXACT" || echo "DIVERGENT")
 MATCH_D3=$([[ "$BURST3_BYTES" == "$D3_SIZE" ]] && echo "EXACT" || echo "DIVERGENT")
  
-# Recherche d'une 4eme tentative (hypothese "final exfil attempt 2026-05-15 02:00 CDT"
-# mentionnee dans ir_team_notes.txt) -- a corroborer ou infirmer par le pare-feu
+# Looking for a 4th attempt (the "final exfil attempt 2026-05-15 02:00 CDT"
+# hypothesis mentioned in ir_team_notes.txt) -- to corroborate or refute
+# against the firewall record
 HYPOTHESIS_MAY15=$(grep -c "Final exfil attempt" "$NOTES_FILE" || true)
 MAY15_BURSTS=$(jq -r '[.sessions[]? | select(.classification?=="EXFIL_BURST") | select(.ts_start? // "" | startswith("2026-05-15"))] | length' "$FW_FILE")
  
@@ -100,7 +102,7 @@ ISOLATION_TIME=$(grep -oP 'isolated at \K\d{2}:\d{2} CDT' "$NOTES_FILE" | head -
 ISOLATION_DATE=$(grep -oP 'Period covered:\s+\K2026-05-\d{2}(?=\s+\(isolation\))' "$NOTES_FILE")
  
 # ---------------------------------------------------------------------------
-# 3. Volumetrie des enregistrements et sensibilite des donnees
+# 3. Record volumetry and data sensitivity
 # ---------------------------------------------------------------------------
 PATIENT_COUNT=$(jq -r '[.sessions[]? | select(.classification?=="EXFIL_BURST") | ._note] | map(select(test("patient table"; "i")))[0] // empty' "$FW_FILE" | grep -oP '[\d ]+(?=-record patient table)' | tr -d ' ')
 PATIENT_COUNT_APPROX=$(grep -oP '~\s*47\s*000' "$ASSET_FILE" | head -1 | tr -d ' ~')
@@ -111,30 +113,30 @@ SSN_NOTE=$(grep -n "ssn (encrypted at rest" "$ASSET_FILE" | head -1 | cut -d: -f
 QUERY_COLUMNS=$(grep -A2 'SELECT TOP 100000' "$MALWARE_FILE" | tr -s ' \n' ' ' | grep -oP 'SELECT.*?(?=FROM)')
  
 # ---------------------------------------------------------------------------
-# AFFICHAGE
+# OUTPUT
 # ---------------------------------------------------------------------------
 line
 echo "   DATA EXPOSURE ASSESSMENT"
 line
 echo
  
-bold "0. ALERTE PREALABLE - DIVERGENCE D'ADRESSES IP (3 SOURCES)"
-printf "  %-15s %-18s %-18s %-18s\n" "Hote" "network_topology" "asset_inventory" "firewall metadata"
+bold "0. PRELIMINARY ALERT - CROSS-SOURCE IP DISCREPANCY (3 SOURCES)"
+printf "  %-15s %-18s %-18s %-18s\n" "Host" "network_topology" "asset_inventory" "firewall metadata"
 printf "  %-15s %-18s %-18s %-18s\n" "SRV-DC-01"     "$TOPO_DC01_IP"    "10.10.20.10"      "$FW_DC01_IP"
 printf "  %-15s %-18s %-18s %-18s\n" "SRV-HEALTH-DB" "$TOPO_HEALTHDB_IP" "10.10.20.15"      "$FW_HEALTHDB_IP"
 printf "  %-15s %-18s %-18s %-18s\n" "SRV-INS-DB"    "$TOPO_INSDB_IP"    "10.10.20.25"      "$FW_INSDB_IP"
 printf "  %-15s %-18s %-18s %-18s\n" "SRV-FILE-01"   "$TOPO_FILE01_IP"   "10.10.20.30"      "$FW_FILE01_IP"
 echo
-echo "  CONSTAT : network_topology.txt et meddefense_asset_inventory.txt sont"
-echo "  d'accord entre eux pour SRV-HEALTH-DB (.15) et SRV-INS-DB (.25), mais"
-echo "  le fichier pare-feu utilise des IP differentes (.30 / .31) qui ne"
-echo "  correspondent a AUCUN hote documente -- 10.10.20.30 est meme l'IP"
-echo "  attribuee a SRV-FILE-01 dans l'inventaire des actifs. Cette tache ne"
-echo "  tranche donc PAS l'attribution par IP du pare-feu ; elle s'appuie a la"
-echo "  place sur l'attribution par NOM D'HOTE (Sysmon/PsExec /node:<hote>,"
-printf '%s\n' "  chemins UNC \\\\SRV-xxx\\...) et sur la correspondance octet-pres entre"
-echo "  les archives recuperees sur disque et les sessions d'exfiltration,"
-echo "  deux preuves independantes de l'IP litigieuse."
+echo "  FINDING: network_topology.txt and meddefense_asset_inventory.txt agree"
+echo "  with each other on SRV-HEALTH-DB (.15) and SRV-INS-DB (.25), but the"
+echo "  firewall export uses DIFFERENT IPs (.30 / .31) that do not match any"
+echo "  documented host at all -- 10.10.20.30 is in fact the IP the asset"
+echo "  inventory assigns to SRV-FILE-01. This task therefore does NOT rely on"
+echo "  the firewall's own IP-based labels for host attribution; instead it"
+echo "  uses HOSTNAME-based attribution (Sysmon/PsExec /node:<host>, UNC paths"
+printf '%s\n' "  \\\\SRV-xxx\\...) plus byte-exact matching between the recovered"
+echo "  disk archives and the exfiltration sessions -- two lines of evidence"
+echo "  independent of the disputed IP."
 echo
  
 bold "COMPROMISED SYSTEM MAPPING:"
@@ -145,16 +147,16 @@ printf "  %-15s %-18s %-17s %s\n" "SRV-INS-DB" "Insurance DB" "HIGH (PII+fin)" "
 printf "  %-15s %-18s %-17s %s\n" "SRV-DC-01" "Domain Controller" "HIGH (auth)" "CONFIRMED ACCESS"
 printf "  %-15s %-18s %-17s %s\n" "SRV-FILE-01" "File Server" "MEDIUM" "NO ACCESS"
 echo
-echo "  NOTE : cette evaluation s'ecarte du gabarit de la consigne pour"
-echo "  SRV-INS-DB, SRV-DC-01 et SRV-FILE-01. Le gabarit suggere"
-echo "  PROBABLE/POSSIBLE/PROBABLE ; les preuves reunies ici (fichiers D2/D3"
-echo "  dont la taille correspond octet-pres a une session d'exfiltration, et"
-echo "  cibles nommees dans $(basename "$HUNT_FILE")) justifient CONFIRMED pour"
-echo "  SRV-INS-DB et SRV-DC-01. Pour SRV-FILE-01, aucune preuve de mouvement"
-echo "  laterale de l'attaquant n'a ete trouvee (le seul acces observe dans"
-echo "  memory_artifacts.txt est un partage de fichiers benin, anterieur/sans"
-echo "  rapport avec l'activite de l'attaquant) -> NO ACCESS, et non PROBABLE."
-echo "  Hotes verifies dans $(basename "$HUNT_FILE") (cibles de mouvement lateral):"
+echo "  NOTE: this assessment departs from the task template for SRV-INS-DB,"
+echo "  SRV-DC-01 and SRV-FILE-01. The template suggests"
+echo "  PROBABLE/POSSIBLE/PROBABLE; the evidence gathered here (D2/D3 files"
+echo "  whose size is a byte-exact match to an exfiltration session, plus"
+echo "  targets named in $(basename "$HUNT_FILE")) justifies CONFIRMED for"
+echo "  SRV-INS-DB and SRV-DC-01. For SRV-FILE-01, no evidence of attacker"
+echo "  lateral movement was found (the only access observed in"
+echo "  memory_artifacts.txt is a benign file share, predating/unrelated to"
+echo "  the attacker's activity) -> NO ACCESS, not PROBABLE."
+echo "  Hosts verified in $(basename "$HUNT_FILE") (lateral-movement targets):"
 while IFS= read -r host; do
   [[ -n "$host" ]] && echo "    - $host"
 done <<< "$HUNT_TARGETS"
@@ -162,105 +164,106 @@ echo
  
 bold "EXFILTRATION STATUS:"
 echo "  Data staged on WS-RECV-03: YES (${TOTAL_STAGED_MB} MB in 3 files)"
-echo "    [D1] staging_export_001.zip : ${D1_SIZE} octets"
-echo "    [D2] staging_export_002.zip : ${D2_SIZE} octets"
-echo "    [D3] query_results.csv      : ${D3_SIZE} octets"
-echo "  Data transmitted externally: YES -- CONFIRMEE (3/3 archives, correspondance"
-echo "    octet-pres avec les sessions EXFIL_BURST du pare-feu) :"
-echo "    Burst 1 vs D1 : ${BURST1_BYTES} vs ${D1_SIZE} -> ${MATCH_D1}"
-echo "    Burst 2 vs D2 : ${BURST2_BYTES} vs ${D2_SIZE} -> ${MATCH_D2}"
-echo "    Burst 3 vs D3 : ${BURST3_BYTES} vs ${D3_SIZE} -> ${MATCH_D3}"
-echo "    Total transmis : ${EXFIL_TOTAL_MB} MB sur ${EXFIL_COUNT} sessions"
+echo "    [D1] staging_export_001.zip : ${D1_SIZE} bytes"
+echo "    [D2] staging_export_002.zip : ${D2_SIZE} bytes"
+echo "    [D3] query_results.csv      : ${D3_SIZE} bytes"
+echo "  Data transmitted externally: YES -- CONFIRMED (3/3 archives, byte-exact"
+echo "    match with the firewall's EXFIL_BURST sessions):"
+echo "    Burst 1 vs D1: ${BURST1_BYTES} vs ${D1_SIZE} -> ${MATCH_D1}"
+echo "    Burst 2 vs D2: ${BURST2_BYTES} vs ${D2_SIZE} -> ${MATCH_D2}"
+echo "    Burst 3 vs D3: ${BURST3_BYTES} vs ${D3_SIZE} -> ${MATCH_D3}"
+echo "    Total transmitted: ${EXFIL_TOTAL_MB} MB across ${EXFIL_COUNT} sessions"
 echo "  Exfiltration channel: C2 IP ${EXFIL_DEST_IP}:${EXFIL_DEST_PORT} (HTTPS/443,"
-echo "    classification 'ssl', PAS un tunnel DNS -- confirme par le"
-echo "    recouvrement de config dans 4x03 : \"channel\":\"c2_post\")"
-echo "  Interruption: isolation de WS-RECV-03 le ${ISOLATION_DATE:-2026-05-15} a"
-echo "    ${ISOLATION_TIME:-13:42 CDT}, soit APRES les 3 exfiltrations confirmees"
-echo "    (2026-05-08, 2026-05-11, 2026-05-13). L'isolation n'a donc PAS"
-echo "    interrompu une exfiltration en cours."
+echo "    classification 'ssl', NOT a DNS tunnel -- confirmed by the recovered"
+echo "    config in 4x03: \"channel\":\"c2_post\")"
+echo "  Interruption: WS-RECV-03 isolated on ${ISOLATION_DATE:-2026-05-15} at"
+echo "    ${ISOLATION_TIME:-13:42 CDT}, i.e. AFTER all 3 confirmed exfiltrations"
+echo "    (2026-05-08, 2026-05-11, 2026-05-13). Isolation therefore did NOT"
+echo "    interrupt an exfiltration in progress."
 if [[ "$HYPOTHESIS_MAY15" -gt 0 && "$MAY15_BURSTS" -eq 0 ]]; then
-echo "  ATTENTION : ir_team_notes.txt evoque une '4e tentative' d'exfiltration"
-echo "    le 2026-05-15 a 02:00 CDT, mais AUCUNE session EXFIL_BURST du"
-echo "    2026-05-15 n'existe dans le pare-feu ($MAY15_BURSTS trouvee(s))."
-echo "    Le document lui-meme qualifie ce point d'HYPOTHESE non verifiee ;"
-echo "    je ne peux pas la corroborer avec les donnees pare-feu disponibles."
-echo "    -> a signaler, pas a trancher silencieusement."
+echo "  WARNING: ir_team_notes.txt mentions a '4th attempt' at exfiltration on"
+echo "    2026-05-15 at 02:00 CDT, but NO EXFIL_BURST session from 2026-05-15"
+echo "    exists in the firewall log ($MAY15_BURSTS found)."
+echo "    The source document itself labels this point a HYPOTHESIS, not a"
+echo "    verified fact; I cannot corroborate it with the available firewall"
+echo "    data. -> flagged, not silently resolved."
 fi
 echo
-echo "  CONCLUSION: Mise en scene (staging) confirmee ET exfiltration COMPLETE"
-echo "  (et non partielle/interrompue) pour les 3 fichiers avant toute action"
-echo "  de confinement. L'isolation du 2026-05-15 a stoppe la persistance de"
-echo "  l'attaquant, pas une exfiltration en cours."
+echo "  CONCLUSION: Staging is confirmed AND exfiltration is COMPLETE (not"
+echo "  partial/interrupted) for all 3 files, all of which occurred before any"
+echo "  containment action. The 2026-05-15 isolation stopped the attacker's"
+echo "  persistence, not an exfiltration already in progress."
 echo
  
 bold "DATA EXPOSURE BY TYPE:"
 echo "  Patient health records (PHI):"
 echo "    Status: CONFIRMED EXFILTRATED"
-echo "    Evidence: IR-DISK [D1] staging_export_001.zip (${D1_SIZE} octets,"
-echo "      supprime puis recupere), correspondance octet-pres avec EXFIL_BURST #1"
-echo "    Estimated scope: ${PATIENT_COUNT:-inconnu} patients (chiffre precis tire de"
-echo "      l'annotation de la session EXFIL_BURST #1 dans le pare-feu ;"
-echo "      l'inventaire des actifs donne un ordre de grandeur arrondi"
-echo "      ~${PATIENT_COUNT_APPROX:-47 000}, coherent mais moins precis)."
-echo "      Requete : ${QUERY_COLUMNS:-SELECT TOP 100000 patient_id, first_name, last_name, dob, ssn, diagnosis_codes}"
+echo "    Evidence: IR-DISK [D1] staging_export_001.zip (${D1_SIZE} bytes,"
+echo "      deleted then recovered), byte-exact match with EXFIL_BURST #1"
+echo "    Estimated scope: ${PATIENT_COUNT:-unknown} patients (exact figure taken"
+echo "      from the firewall's EXFIL_BURST #1 session annotation; the asset"
+echo "      inventory gives a rounded order of magnitude of"
+echo "      ~${PATIENT_COUNT_APPROX:-47 000}, consistent but less precise)."
+echo "      Query: ${QUERY_COLUMNS:-SELECT TOP 100000 patient_id, first_name, last_name, dob, ssn, diagnosis_codes}"
 echo
 echo "  Insurance/billing data:"
-echo "    Status: CONFIRMED EXFILTRATED (et non 'PROBABLE ACCESS based on"
-echo "      credential scope' comme suggere par le gabarit -- la preuve directe"
-echo "      existe via D2 + EXFIL_BURST #2)"
-echo "    Evidence: IR-DISK [D2] staging_export_002.zip (${D2_SIZE} octets),"
-echo "      correspondance octet-pres avec EXFIL_BURST #2"
-echo "    Estimated scope: ${INSURANCE_COUNT:-inconnu} polices/membres (chiffre precis"
-echo "      tire de l'annotation EXFIL_BURST #2 ; inventaire des actifs : ~${INSURANCE_COUNT_APPROX:-51 000})"
+echo "    Status: CONFIRMED EXFILTRATED (not 'PROBABLE ACCESS based on"
+echo "      credential scope' as suggested by the template -- direct evidence"
+echo "      exists via D2 + EXFIL_BURST #2)"
+echo "    Evidence: IR-DISK [D2] staging_export_002.zip (${D2_SIZE} bytes),"
+echo "      byte-exact match with EXFIL_BURST #2"
+echo "    Estimated scope: ${INSURANCE_COUNT:-unknown} policies/members (exact"
+echo "      figure taken from the EXFIL_BURST #2 annotation; asset inventory:"
+echo "      ~${INSURANCE_COUNT_APPROX:-51 000})"
 echo
 echo "  Employee records:"
 printf '%s\n' "    Status: NOT EXPOSED (no evidence of SRV-FILE-01 / \\\\shared\\\\hr access)"
-echo "    Scope potentiel non expose : ~${EMPLOYEE_COUNT:-320} employes (reference inventaire)"
+echo "    Potential scope not exposed: ~${EMPLOYEE_COUNT:-320} employees (per asset inventory)"
 echo
 echo "  Operational / authentication data (Active Directory):"
-echo "    Status: CONFIRMED EXFILTRATED (hors perimetre PHI direct, mais impact"
-echo "      securite majeur : recon + export de comptes AD)"
-echo "    Evidence: IR-DISK [D3] query_results.csv (${D3_SIZE} octets),"
-echo "      correspondance octet-pres avec EXFIL_BURST #3 (SRV-DC-01)"
+echo "    Status: CONFIRMED EXFILTRATED (outside direct PHI scope, but a major"
+echo "      security impact: AD account recon and export)"
+echo "    Evidence: IR-DISK [D3] query_results.csv (${D3_SIZE} bytes),"
+echo "      byte-exact match with EXFIL_BURST #3 (SRV-DC-01)"
 echo
  
 bold "REGULATORY ASSESSMENT:"
 echo "  HIPAA breach notification threshold: MET"
-echo "  Basis: PHI (donnees patients, ${PATIENT_COUNT:-~47 000} individus, et donnees"
-echo "    d'assurance liees a des soins, ${INSURANCE_COUNT:-~51 000} individus) confirmee"
-echo "    exfiltree vers une IP externe non autorisee (${EXFIL_DEST_IP}), tres au-dela"
-echo "    du seuil de 500 individus (45 CFR 164.402/164.408)."
-echo "  Estimated scope: de l'ordre de 50 000 a 98 000 individus selon le"
-echo "    niveau de deduplication patients/assures (chevauchement attendu mais"
-echo "    non quantifie dans les preuves disponibles -- a verifier aupres du"
-echo "    DPO, je ne peux pas deduire un chiffre dedupliquer exact depuis ces"
-echo "    fichiers seuls)."
+echo "  Basis: PHI (patient data, ${PATIENT_COUNT:-~47 000} individuals, and"
+echo "    insurance/billing data tied to care, ${INSURANCE_COUNT:-~51 000}"
+echo "    individuals) confirmed exfiltrated to an unauthorized external IP"
+echo "    (${EXFIL_DEST_IP}), far above the 500-individual threshold"
+echo "    (45 CFR 164.402/164.408)."
+echo "  Estimated scope: on the order of 50,000 to 98,000 individuals"
+echo "    depending on the level of deduplication between patients and"
+echo "    insurance members (overlap is expected but not quantified in the"
+echo "    available evidence -- should be verified with the DPO; I cannot"
+echo "    derive an exact deduplicated figure from these files alone)."
 echo "  Mitigating factors:"
-echo "    [*] Perimetre : AUCUN -- l'exfiltration des 3 fichiers est COMPLETE,"
-echo "        pas interrompue (voir EXFILTRATION STATUS ci-dessus)."
+echo "    [*] Scope: NONE -- exfiltration of all 3 files is COMPLETE, not"
+echo "        interrupted (see EXFILTRATION STATUS above)."
 if [[ -n "$SSN_NOTE" ]]; then
-echo "    [*] Chiffrement SSN : l'inventaire des actifs indique 'ssn (encrypted"
-echo "        at rest)' (ligne ${SSN_NOTE}), MAIS la requete recuperee dans"
-echo "        $(basename "$MALWARE_FILE") selectionne directement la colonne 'ssn'"
-echo "        via une requete applicative standard. Je ne peux pas determiner,"
-echo "        a partir des preuves disponibles, si ce chiffrement est du"
-echo "        chiffrement colonne (le SELECT aurait alors renvoye un blob"
-echo "        chiffre inexploitable) ou du chiffrement au repos transparent"
-echo "        (TDE, qui dechiffre pour toute requete applicative autorisee, et"
-echo "        aurait alors renvoye les SSN en clair). C'EST UNE QUESTION"
-echo "        OUVERTE A CLARIFIER, pas un fait etabli -- ne pas presenter ce"
-echo "        chiffrement comme un facteur attenuant confirme sans verification"
-echo "        technique de l'equipe base de donnees."
+echo "    [*] SSN encryption: the asset inventory states 'ssn (encrypted at"
+echo "        rest)' (line ${SSN_NOTE}), BUT the query recovered in"
+echo "        $(basename "$MALWARE_FILE") selects the 'ssn' column directly via"
+echo "        a standard application query. I cannot determine from the"
+echo "        available evidence whether this is column-level encryption (the"
+echo "        SELECT would then have returned an unusable encrypted blob) or"
+echo "        transparent at-rest encryption (TDE, which decrypts for any"
+echo "        authorized application query and would then have returned plain"
+echo "        SSNs). THIS IS AN OPEN QUESTION TO CLARIFY, not an established"
+echo "        fact -- do not present this encryption as a confirmed mitigating"
+echo "        factor without technical verification from the database team."
 fi
-echo "    [*] Delai de detection -> confinement : staging/exfil du 2026-05-08 au"
-echo "        2026-05-13 ; chasse/detection autour du 2026-05-15 ; isolation le"
-echo "        ${ISOLATION_DATE:-2026-05-15} a ${ISOLATION_TIME:-13:42 CDT}. Le confinement est"
-echo "        intervenu APRES l'exfiltration complete, donc ce delai n'attenue"
-echo "        pas le volume de donnees deja sorties -- il limite seulement la"
-echo "        persistance/les actions ulterieures de l'attaquant."
-echo "  Recommended action: NOTIFIER (seuil HIPAA depasse), engager une analyse"
-echo "    de deduplication precise du perimetre patients/assures, et faire"
-echo "    clarifier par l'equipe base de donnees le mode de chiffrement reel"
-echo "    de la colonne ssn avant de finaliser la lettre de notification."
+echo "    [*] Detection-to-containment delay: staging/exfil ran from 2026-05-08"
+echo "        to 2026-05-13; hunt/detection around 2026-05-15; isolation on"
+echo "        ${ISOLATION_DATE:-2026-05-15} at ${ISOLATION_TIME:-13:42 CDT}."
+echo "        Containment happened AFTER exfiltration had already completed,"
+echo "        so this delay does not mitigate the volume of data already lost"
+echo "        -- it only limited the attacker's further persistence/actions."
+echo "  Recommended action: NOTIFY (HIPAA threshold exceeded); run a precise"
+echo "    deduplication analysis of the patient/insurance scope; have the"
+echo "    database team confirm the actual encryption mode of the ssn column"
+echo "    before finalizing the notification letter."
 echo
 line
