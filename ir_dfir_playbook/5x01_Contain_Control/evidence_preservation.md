@@ -52,13 +52,31 @@ where: /evidence/IR-2026-0414-01/siem/alert_A-20260414-9841.json
 hash cmd: sha256sum alert_A-20260414-9841.json actual value: 535f02ef55927decc138e5542ad825dea3754a7370c6ee05f58f7d8480eaf6db
 ordering: low volatility, but preserved early regardless, since it is the triggering record referenced by every other document in this incident (triage notes, timeline, this runbook) and must be hashed before any SIEM retention policy or index rotation could alter access to it.
 6. Proxy and DNS logs for dmarsh (24h before the alert)
+6a. Proxy log (already-exported artifact)
 what: 24-hour proxy log for the account (proxy_24h_dmarsh.log)
 how:
   cp proxy_24h_dmarsh.log /evidence/IR-2026-0414-01/proxy_dns/
 where: /evidence/IR-2026-0414-01/proxy_dns/proxy_24h_dmarsh.log
 hash cmd: sha256sum proxy_24h_dmarsh.log actual value: 7738cd69ce3c726273fa6ca1a3eac54bef3d22b63859af071a203cb90b80f303
 ordering: preserved alongside the SIEM alert, before any proxy log rotation could remove the 2026-04-13T18:14:02Z entry showing the visit to the phishing domain.
-open gap, not filled by assumption: the lab materials provided to this module include a proxy log but no separate DNS resolution log. This runbook is written against exactly what exists; a dedicated DNS log file is listed as a requirement in the task instructions but was not present in the provided archive, so it is flagged here as missing rather than fabricated or silently skipped.
+6b. DNS resolution evidence (live capture — no export was provided to copy)
+what: DNS queries resolved for WST-WS-031 (IP 10.42.118.31, per the alert's network_connection.local_ip) over the same 24-hour window, from two sources: the host's own resolver cache (volatile, point-in-time only) and the internal DNS server's query log (authoritative, covers the full window if logging was enabled)
+how, host-side resolver cache (captured with Section 2-3, since it is live and volatile):
+  ipconfig /displaydns > dns_cache_wst-ws-031.txt
+
+(this only shows entries whose TTL has not yet expired; it will not reliably cover the full 24h window on its own, which is why the DNS server export below is the primary source)
+
+how, internal DNS server query log (authoritative source for the full window):
+  Get-WinEvent -LogName "Microsoft-Windows-DNS-Server/Analytical" |
+    Where-Object { $_.Message -match "10.42.118.31" -and $_.TimeCreated -ge (Get-Date "2026-04-13T02:47:00Z") -and $_.TimeCreated -le (Get-Date "2026-04-14T02:47:00Z") } |
+    Export-Csv dns_queries_dmarsh.csv
+
+(requires the DNS Server analytic/debug log to have been enabled on the domain controller beforehand; if it was not, this is itself an eradication/visibility gap to note in the incident timeline, not something this runbook can retroactively fix)
+
+where: /evidence/IR-2026-0414-01/proxy_dns/dns_cache_wst-ws-031.txt and /evidence/IR-2026-0414-01/proxy_dns/dns_queries_dmarsh.csv
+hash cmd: certutil -hashfile dns_cache_wst-ws-031.txt SHA256 on the host, sha256sum dns_queries_dmarsh.csv on the DNS server export; both re-verified with sha256sum after transfer to the evidence store
+ordering: the resolver cache is captured with Sections 2-3 (live, volatile host state); the DNS server export is captured alongside Section 6a (an authoritative log export, same urgency as the proxy log before rotation).
+open gap, not filled by assumption: the lab materials provided to this module include a proxy log but no pre-existing DNS log export to copy and hash directly, unlike the other log-based sections. The commands above specify exactly how this evidence would be captured from the host and the DNS server in a real engagement; nothing below this line should be read as DNS data already being in hand, reviewed, or analyzed — only the capture procedure is established here.
 7. Authentication events for dmarsh (24h before the alert, Active Directory + Azure AD)
 what: the combined AD + Azure AD authentication export for the account (auth_24h_dmarsh.json), sourced from ad_domain_controller_ms-dc01, ad_domain_controller_ms-dc02, and azure_ad_signin_log
 how:
