@@ -59,24 +59,24 @@ how:
 where: /evidence/IR-2026-0414-01/proxy_dns/proxy_24h_dmarsh.log
 hash cmd: sha256sum proxy_24h_dmarsh.log actual value: 7738cd69ce3c726273fa6ca1a3eac54bef3d22b63859af071a203cb90b80f303
 ordering: preserved alongside the SIEM alert, before any proxy log rotation could remove the 2026-04-13T18:14:02Z entry showing the visit to the phishing domain.
-6b. DNS resolution evidence (live capture — no export was provided to copy)
-what: DNS queries resolved for WST-WS-031 (IP 10.42.118.31, per the alert's network_connection.local_ip) over the same 24-hour window, from two sources: the host's own resolver cache (volatile, point-in-time only) and the internal DNS server's query log (authoritative, covers the full window if logging was enabled)
-how, host-side resolver cache (captured with Section 2-3, since it is live and volatile):
+6b. DNS resolution evidence, host resolver cache (no export was provided to copy — live capture)
+what: DNS queries still resident in WST-WS-031's own resolver cache (IP 10.42.118.31, per the alert's network_connection.local_ip) — a point-in-time snapshot, not a 24h history
+how:
   ipconfig /displaydns > dns_cache_wst-ws-031.txt
-
-(this only shows entries whose TTL has not yet expired; it will not reliably cover the full 24h window on its own, which is why the DNS server export below is the primary source)
-
-how, internal DNS server query log (authoritative source for the full window):
+where: /evidence/IR-2026-0414-01/proxy_dns/dns_cache_wst-ws-031.txt
+hash cmd: certutil -hashfile dns_cache_wst-ws-031.txt SHA256 on the host, re-verified with sha256sum after transfer to the evidence store
+ordering: captured with Sections 2-3, not with 6a — this is live, volatile host state (entries expire on TTL and are lost once the cache is flushed or the host reboots), unlike the proxy log which is already an export.
+open gap, not filled by assumption: this only shows entries whose TTL has not yet expired at capture time; it will not reliably cover the full 24-hour window before the alert on its own. The authoritative source for the full window is Section 6c below.
+6c. DNS resolution evidence, internal DNS server query log (no export was provided to copy — live capture)
+what: the internal DNS server's own query log for the same IP (10.42.118.31) over the 24-hour window 2026-04-13T02:47:00Z to 2026-04-14T02:47:00Z
+how:
   Get-WinEvent -LogName "Microsoft-Windows-DNS-Server/Analytical" |
     Where-Object { $_.Message -match "10.42.118.31" -and $_.TimeCreated -ge (Get-Date "2026-04-13T02:47:00Z") -and $_.TimeCreated -le (Get-Date "2026-04-14T02:47:00Z") } |
     Export-Csv dns_queries_dmarsh.csv
-
-(requires the DNS Server analytic/debug log to have been enabled on the domain controller beforehand; if it was not, this is itself an eradication/visibility gap to note in the incident timeline, not something this runbook can retroactively fix)
-
-where: /evidence/IR-2026-0414-01/proxy_dns/dns_cache_wst-ws-031.txt and /evidence/IR-2026-0414-01/proxy_dns/dns_queries_dmarsh.csv
-hash cmd: certutil -hashfile dns_cache_wst-ws-031.txt SHA256 on the host, sha256sum dns_queries_dmarsh.csv on the DNS server export; both re-verified with sha256sum after transfer to the evidence store
-ordering: the resolver cache is captured with Sections 2-3 (live, volatile host state); the DNS server export is captured alongside Section 6a (an authoritative log export, same urgency as the proxy log before rotation).
-open gap, not filled by assumption: the lab materials provided to this module include a proxy log but no pre-existing DNS log export to copy and hash directly, unlike the other log-based sections. The commands above specify exactly how this evidence would be captured from the host and the DNS server in a real engagement; nothing below this line should be read as DNS data already being in hand, reviewed, or analyzed — only the capture procedure is established here.
+where: /evidence/IR-2026-0414-01/proxy_dns/dns_queries_dmarsh.csv
+hash cmd: sha256sum dns_queries_dmarsh.csv on the DNS server export, re-verified with sha256sum after transfer to the evidence store
+ordering: captured alongside Section 6a — this is an authoritative log export (not live host state), with the same urgency as the proxy log: it must be pulled before any log rotation or retention policy on the DNS server removes the window.
+open gap, not filled by assumption: this command requires the DNS Server analytic/debug log to have been enabled on the domain controller beforehand. The lab materials provided to this module include a proxy log but no pre-existing DNS log export to copy and hash directly, unlike the other log-based sections, so no DNS data is treated here as already captured, reviewed, or analyzed — only the capture procedure is established. If the analytic log turns out not to have been enabled, that absence is itself a visibility gap to record in incident_timeline.md, not something this runbook can retroactively produce data for.
 7. Authentication events for dmarsh (24h before the alert, Active Directory + Azure AD)
 what: the combined AD + Azure AD authentication export for the account (auth_24h_dmarsh.json), sourced from ad_domain_controller_ms-dc01, ad_domain_controller_ms-dc02, and azure_ad_signin_log
 how:
@@ -89,22 +89,46 @@ Significant finding surfaced while reviewing this file for this runbook — not 
 
 8. Persistence and malware artifacts on WST-WS-031
 
-Not explicitly itemized in the task's minimum list, but included because edr_wst_ws_031_24h.jsonl shows these artifacts exist on disk right now and would be destroyed by any eradication step (deleting the dropper, clearing the Run key, removing the scheduled task) — exactly the kind of evidence this runbook exists to protect.
+Not explicitly itemized in the task's minimum list, but included because edr_wst_ws_031_24h.jsonl shows these five artifacts exist on disk/registry right now and would each be destroyed by eradication (deleting the dropper, clearing the Run key, removing the scheduled task) — exactly the kind of evidence this runbook exists to protect. Each item below carries its own full record rather than being grouped, so none of the five can be mistaken for already covered by another.
 
-what: the dropper file chain and the two persistence mechanisms it installed:
-C:\Users\dmarsh\Downloads\update.zip (sha256 3c2a1b9e8d7c6b5a4f3e2d1c0b9a8f7e6d5c4b3a2f1e0d9c8b7a6f5e4d3c2b1a, per telemetry)
-C:\Users\dmarsh\AppData\Local\Temp\update.xml (sha256 a4f1e9b4fe7aa6d5d3f3e2b8c9a7d4e8f5b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3)
-C:\Users\dmarsh\AppData\Local\Temp\update.exe (sha256 5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b9c8d7e6f5a4b)
-registry value HKCU\Software\Microsoft\Windows\CurrentVersion\Run\WindowsUpdateSvc
-scheduled task {7B4F2D81-19E2-4A8C-9E67-A1F0DE2C7B3A} (trigger: user_logon) (the three file hashes above are taken directly from edr_wst_ws_031_24h.jsonl's own sha256 fields at the time each file was created — not independently recomputed here, since the files have not yet been collected off the host at the time of writing this runbook; re-hashing at collection time, per Section 9, is what confirms they still match.)
+8a. Dropper archive: update.zip
+what: the file dropped to C:\Users\dmarsh\Downloads\update.zip by chrome.exe, sourced from the phishing domain (source_url field in edr_wst_ws_031_24h.jsonl)
 how:
-  robocopy C:\Users\dmarsh\Downloads  \\evidence\IR-2026-0414-01\malware\  update.zip
-  robocopy C:\Users\dmarsh\AppData\Local\Temp  \\evidence\IR-2026-0414-01\malware\  update.xml update.exe
+  robocopy C:\Users\dmarsh\Downloads \\evidence\IR-2026-0414-01\malware\ update.zip
+where: /evidence/IR-2026-0414-01/malware/update.zip
+hash cmd: certutil -hashfile update.zip SHA256 on the host at collection time, re-verified with sha256sum after transfer. Expected value per telemetry (to confirm, not assumed unchanged): 3c2a1b9e8d7c6b5a4f3e2d1c0b9a8f7e6d5c4b3a2f1e0d9c8b7a6f5e4d3c2b1a
+ordering: must precede eradication, not memory/network capture — this file is persistent on disk and is not lost by the delay of Sections 1-3, but would be destroyed the moment anyone deletes the dropper as part of cleanup.
+8b. Dropper payload: update.xml
+what: the MSBuild project file written to C:\Users\dmarsh\AppData\Local\Temp\update.xml, later modified by powershell.exe (PID 7812) at 02:46:51Z immediately before MSBuild.exe executed it
+how:
+  robocopy C:\Users\dmarsh\AppData\Local\Temp \\evidence\IR-2026-0414-01\malware\ update.xml
+where: /evidence/IR-2026-0414-01/malware/update.xml
+hash cmd: certutil -hashfile update.xml SHA256 on the host, re-verified with sha256sum after transfer. Expected value per telemetry: a4f1e9b4fe7aa6d5d3f3e2b8c9a7d4e8f5b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3
+ordering: must precede eradication — its content was modified post-creation (by the PowerShell process), so it is the most direct on-disk record of what MSBuild was actually instructed to run. Any cleanup that deletes the Temp folder destroys this.
+8c. Dropper executable: update.exe
+what: the executable written to C:\Users\dmarsh\AppData\Local\Temp\update.exe, the actual process image run by the scheduled task at 02:44:05Z on the morning of the alert (parent of the powershell.exe that led to MSBuild.exe)
+how:
+  robocopy C:\Users\dmarsh\AppData\Local\Temp \\evidence\IR-2026-0414-01\malware\ update.exe
+where: /evidence/IR-2026-0414-01/malware/update.exe
+hash cmd: certutil -hashfile update.exe SHA256 on the host, re-verified with sha256sum after transfer. Expected value per telemetry: 5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b9c8d7e6f5a4b
+ordering: must precede eradication — this is the binary that actually launched the chain leading to the alert; it is the single highest-value malware artifact in this runbook and the first eradication would normally delete.
+8d. Persistence mechanism: Run key
+what: the registry value WindowsUpdateSvc under HKCU\Software\Microsoft\Windows\CurrentVersion\Run, pointing at update.exe, set at 18:15:12Z the evening before the alert
+how:
   reg export HKCU\Software\Microsoft\Windows\CurrentVersion\Run \\evidence\IR-2026-0414-01\disk\run_key_export.reg
+where: /evidence/IR-2026-0414-01/disk/run_key_export.reg
+hash cmd: certutil -hashfile run_key_export.reg SHA256 on the host, re-verified with sha256sum after transfer
+ordering: must precede eradication — clearing this key is a normal first eradication step, and doing so before this export exists would remove the only record proving how persistence was configured (value name, target path, hive location).
+8e. Persistence mechanism: scheduled task
+what: the scheduled task {7B4F2D81-19E2-4A8C-9E67-A1F0DE2C7B3A}, trigger user_logon, action update.exe, created at 18:15:14Z the evening before the alert — the mechanism that actually re-launched update.exe at 02:44:05Z the next morning when dmarsh logged back in
+how:
   schtasks /query /tn "{7B4F2D81-19E2-4A8C-9E67-A1F0DE2C7B3A}" /xml ONE > \\evidence\IR-2026-0414-01\disk\scheduled_task_export.xml
-where: /evidence/IR-2026-0414-01/malware/ (the three files) and /evidence/IR-2026-0414-01/disk/ (the registry and scheduled-task exports)
-hash cmd: certutil -hashfile <file> SHA256 on the host at collection time, re-verified with sha256sum after transfer, for all five items
-ordering: must happen before eradication, not before memory/network capture — these artifacts are persistent (they survive a reboot or a process kill), so they are not lost by the delay of Sections 1-3, but they would be destroyed the moment anyone deletes the dropper, clears the Run key, or removes the scheduled task as part of cleanup. This section is the last preservation step precisely because eradication is the next phase that would destroy it.
+where: /evidence/IR-2026-0414-01/disk/scheduled_task_export.xml
+hash cmd: certutil -hashfile scheduled_task_export.xml SHA256 on the host, re-verified with sha256sum after transfer
+ordering: must precede eradication — removing this task is a normal cleanup step, and this is the only artifact that proves the user_logon trigger is what bridged the 8-hour gap between the evening drop and the next morning's execution, which matters for confirming the full attack timeline.
+
+(the three file hashes quoted as "expected value" in 8a-8c are taken directly from edr_wst_ws_031_24h.jsonl's own sha256 fields at the time each file was created — not independently recomputed by me, since the files have not yet been collected off the host at the time of writing this runbook. Section 9's re-hash at collection time is what confirms whether they still match.)
+
 9. Verification
 Every file captured in Sections 1-8 is re-hashed from its location inside /evidence/IR-2026-0414-01/:
   sha256sum /evidence/IR-2026-0414-01/*/* > verification_run.txt
