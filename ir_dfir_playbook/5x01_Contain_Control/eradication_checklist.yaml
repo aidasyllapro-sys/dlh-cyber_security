@@ -1,0 +1,155 @@
+items:
+  - id: ERAD-001
+    category: malware_artifact
+    target_host: WST-WS-031
+    description: Remove dropper files update.zip, update.xml, update.exe from Downloads and Temp
+    command_or_action: Remove-Item on all three paths
+    verification_command: Test-Path on all three paths plus endpoint live-response file listing of the Temp folder
+    expected_verification_result: all three paths return false and live-response shows no match
+    status: pending
+    executed_at: null
+    executed_by: null
+ 
+  - id: ERAD-002
+    category: malware_artifact
+    target_host: WST-WS-031
+    description: Remove scheduled task persistence {7B4F2D81-19E2-4A8C-9E67-A1F0DE2C7B3A}
+    command_or_action: schtasks /delete /tn "{7B4F2D81-19E2-4A8C-9E67-A1F0DE2C7B3A}" /f
+    verification_command: schtasks /query | findstr "7B4F2D81-19E2-4A8C-9E67-A1F0DE2C7B3A"
+    expected_verification_result: no matches
+    status: pending
+    executed_at: null
+    executed_by: null
+ 
+  - id: ERAD-003
+    category: malware_artifact
+    target_host: WST-WS-031
+    description: Remove Run key persistence HKCU\Software\Microsoft\Windows\CurrentVersion\Run\WindowsUpdateSvc
+    command_or_action: Remove-ItemProperty -Path HKCU:\Software\Microsoft\Windows\CurrentVersion\Run -Name WindowsUpdateSvc
+    verification_command: reg query HKCU\Software\Microsoft\Windows\CurrentVersion\Run | findstr WindowsUpdateSvc
+    expected_verification_result: no matches
+    status: pending
+    executed_at: null
+    executed_by: null
+ 
+  - id: ERAD-004
+    category: malware_artifact
+    target_host: WST-WS-017
+    description: Remove dropped update.xml (same payload hash as WST-WS-031, confirmed in auth_expansion_0334Z.log; no registry or scheduled-task persistence observed on this host)
+    command_or_action: Remove-Item C:\Users\dmarsh\AppData\Local\Temp\update.xml
+    verification_command: Test-Path on the file plus endpoint live-response file listing of the Temp folder
+    expected_verification_result: path returns false and live-response shows no match
+    status: pending
+    executed_at: null
+    executed_by: null
+ 
+  - id: ERAD-005
+    category: malware_artifact
+    target_host: LIS-WSIDE-01
+    description: No dropped artifact observed on this host in the provided evidence (file-read access only) — verification sweep to confirm, not a removal
+    command_or_action: none (no artifact to remove)
+    verification_command: endpoint live-response full file listing of user Temp/Downloads paths and persistence locations
+    expected_verification_result: no unexpected files or persistence entries found
+    status: pending
+    executed_at: null
+    executed_by: null
+ 
+  - id: ERAD-006
+    category: process
+    target_host: WST-WS-031
+    description: Terminate attacker-tied processes powershell.exe (PID 7812) and MSBuild.exe (PID 8104)
+    command_or_action: Stop-Process -Id 7812,8104 -Force
+    verification_command: Get-Process -Id 7812,8104 -ErrorAction SilentlyContinue
+    expected_verification_result: no process returned for either PID
+    status: pending
+    executed_at: null
+    executed_by: null
+ 
+  - id: ERAD-007
+    category: process
+    target_host: WST-WS-017
+    description: Terminate attacker-tied processes powershell.exe (PID 4402) and MSBuild.exe (PID 5108)
+    command_or_action: Stop-Process -Id 4402,5108 -Force
+    verification_command: Get-Process -Id 4402,5108 -ErrorAction SilentlyContinue
+    expected_verification_result: no process returned for either PID
+    status: pending
+    executed_at: null
+    executed_by: null
+ 
+  - id: ERAD-008
+    category: credential
+    target_host: domain
+    description: Reset dmarsh AD password and revoke Azure AD sessions and refresh tokens
+    command_or_action: Set-ADAccountPassword -Identity dmarsh -Reset; Revoke-AzureADUserAllRefreshToken -ObjectId dmarsh
+    verification_command: query Azure AD sign-in logs and AD logon events for dmarsh for sign-ins using tokens or Kerberos material issued before the reset
+    expected_verification_result: no successful sign-in using material issued before the reset timestamp
+    status: pending
+    executed_at: null
+    executed_by: null
+ 
+  - id: ERAD-009
+    category: machine_account
+    target_host: WST-WS-031
+    description: Rotate the computer account password for WST-WS-031
+    command_or_action: Reset-ComputerMachinePassword (run on host) or Test-ComputerSecureChannel -Repair -Credential <domain admin> (run remotely)
+    verification_command: check the computer object's pwdLastSet attribute in AD
+    expected_verification_result: pwdLastSet timestamp is after the eradication window
+    status: pending
+    executed_at: null
+    executed_by: null
+ 
+  - id: ERAD-010
+    category: machine_account
+    target_host: WST-WS-017
+    description: Rotate the computer account password for WST-WS-017
+    command_or_action: Test-ComputerSecureChannel -Repair -Credential <domain admin>
+    verification_command: check the computer object's pwdLastSet attribute in AD
+    expected_verification_result: pwdLastSet timestamp is after the eradication window
+    status: pending
+    executed_at: null
+    executed_by: null
+ 
+  - id: ERAD-011
+    category: machine_account
+    target_host: LIS-WSIDE-01
+    description: Rotate the computer account password for LIS-WSIDE-01 (precautionary — host was accessed via SMB/Kerberos logon during the incident)
+    command_or_action: Test-ComputerSecureChannel -Repair -Credential <domain admin>
+    verification_command: check the computer object's pwdLastSet attribute in AD
+    expected_verification_result: pwdLastSet timestamp is after the eradication window
+    status: pending
+    executed_at: null
+    executed_by: null
+ 
+  - id: ERAD-012
+    category: krbtgt
+    target_host: domain
+    description: Double-reset of the krbtgt account password following confirmed Pass-the-Ticket
+    command_or_action: Reset-ADAccountPassword -Identity krbtgt (twice, with full AD replication convergence between the two resets)
+    rationale: Pass-the-Ticket was confirmed on dmarsh (consecutive TGS_REQ events from WST-WS-031 to WST-WS-017 to LIS-WSIDE-01 reusing the same session without fresh interactive logon). A single krbtgt reset still leaves tickets forged against the prior password's second-most-recent hash valid; a double reset with replication convergence between resets is required to invalidate all outstanding forged TGTs domain-wide.
+    verification_command: audit TGT issuance timestamps domain-wide and confirm no session uses a ticket issued before the second reset
+    expected_verification_result: no valid TGTs found with an issuance timestamp earlier than the second krbtgt reset
+    status: pending
+    executed_at: null
+    executed_by: null
+ 
+  - id: ERAD-013
+    category: network
+    target_host: perimeter
+    description: Egress deny for 185.220.101.47 (Tor exit relay, first C2 IP)
+    command_or_action: firewall policy update, deny outbound ip any 185.220.101.47
+    verification_command: netflow query for the last 24 hours toward 185.220.101.47
+    expected_verification_result: zero packets
+    status: completed
+    executed_at: "2026-04-14T03:21:15Z"
+    executed_by: On-Call SOC Analyst
+ 
+  - id: ERAD-014
+    category: network
+    target_host: perimeter
+    description: Egress deny for 91.234.99.107 (second C2 IP, observed from WST-WS-017)
+    command_or_action: firewall policy update, deny outbound ip any 91.234.99.107
+    verification_command: netflow query for the last 24 hours toward 91.234.99.107
+    expected_verification_result: zero packets
+    status: pending
+    executed_at: null
+    executed_by: null
