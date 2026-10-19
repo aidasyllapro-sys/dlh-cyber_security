@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 #
 # verify_artifacts.sh
 #
@@ -121,3 +121,4 @@ else
   echo "ARTIFACT VERIFICATION FAILED" >&2
   exit 1
 fi
+
