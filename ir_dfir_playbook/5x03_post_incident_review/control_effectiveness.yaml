@@ -1,0 +1,103 @@
+# Control Effectiveness Audit — IR-2026-0414-01 / LH-2026-0414-01
+#
+# Source evidence:
+#   - forensic_findings_summary.md (5x03 lab materials): evidence IDs, ATT&CK mapping, IOCs
+#   - ad_auth_log.jsonl, proxy_log.jsonl, siem_alert_export.json (5x02 lab materials, same
+#     investigation): exact timestamps and log fields cited per phase below
+#
+# Methodology: each phase is scored by comparing what actually fired (a log field, a risk
+# score, or a confirmed alert with a fired_at timestamp) against what should have acted.
+# A "note"/"risk" annotation inside a raw log is evidence that detection logic evaluated the
+# event, not evidence that a human analyst was alerted or that any blocking action occurred —
+# these are kept distinct below rather than both labeled "fired".
+
+- phase: Credential phishing and submission
+  att_ck_technique: T1566.002 / T1078
+  controls_expected:
+    - Secure email gateway / anti-phishing filtering on inbound mail
+    - Web proxy URL categorization blocking newly-registered or typosquat domains
+    - Azure AD Identity Protection risk-based conditional access (block or step-up on medium/high risk sign-in)
+    - Security awareness training reducing click-through on phishing links
+  controls_fired:
+    - Azure AD Identity Protection risk scoring: sign-in at 2026-04-13T18:14:41Z from 45.63.9.88 (RU) scored risk=medium, risk_detail=impossibleTravel (ad_auth_log.jsonl)
+  controls_missed:
+    - Secure email gateway did not block the phishing message (user reached ms0365-support.login-verification.click and submitted credentials at 18:14:41Z — proxy_log.jsonl)
+    - Conditional access did not block or step up authentication despite the medium/impossibleTravel risk score; sign-in allowed under ca_policy=compliant_device (ad_auth_log.jsonl)
+    - Web proxy did not block the typosquat domain prior to credential submission
+  gap_severity: critical
+  gap_reason: Risk was correctly scored by Identity Protection but conditional access still allowed the sign-in through, so the one control that evaluated the event did not act on it.
+
+- phase: VPN access using stolen credentials from a foreign IP
+  att_ck_technique: T1078 / T1133
+  controls_expected:
+    - Geo-IP or impossible-travel-based VPN access restriction
+    - MFA enforcement resistant to prompt-bombing/fatigue for VPN logons
+    - Anomaly alerting on VPN logons from a country outside the normal access baseline
+  controls_fired:
+    - VPN logon at 2026-04-14T02:44:17Z from 45.63.9.88 was logged with the annotation external_ip_in_ru_but_conditional_access_passed, confirming conditional access evaluated the geography (ad_auth_log.jsonl)
+  controls_missed:
+    - No geo-IP restriction blocked the RU-origin VPN logon
+    - MFA approval succeeded (mobile_app_notification) with no step-up or secondary verification despite the same external IP already flagged at 18:14:41Z the day before
+    - No anomaly alert appears to have reached a SOC analyst for this logon — the kerberos_as_req three minutes earlier carries only a log annotation (note: unusual_hour_for_user), not a confirmed alert record
+  gap_severity: high
+  gap_reason: The same external IP had already been flagged once (18:14:41Z) and was allowed to re-authenticate eight hours later with no escalation, indicating the risk signal from phase 1 was not carried forward into a block on reuse.
+
+- phase: PowerShell to MSBuild LOLBin execution
+  att_ck_technique: T1127.001 / T1059.001
+  controls_expected:
+    - EDR/AV behavioral detection and blocking of LOLBAS abuse (MSBuild.exe executing non-project files)
+    - PowerShell Constrained Language Mode / AMSI blocking an encoded, hidden-window PowerShell command
+    - Application control (AppLocker or WDAC) restricting MSBuild.exe execution outside an approved developer context
+  controls_fired:
+    - SIEM/EDR rule wz-edr-100041 ("Suspicious process tree: PowerShell -> MSBuild", severity high, MITRE T1127.001/T1059.001) fired as alert A-20260414-9841 at 2026-04-14T02:47:11Z, 13 seconds after MSBuild.exe (PID 8104) started (siem_alert_export.json)
+  controls_missed:
+    - No AMSI or script-block logging prevented or flagged the base64-encoded, hidden-window PowerShell command (powershell.exe -ep bypass -w hidden -enc ..., PID 7812) before it ran
+    - No application control policy blocked MSBuild.exe from executing update.xml outside a build context
+    - The alert that did fire did not trigger an automated containment action — MSBuild.exe (PID 8104) went on to establish an outbound connection to 185.220.101.47:443 (siem_alert_export.json, network block)
+  gap_severity: high
+  gap_reason: Detection worked and fired within 13 seconds, but the absence of an automated or rapid manual containment response let the detected process continue to execution and external C2 connection.
+
+- phase: C2 beaconing to external IPs
+  att_ck_technique: T1071.001 / T1090.003
+  controls_expected:
+    - Egress filtering/firewall blocking known-malicious IPs or Tor exit-relay ranges
+    - DNS or web-proxy threat-intelligence blocklist covering C2/anonymizer infrastructure
+    - Network IDS/IPS signature or anomaly detection on repeated outbound beacon patterns
+  controls_fired:
+    - None confirmed. The connection from MSBuild.exe (PID 8104) to 185.220.101.47:443 is recorded in siem_alert_export.json tagged tor_exit_relay/anonymizer as context for the process-tree alert, not as a network-layer block or alert of its own.
+  controls_missed:
+    - No egress filter blocked the Tor-exit IP 185.220.101.47 (first beacon, WST-WS-031, 2026-04-14T02:46:58Z, proxy_log.jsonl)
+    - No egress filter or threat-intel blocklist stopped the second C2 IP 91.234.99.107 (WST-WS-017, 2026-04-14T03:27:13Z, proxy_log.jsonl), even after the first beacon had already fired a high-severity alert
+    - No IDS/IPS signature flagged the repeated beacon pattern on either host
+  gap_severity: critical
+  gap_reason: A second host beaconed to a second unknown external IP more than 40 minutes after the first C2 connection had already triggered a high-severity alert, and no network-layer control blocked either destination.
+
+- phase: LSASS credential access and Kerberos ticket extraction
+  att_ck_technique: T1003.001 / T1558.003
+  controls_expected:
+    - LSASS protection (Credential Guard or RunAsPPL) preventing credential-material dumping
+    - EDR alerting on unauthorized process handle access to lsass.exe
+    - Kerberos ticket-lifetime and anomaly detection on ticket-granting-service request patterns
+  controls_fired:
+    - None confirmed. No alert record in siem_alert_export.json references lsass.exe or a credential-access technique; this phase's findings (NTLM hash material present in lsass memory, and the anomalous TGS pattern below) surface only in forensic artifacts collected after containment, not in a real-time detection.
+  controls_missed:
+    - LSASS protection did not prevent NTLM hash material for dmarsh from being resident and accessible in process memory
+    - No EDR alert fired on lsass.exe process access
+    - The repeated TGS request for cifs/LIS-WSIDE-01 at 2026-04-14T03:41:52Z carries the log annotation second_request_with_ticket_reuse (ad_auth_log.jsonl), but no alert record shows this annotation reached a SOC analyst or triggered a response
+  gap_severity: critical
+  gap_reason: This phase has no confirmed real-time detection at all; every related finding was reconstructed afterward, meaning the credential-theft pivot that enabled all downstream lateral movement was fully invisible to the SOC while it happened.
+
+- phase: Lateral movement and PHI access
+  att_ck_technique: T1550.003 / T1078 / T1005
+  controls_expected:
+    - Pass-the-ticket / ticket-reuse detection generating an actionable SOC alert
+    - Network segmentation between clinical workstations and laboratory information system (LIS) hosts
+    - Least-privilege file-share ACLs limiting bulk PHI access, with DLP or UEBA alerting on abnormal volume
+  controls_fired:
+    - The ticket-reuse pattern was logged with the annotation second_request_with_ticket_reuse at 2026-04-14T03:41:52Z (ad_auth_log.jsonl), confirming the underlying logging/analytics layer did capture the anomalous pattern
+  controls_missed:
+    - No alert record shows the ticket-reuse annotation escalated to a SOC response before the subsequent logon to LIS-WSIDE-01 at 03:42:08Z, roughly 16 minutes later
+    - No network segmentation prevented the Kerberos-authenticated logon from WST-WS-017 to LIS-WSIDE-01
+    - No DLP or UEBA control flagged or blocked the bulk access of 14 patient lab report PDFs under LIS_REPORTS$ at 03:43:30Z (ad_auth_log.jsonl)
+  gap_severity: critical
+  gap_reason: The one signal that was logged (ticket reuse) did not prevent PHI belonging to 14 patients from being accessed roughly 90 seconds after the lateral-movement logon completed, confirming a HIPAA breach-presumption event under 45 CFR 164.402.
