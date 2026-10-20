@@ -1,0 +1,55 @@
+title: PowerShell Spawning Trusted Developer Utility (LOLBin Proxy Execution)
+id: 8fa55e42-a2cd-42a7-b5d8-190b851eeb44
+status: test
+description: |
+  Detects a trusted, signed Windows developer utility (MSBuild.exe and similar
+  LOLBAS-listed compilers/script hosts) being spawned directly by a PowerShell or
+  script-host process. This matches the technique confirmed in IR-2026-0414-01,
+  where powershell.exe (PID 7812, launched with -ep bypass -w hidden -enc) spawned
+  MSBuild.exe (PID 8104), which executed an attacker-supplied update.xml inline-task
+  file and then beaconed to an external IP. No detection rule for this pattern
+  existed before the incident.
+references:
+  - https://lolbas-project.github.io/lolbas/Binaries/Msbuild/
+  - https://attack.mitre.org/techniques/T1127/001/
+  - https://attack.mitre.org/techniques/T1059/001/
+  - control_effectiveness.yaml (phase: PowerShell to MSBuild LOLBin execution)
+  - gap_analysis.md (GAP-004, GAP-005)
+author: Aida Sylla
+date: 2026-10-21
+tags:
+  - attack.execution
+  - attack.defense-evasion
+  - attack.t1127.001
+  - attack.t1059.001
+logsource:
+  category: process_creation
+  product: windows
+detection:
+  selection_parent:
+    ParentImage|endswith:
+      - '\powershell.exe'
+      - '\pwsh.exe'
+      - '\wscript.exe'
+      - '\cscript.exe'
+  selection_child:
+    Image|endswith:
+      - '\MSBuild.exe'
+      - '\csc.exe'
+      - '\vbc.exe'
+      - '\jsc.exe'
+      - '\InstallUtil.exe'
+      - '\RegAsm.exe'
+      - '\RegSvcs.exe'
+  condition: selection_parent and selection_child
+falsepositives:
+  - A CI/CD build agent or deployment script (for example a scheduled PowerShell
+    build task under C:\src\deploy\) that invokes MSBuild.exe directly rather than
+    through devenv.exe or a dotnet CLI wrapper; confirm against the build server
+    asset inventory and scheduled task name before escalating.
+  - A developer or administrator manually troubleshooting a build from a PowerShell
+    prompt (rather than the Visual Studio IDE) who runs MSBuild.exe, csc.exe, or
+    vbc.exe against a project under a legitimate source directory such as
+    C:\src\meddefense-tools\; confirm the target project path is a known
+    repository, not a user Temp or Downloads folder.
+level: high
