@@ -1,0 +1,10 @@
+# Incident Timeline: IR-2026-0420-01
+
+Append-only. Every task in this capstone adds entries below; existing entries are never edited or
+removed.
+
+| Timestamp | Type | Actor | Description | Source | Certainty |
+|---|---|---|---|---|---|
+| 2026-04-20T19:43:22Z | OBSERVATION | Mike Torres (relaying on-call nurse, and own observation) | On-call nurse at Main reports workstation CS-WS-101 "crawling," with desktop filenames appearing changed; not yet independently verified by login. Separately, Torres reports SCHED-SVR-01 (Main scheduling server) has shown pinned CPU and high disk queue for an estimated ~90 minutes (onset approx. 18:14Z, Torres's estimate, not log-confirmed), initially suspected as a stuck batch job. | Torres call transcript, 19:43:22Z-19:43:50Z | Unconfirmed - secondhand user report (CS-WS-101) and operator estimate (SCHED-SVR-01), neither independently verified at this timestamp |
+| 2026-04-20T19:44:20Z | OBSERVATION | Mike Torres (SIEM) | SIEM service-installation alert, rule `wz-edr-200214`, fired on three clinical workstations at Main (CS-WS-104, CS-WS-107, CS-WS-112) within the same twelve-minute window this afternoon (exact fire time not given in the transcript). Installed service name `WinHealthSvc`, image path `C:\ProgramData\Microsoft\svchost32.exe` - a non-standard path and name masquerading as a Microsoft component. | Torres call transcript, 19:44:20Z-19:44:48Z | Confirmed alert fired as described; malicious intent of the service not yet forensically confirmed, but the masquerading pattern is a strong indicator |
+| 2026-04-20T19:52:00Z | DECISION | Aida Sylla (on-call IR) | Incident formally declared as IR-2026-0420-01 at SEV2, per the MedDefense severity matrix's "malware confirmed on a single workstation at a clinical site" threshold, met and exceeded by the three-host SIEM alert. PB-003 (`playbook_clinical_degradation.yaml`) activated as the closest available match, despite an imperfect fit (see `ir_activation.md` reasoning). | ir_activation.md | Confirmed - this is a documented decision, not an observation |
