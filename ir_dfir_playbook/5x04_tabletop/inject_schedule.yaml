@@ -1,0 +1,163 @@
+injects:
+  - id: INJ-00
+    time_minutes: 0
+    delivery: facilitator reads aloud
+    situation: >
+      The SOC has flagged unusual outbound traffic from the Nexus scheduling server at the Main
+      campus (SCHED-SVR-01) to an unknown external IP address. The alert fired 45 minutes ago.
+      The connection recurs at roughly four-hour intervals. The Nexus system is currently
+      operational. Patient scheduling is running normally at all three sites. No other anomalies
+      have been detected yet.
+    capability_tested: CAP-01
+    decision_point: Declare an incident? What severity? Who is notified in the first 15 minutes?
+    roles_challenged:
+      - James Chen (SOC Lead)
+      - Sarah Park (IT Director)
+    expected_response: >-
+      Incident declared at SEV2 minimum; IR Commander and executive leadership notified within
+      15 minutes; SOC begins evidence collection on SCHED-SVR-01 without yet touching the Nexus
+      integration itself.
+
+  - id: INJ-01
+    time_minutes: 20
+    delivery: facilitator reads aloud
+    situation: >
+      Nexus Health Technologies has published a security advisory. Their build pipeline was
+      compromised by a threat actor with access to their code-signing certificate. Software
+      updates distributed through the automatic update channel in the last several days may
+      contain a malicious component. Nexus does not yet have a patch and asks customers to
+      contact their 24x7 SecOps line for guidance.
+    capability_tested: CAP-02
+    decision_point: >-
+      Who formally opens the vendor incident channel with Nexus, what specific information is
+      requested, and who owns tracking Nexus's own BAA notification obligations going forward?
+    roles_challenged:
+      - Sarah Park (IT Director)
+      - Marcus Webb (Security Analyst)
+    expected_response: >-
+      A named MedDefense owner contacts Nexus SecOps directly rather than waiting for further
+      vendor outreach; specific questions are asked (scope of the build compromise, which
+      customers/versions are affected, remediation timeline); someone is assigned to track
+      whether Nexus meets its 24-hour BAA notification duty, rather than treating the advisory
+      itself as satisfying that duty.
+
+  - id: INJ-02
+    time_minutes: 35
+    delivery: facilitator reads aloud
+    situation: >
+      Forensic review confirms the backdoor delivered through the malicious update has been
+      running on the Nexus agent hosts at all three sites (Main, West Campus, North Site), not
+      only the one originally flagged, since the update was deployed three days ago. Outbound
+      beaconing has been occurring at four-hour intervals the entire time.
+    capability_tested: CAP-01
+    decision_point: >-
+      Does this change the incident's severity and scope? Who beyond the original notification
+      list must now be informed?
+    roles_challenged:
+      - James Chen (SOC Lead)
+      - Sarah Park (IT Director)
+    expected_response: >-
+      Severity is explicitly re-escalated given the three-site, three-day scope; the
+      notification list is expanded to include executive leadership and legal rather than left
+      at its original SEV2 distribution; the team acknowledges the exposure window is longer
+      than the original 45-minute alert implied.
+
+  - id: INJ-03
+    time_minutes: 50
+    delivery: facilitator reads aloud
+    situation: >
+      Marcus Webb recommends immediately isolating all three Nexus agent hosts and severing the
+      Nexus integration entirely until the compromise is fully understood. The Clinical Director
+      representative objects: tomorrow's appointment schedule, including several pre-surgical
+      bookings, depends on current Nexus data, and no manual scheduling fallback is currently
+      staffed or ready. Robert Kim notes that an extended outage also halts insurance eligibility
+      checks, risking claim denials and billing delays across all three sites.
+    capability_tested: CAP-03
+    decision_point: >-
+      Do you sever the Nexus integration now, delay it, or isolate partially? Who has the
+      authority to make and own this call, and what is the fallback for patient scheduling if
+      the integration is cut?
+    roles_challenged:
+      - Marcus Webb (Security Analyst)
+      - Clinical Director representative
+      - Robert Kim (CFO)
+      - Dr. Patricia Morales (CEO)
+    expected_response: >-
+      Dr. Patricia Morales makes and owns an explicit, documented decision rather than letting
+      the disagreement go unresolved; the decision names a concrete patient-safety fallback
+      (e.g., manual verification of pre-surgical bookings before relying on Nexus data) and a
+      specific condition or timeframe for revisiting the decision, rather than an open-ended cut
+      with no review point.
+
+  - id: INJ-04
+    time_minutes: 65
+    delivery: facilitator reads aloud
+    situation: >
+      Forensic analysis shows the attacker queried locally cached patient demographic data and
+      insurance eligibility records on the compromised agent hosts. It is not yet confirmed
+      whether any data left the environment. Separately, Nexus has not yet confirmed to
+      MedDefense that it has met its 24-hour BAA breach notification obligation; their advisory
+      was general, not an individualized notice.
+    capability_tested: CAP-04, CAP-05
+    decision_point: >-
+      What PHI categories are confirmed versus merely possibly exposed? Does MedDefense begin
+      its own HIPAA breach risk assessment now, or wait for Nexus's formal notification?
+    roles_challenged:
+      - Helena Reyes (General Counsel)
+      - Marcus Webb (Security Analyst)
+    expected_response: >-
+      Helena Reyes states explicitly that MedDefense's own notification clock is not contingent
+      on Nexus completing its 24-hour obligation, and opens MedDefense's own four-factor risk
+      assessment now; the exposure scope is stated precisely as "demographic and insurance
+      eligibility data on three agent hosts, access confirmed, exfiltration unconfirmed" rather
+      than left vague.
+
+  - id: INJ-05
+    time_minutes: 80
+    delivery: facilitator reads aloud
+    situation: >
+      Scheduling staff report discrepancies in tomorrow's appointment list at the Main campus:
+      at least two patients show conflicting double-booked slots, and one pre-surgical
+      appointment appears to have been silently cancelled with no record of who cancelled it.
+      At the same time, a local news reporter calls the front desk asking MedDefense to confirm
+      or deny "a data breach involving a scheduling vendor."
+    capability_tested: CAP-06, CAP-07
+    decision_point: >-
+      How do you verify which appointment records can still be trusted before clinical staff act
+      on them, and what, if anything, is said to the reporter right now?
+    roles_challenged:
+      - Sarah Park (IT Director)
+      - Dr. Patricia Morales (CEO)
+      - Helena Reyes (General Counsel)
+    expected_response: >-
+      A concrete verification method is named for flagged records (e.g., manual confirmation
+      against the last known-good backup or direct patient callback for affected slots) rather
+      than trusting the data by default; a single designated spokesperson, coordinated with
+      Legal, gives one consistent, fact-checked response to the reporter rather than confirming
+      unverified details or issuing an uncoordinated "no comment" from multiple people.
+
+  - id: INJ-06
+    time_minutes: 95
+    delivery: facilitator reads aloud
+    situation: >
+      The board has requested a status briefing in 90 minutes. Full forensic confirmation of
+      which patient records were accessed, modified, or exfiltrated across all three sites is
+      not expected for several more days, and Nexus has not yet shared the full scope of its own
+      root-cause investigation into the build pipeline compromise.
+    capability_tested: CAP-08
+    decision_point: >-
+      What goes into the board brief, and how is unresolved uncertainty presented without either
+      understating or overstating the organization's current state of knowledge?
+    roles_challenged:
+      - Sarah Park (IT Director)
+      - Dr. Patricia Morales (CEO)
+    expected_response: >-
+      The brief distinguishes clearly between what is confirmed, what is still unknown, what
+      decisions have already been made (e.g., the INJ-03 continuity decision), and what is
+      explicitly still needed from Nexus and from MedDefense's own forensics, rather than
+      presenting a falsely complete or falsely alarmist picture.
+    open_question: >-
+      The full scope of PHI accessed, modified, or exfiltrated across all three sites, and the
+      root cause of Nexus's own build pipeline compromise, remain unresolved at exercise end by
+      design. This is intentional: it tests whether participants can state what they still do
+      not know, rather than manufacturing false closure to end the exercise cleanly.
