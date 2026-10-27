@@ -1,0 +1,143 @@
+criteria:
+  - inject_id: INJ-00
+    capability_tested: CAP-01
+    pass_criteria:
+      - Incident is declared within the inject window with severity (at least SEV2) stated with explicit reasoning
+      - James Chen (SOC Lead) and Sarah Park (IT Director) are both named as notified within the inject window
+      - Evidence collection on SCHED-SVR-01 is proposed before any containment action is discussed
+    fail_indicators:
+      - No formal incident is declared; the team continues treating the alert as routine monitoring noise
+      - A containment action (isolating the host, pulling network access) is proposed before any evidence-collection step is named
+      - The vendor relationship (Nexus) is never raised as a possible dimension of the alert during the inject window
+    finding_if_fail: >-
+      The team did not declare a formal incident within the inject window, proposed containment
+      before naming an evidence-preservation step, or never raised the vendor as a possible
+      source. This indicates the severity classification process does not reliably trigger on
+      ambiguous, vendor-adjacent traffic anomalies. Recommended action: add an explicit SOC
+      triage prompt ("could this traffic originate from a third-party integration?") to the
+      initial alert-triage checklist, and require evidence preservation as the first named action
+      before containment in the credential exposure and malware playbooks. Owner: James Chen
+      (SOC Lead). Deadline: 14 days.
+
+  - inject_id: INJ-01
+    capability_tested: CAP-02
+    pass_criteria:
+      - A named MedDefense owner formally contacts Nexus's 24x7 SecOps line within the inject window
+      - The team explicitly raises that the Nexus incident communication path has never been exercised jointly before, and factors that into how much it relies on vendor assurances right now
+      - The team questions whether a future signed update from Nexus should be trusted automatically, given that trust currently depends solely on certificate validation with no independent client-side verification
+      - Someone is explicitly assigned to track whether Nexus meets its 24-hour BAA notification duty
+    fail_indicators:
+      - The team treats Nexus's published advisory as sufficient and does not open a direct vendor incident channel
+      - No one raises that this communication path has never been tested jointly before today
+      - A future signed update from Nexus is treated as automatically trustworthy, with no additional validation step discussed
+      - No one is assigned to track the BAA's 24-hour notification clock
+    finding_if_fail: >-
+      The team relied on Nexus's general advisory rather than opening a direct vendor channel,
+      did not flag that the communication path had never been jointly tested, and/or did not
+      question whether certificate-only validation is sufficient grounds to trust future signed
+      updates. This indicates the organization's vendor incident response readiness, and its
+      update-channel trust model, are both unverified in practice rather than just undocumented
+      on paper. Recommended action: schedule a joint incident communication drill with Nexus
+      SecOps before the next annual vendor security review, require independent hash
+      verification for Nexus updates pending a full compromise assessment, and assign a named BAA
+      notification tracking owner within the IR playbook. Owner: Sarah Park (IT Director).
+      Deadline: 30 days.
+
+  - inject_id: INJ-02
+    capability_tested: CAP-01
+    pass_criteria:
+      - Severity is explicitly re-escalated given the confirmed three-site, three-day scope
+      - The notification list is expanded beyond the original INJ-00 distribution to include executive leadership and legal
+      - The team explicitly states the three-day exposure window rather than leaving it as "ongoing" or unstated
+    fail_indicators:
+      - Severity classification is left unchanged despite the expanded scope
+      - No new roles are notified beyond the original INJ-00 list
+      - The three-day exposure window is not acknowledged or is understated
+    finding_if_fail: >-
+      The team did not re-escalate severity or expand notification when scope widened from one
+      host to three sites and from minutes to days of exposure. This indicates the severity
+      matrix lacks an explicit re-evaluation trigger tied to scope changes discovered mid-incident.
+      Recommended action: add a mandatory severity re-assessment checkpoint triggered by any
+      confirmed multi-site or multi-day scope expansion, with automatic escalation to executive
+      leadership. Owner: James Chen (SOC Lead). Deadline: 14 days.
+
+  - inject_id: INJ-03
+    capability_tested: CAP-03
+    pass_criteria:
+      - Dr. Patricia Morales (or an explicitly designated decision authority) makes and states a documented decision on the Nexus integration within the inject window
+      - A concrete patient-safety fallback is named for time-sensitive appointments (e.g., manual verification of pre-surgical bookings)
+      - A specific condition or timeframe for revisiting the decision is stated
+    fail_indicators:
+      - The disagreement between security and clinical leadership is discussed but never resolved into a documented decision
+      - No concrete fallback is named for pre-surgical or time-sensitive appointments
+      - The decision, if made, has no stated review point or revisiting condition
+    finding_if_fail: >-
+      The business continuity decision on the Nexus integration was either never formally
+      resolved, or resolved without naming a concrete patient-safety fallback or a review point.
+      This indicates the organization has no pre-agreed decision framework for weighing security
+      containment against patient-facing continuity, leaving this judgment to be improvised live
+      during a real incident. Recommended action: document a pre-approved decision framework and
+      designated decision authority for business-critical vendor system isolation, including a
+      mandatory patient-safety fallback checklist. Owner: Dr. Patricia Morales (CEO). Deadline:
+      30 days.
+
+  - inject_id: INJ-04
+    capability_tested: CAP-04, CAP-05
+    pass_criteria:
+      - PHI exposure is stated precisely (demographic and insurance eligibility data, access confirmed, exfiltration unconfirmed) rather than vaguely
+      - Helena Reyes (General Counsel) explicitly states that MedDefense's own notification clock does not depend on Nexus completing its 24-hour BAA obligation
+      - MedDefense's own four-factor HIPAA risk assessment is explicitly opened within the inject window
+    fail_indicators:
+      - PHI exposure is described vaguely ("some data may have been accessed") without naming the specific categories involved
+      - The team waits for Nexus's formal notification before beginning any internal assessment
+      - No one opens or references MedDefense's own breach risk assessment process
+    finding_if_fail: >-
+      The team either described PHI exposure too vaguely to act on, or treated Nexus's 24-hour
+      BAA notification deadline as the trigger for MedDefense's own HIPAA obligations rather than
+      opening its own risk assessment independently. This indicates a gap in understanding that a
+      Business Associate's notification duty and the Covered Entity's own notification duty run
+      on separate, independent clocks. Recommended action: add an explicit decision node to the
+      credential exposure and vendor-compromise playbooks requiring MedDefense's own four-factor
+      risk assessment to begin immediately upon confirmed PHI access, regardless of Business
+      Associate notification status. Owner: Helena Reyes (General Counsel). Deadline: 30 days.
+
+  - inject_id: INJ-05
+    capability_tested: CAP-06, CAP-07
+    pass_criteria:
+      - A concrete verification method is named for flagged appointment records before clinical staff are told to rely on them
+      - A single designated spokesperson is named to respond to the reporter
+      - No unverified detail (confirmed breach status, specific patient counts, root cause) is stated to the reporter
+    fail_indicators:
+      - Flagged appointment records are treated as reliable without any verification step being named
+      - Multiple participants attempt to respond to the reporter, or the team cannot agree on who speaks
+      - An unverified detail is stated aloud as if confirmed, or the team gives a blanket "no comment" with no commitment to follow up
+    finding_if_fail: >-
+      The team either had no named method to verify appointment record integrity before clinical
+      reliance, or had no single designated spokesperson for external media contact, resulting in
+      an uncoordinated response or a defensive "no comment" with no follow-up commitment. This
+      indicates the organization lacks both a data-integrity verification procedure and a crisis
+      communications protocol with a pre-named spokesperson. Recommended action: add a
+      record-integrity verification step to the recovery validation section of the relevant
+      playbook, and formally designate a single media spokesperson role, with Legal as a
+      mandatory co-reviewer of any public statement, in the communication plan. Owner: Sarah Park
+      (IT Director) for data integrity verification; Dr. Patricia Morales (CEO) for the
+      spokesperson designation. Deadline: 30 days.
+
+  - inject_id: INJ-06
+    capability_tested: CAP-08
+    pass_criteria:
+      - The brief explicitly separates what is confirmed from what is still unknown
+      - The brief references at least one concrete decision already made during the exercise (e.g., the INJ-03 continuity decision)
+      - The brief explicitly states what is still needed from Nexus and from MedDefense's own forensics, without manufacturing false closure
+    fail_indicators:
+      - The brief presents unconfirmed details as settled fact
+      - The brief omits material uncertainty to appear more resolved than the facts support
+      - The brief contains no reference to decisions already made or to next steps needed
+    finding_if_fail: >-
+      The executive brief either presented unconfirmed facts as settled, omitted material
+      uncertainty, or failed to reference decisions already made during the response. This
+      indicates the organization has no pre-agreed format for board-level incident briefings that
+      forces a clear confirmed/unknown distinction under time pressure. Recommended action: adopt
+      a standard executive briefing template (confirmed facts / open questions / decisions made /
+      asks of leadership) and rehearse it as a standing element of future tabletop exercises.
+      Owner: Dr. Patricia Morales (CEO). Deadline: 30 days.
