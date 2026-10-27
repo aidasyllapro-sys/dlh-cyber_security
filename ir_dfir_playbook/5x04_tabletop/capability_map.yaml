@@ -14,8 +14,8 @@ capabilities:
       before considering the vendor's signed update channel as the source,
       since prior IR exercises in this organization all involved
       internally-originating compromise paths.
-    tested_by_inject: INJ-00, INJ-01
-    evaluation_owner: Technical_Lead
+    tested_by_inject: INJ-00, INJ-02
+    evaluation_owner: James Chen (SOC Lead)
 
   - capability_id: CAP-02
     name: vendor_communication
@@ -31,8 +31,8 @@ capabilities:
       by over two years, the team may not have a clear internal owner for
       vendor-side communication, or may wait passively for Nexus to reach
       out rather than initiating contact.
-    tested_by_inject: INJ-02
-    evaluation_owner: Technical_Lead
+    tested_by_inject: INJ-01
+    evaluation_owner: Sarah Park (IT Director)
 
   - capability_id: CAP-03
     name: business_continuity_decision
@@ -49,7 +49,7 @@ capabilities:
       or the trade-off may be discussed at length without ever being
       resolved into an actual documented decision.
     tested_by_inject: INJ-03
-    evaluation_owner: Executive_Sponsor
+    evaluation_owner: Dr. Patricia Morales (CEO)
 
   - capability_id: CAP-04
     name: phi_exposure_assessment
@@ -65,7 +65,7 @@ capabilities:
       scheduling data as non-sensitive), rather than scoping it precisely to
       what the integration topology actually exposes.
     tested_by_inject: INJ-04
-    evaluation_owner: Legal_Liaison
+    evaluation_owner: Helena Reyes (General Counsel)
 
   - capability_id: CAP-05
     name: hipaa_notification_posture
@@ -80,8 +80,8 @@ capabilities:
       own obligations, rather than recognizing that MedDefense's own
       notification posture depends on what MedDefense itself knows and
       when, independent of the vendor's timeline.
-    tested_by_inject: INJ-05
-    evaluation_owner: Legal_Liaison
+    tested_by_inject: INJ-04
+    evaluation_owner: Helena Reyes (General Counsel)
 
   - capability_id: CAP-06
     name: data_integrity_response
@@ -96,8 +96,8 @@ capabilities:
       (who saw the data) and fail to address integrity (whether the data
       itself can still be trusted), leaving the patient safety risk of
       acting on modified appointment records unaddressed.
-    tested_by_inject: INJ-06
-    evaluation_owner: Technical_Lead
+    tested_by_inject: INJ-05
+    evaluation_owner: Sarah Park (IT Director)
 
   - capability_id: CAP-07
     name: crisis_communications
@@ -111,8 +111,8 @@ capabilities:
       may attempt to respond informally or inconsistently, or the team may
       default to a blanket "no comment," either of which creates
       reputational risk independent of the technical response.
-    tested_by_inject: INJ-07
-    evaluation_owner: Communications_Lead
+    tested_by_inject: INJ-05
+    evaluation_owner: Dr. Patricia Morales (CEO)
 
   - capability_id: CAP-08
     name: executive_briefing_under_pressure
@@ -126,5 +126,5 @@ capabilities:
       to appear more in control than the facts support, or become an
       unfiltered data dump that fails to give the board a clear,
       decision-ready picture.
-    tested_by_inject: INJ-08
-    evaluation_owner: Executive_Sponsor
+    tested_by_inject: INJ-06
+    evaluation_owner: Dr. Patricia Morales (CEO)
