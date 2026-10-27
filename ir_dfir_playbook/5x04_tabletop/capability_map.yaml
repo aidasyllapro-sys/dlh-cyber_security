@@ -1,0 +1,130 @@
+capabilities:
+  - capability_id: CAP-01
+    name: supply_chain_detection
+    expected_behavior: >-
+      The team recognizes within the exercise that Nexus's own signed update
+      channel is the likely infection vector, not an external attacker
+      exploiting a MedDefense-owned system, and redirects investigation
+      toward the vendor relationship rather than only MedDefense's own
+      perimeter.
+    gap_hypothesis: >-
+      Participants may default to treating this as a conventional external
+      intrusion into MedDefense's network and spend disproportionate time
+      investigating MedDefense-side causes (phishing, credential compromise)
+      before considering the vendor's signed update channel as the source,
+      since prior IR exercises in this organization all involved
+      internally-originating compromise paths.
+    tested_by_inject: INJ-00, INJ-01
+    evaluation_owner: Technical_Lead
+
+  - capability_id: CAP-02
+    name: vendor_communication
+    expected_behavior: >-
+      The team initiates contact with Nexus's documented 24x7 incident
+      response channel promptly, requests specific technical detail (scope
+      of the build compromise, affected customers, remediation status), and
+      tracks the vendor's own notification obligations under the BAA rather
+      than treating Nexus purely as a passive information source.
+    gap_hypothesis: >-
+      Given that Nexus has not been in a confirmed public incident before
+      and the last joint incident communication test predates this exercise
+      by over two years, the team may not have a clear internal owner for
+      vendor-side communication, or may wait passively for Nexus to reach
+      out rather than initiating contact.
+    tested_by_inject: INJ-02
+    evaluation_owner: Technical_Lead
+
+  - capability_id: CAP-03
+    name: business_continuity_decision
+    expected_behavior: >-
+      The team weighs the operational cost of severing the Nexus
+      integration (loss of real-time scheduling, eligibility checks, and
+      appointment confirmations across three sites, roughly 3,500 weekly
+      interactions) against the containment benefit, reaches a documented
+      decision with a named owner, and defines the condition under which
+      the integration would be restored.
+    gap_hypothesis: >-
+      The decision may stall because no single role is clearly authorized
+      to approve taking a business-critical, patient-facing system offline,
+      or the trade-off may be discussed at length without ever being
+      resolved into an actual documented decision.
+    tested_by_inject: INJ-03
+    evaluation_owner: Executive_Sponsor
+
+  - capability_id: CAP-04
+    name: phi_exposure_assessment
+    expected_behavior: >-
+      The team scopes which categories of PHI (patient demographics,
+      insurance eligibility data) were potentially accessible through the
+      compromised Nexus integration during the exposure window, and
+      distinguishes confirmed access from merely possible access.
+    gap_hypothesis: >-
+      Since Nexus handles ePHI (demographics and insurance information) but
+      not clinical charting, participants may either overstate the exposure
+      (assuming clinical records were at risk) or understate it (treating
+      scheduling data as non-sensitive), rather than scoping it precisely to
+      what the integration topology actually exposes.
+    tested_by_inject: INJ-04
+    evaluation_owner: Legal_Liaison
+
+  - capability_id: CAP-05
+    name: hipaa_notification_posture
+    expected_behavior: >-
+      The team recognizes that MedDefense's own HIPAA notification clock
+      can begin independently of Nexus completing its investigation, and
+      does not wait passively for the BAA's 24-hour vendor notification
+      deadline to pass before beginning its own breach risk assessment.
+    gap_hypothesis: >-
+      Because the BAA assigns Nexus a 24-hour notification duty, the team
+      may incorrectly treat that deadline as the trigger for MedDefense's
+      own obligations, rather than recognizing that MedDefense's own
+      notification posture depends on what MedDefense itself knows and
+      when, independent of the vendor's timeline.
+    tested_by_inject: INJ-05
+    evaluation_owner: Legal_Liaison
+
+  - capability_id: CAP-06
+    name: data_integrity_response
+    expected_behavior: >-
+      Upon learning that appointment records may have been silently
+      modified during the compromise window, the team defines a method to
+      identify and verify affected records before clinical or scheduling
+      staff rely on them, rather than treating the records as trustworthy
+      by default.
+    gap_hypothesis: >-
+      The team may focus exclusively on access and confidentiality concerns
+      (who saw the data) and fail to address integrity (whether the data
+      itself can still be trusted), leaving the patient safety risk of
+      acting on modified appointment records unaddressed.
+    tested_by_inject: INJ-06
+    evaluation_owner: Technical_Lead
+
+  - capability_id: CAP-07
+    name: crisis_communications
+    expected_behavior: >-
+      The team produces a single, consistent, fact-checked public
+      statement, routes all external media contact through a designated
+      spokesperson, and avoids confirming details not yet verified
+      internally.
+    gap_hypothesis: >-
+      Without a pre-established media response owner, multiple participants
+      may attempt to respond informally or inconsistently, or the team may
+      default to a blanket "no comment," either of which creates
+      reputational risk independent of the technical response.
+    tested_by_inject: INJ-07
+    evaluation_owner: Communications_Lead
+
+  - capability_id: CAP-08
+    name: executive_briefing_under_pressure
+    expected_behavior: >-
+      The team produces a board-quality status brief within the 90-minute
+      window that states what is confirmed, what is still unknown, what
+      decisions have been made, and what is needed from leadership, without
+      minimizing the situation or overstating confirmed facts.
+    gap_hypothesis: >-
+      Under time pressure, the brief may either omit material uncertainty
+      to appear more in control than the facts support, or become an
+      unfiltered data dump that fails to give the board a clear,
+      decision-ready picture.
+    tested_by_inject: INJ-08
+    evaluation_owner: Executive_Sponsor
