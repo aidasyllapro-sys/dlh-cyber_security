@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 # recovery_validation.sh — IR-2026-0420-01 post-eradication validation
 #
 # This script is a real, runnable template meant to be executed by the response
