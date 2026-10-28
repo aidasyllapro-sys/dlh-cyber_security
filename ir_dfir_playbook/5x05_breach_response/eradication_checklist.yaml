@@ -1,0 +1,363 @@
+# Eradication Checklist: IR-2026-0420-01
+#
+# Scope note: covers 6 hosts, not 5 — SCHED-SVR-01 is included per the compromise
+# confirmed in forensic_findings.md (SYSMON-008), outside the task's original 5-host
+# framing but consistent with containment_decision.md's scope expansion.
+#
+# Status note: no item in this file has been executed in this environment (no live
+# hosts, EDR console, or SIEM are reachable here). Every item starts as `pending`.
+# An item may only be set to `completed` by the executing analyst once
+# verification_command has actually been run and its real output matches
+# expected_verification_result. Do not mark `completed` from this plan alone.
+
+- id: ERAD-001
+  category: beacon_process
+  target_host: CS-WS-101
+  description: Terminate the Cobalt Strike beacon process and its process tree
+  command_or_action: "Get-Process -Name svchost32 | Where-Object {$_.Path -eq 'C:\\ProgramData\\Microsoft\\svchost32.exe'} | Stop-Process -Force"
+  verification_command: "Get-Process -Name svchost32 -ErrorAction SilentlyContinue; tasklist | findstr /i svchost32"
+  expected_verification_result: "no process named svchost32.exe running from C:\\ProgramData\\Microsoft\\"
+  status: pending
+  executed_at: null
+  executed_by: null
+
+- id: ERAD-002
+  category: beacon_process
+  target_host: CS-WS-104
+  description: Terminate the beacon process (PID 4102 at time of discovery)
+  command_or_action: "Get-Process -Name svchost32 | Where-Object {$_.Path -eq 'C:\\ProgramData\\Microsoft\\svchost32.exe'} | Stop-Process -Force"
+  verification_command: "Get-Process -Name svchost32 -ErrorAction SilentlyContinue"
+  expected_verification_result: "no process named svchost32.exe running"
+  status: pending
+  executed_at: null
+  executed_by: null
+
+- id: ERAD-003
+  category: beacon_process
+  target_host: CS-WS-107
+  description: Terminate the beacon process (PID 4502 at time of discovery)
+  command_or_action: "Get-Process -Name svchost32 | Where-Object {$_.Path -eq 'C:\\ProgramData\\Microsoft\\svchost32.exe'} | Stop-Process -Force"
+  verification_command: "Get-Process -Name svchost32 -ErrorAction SilentlyContinue"
+  expected_verification_result: "no process named svchost32.exe running"
+  status: pending
+  executed_at: null
+  executed_by: null
+
+- id: ERAD-004
+  category: beacon_process
+  target_host: CS-WS-112
+  description: Terminate the beacon process (PID 4818 at time of discovery)
+  command_or_action: "Get-Process -Name svchost32 | Where-Object {$_.Path -eq 'C:\\ProgramData\\Microsoft\\svchost32.exe'} | Stop-Process -Force"
+  verification_command: "Get-Process -Name svchost32 -ErrorAction SilentlyContinue"
+  expected_verification_result: "no process named svchost32.exe running"
+  status: pending
+  executed_at: null
+  executed_by: null
+
+- id: ERAD-005
+  category: beacon_process
+  target_host: FILE-SVR-01
+  description: Terminate the beacon process (PID 5412 at time of discovery)
+  command_or_action: "Get-Process -Name svchost32 | Where-Object {$_.Path -eq 'C:\\ProgramData\\Microsoft\\svchost32.exe'} | Stop-Process -Force"
+  verification_command: "Get-Process -Name svchost32 -ErrorAction SilentlyContinue"
+  expected_verification_result: "no process named svchost32.exe running"
+  status: pending
+  executed_at: null
+  executed_by: null
+
+- id: ERAD-006
+  category: beacon_process
+  target_host: SCHED-SVR-01
+  description: Terminate the beacon process (PID 5920 at time of discovery)
+  command_or_action: "Get-Process -Name svchost32 | Where-Object {$_.Path -eq 'C:\\ProgramData\\Microsoft\\svchost32.exe'} | Stop-Process -Force"
+  verification_command: "Get-Process -Name svchost32 -ErrorAction SilentlyContinue"
+  expected_verification_result: "no process named svchost32.exe running"
+  status: pending
+  executed_at: null
+  executed_by: null
+
+- id: ERAD-007
+  category: persistence
+  target_host: CS-WS-101
+  description: >-
+    Remove the WinHealthSvc service and its registry ImagePath key
+    (confirmed persistence mechanism, SYSMON-002)
+  command_or_action: "sc.exe delete WinHealthSvc; Remove-Item -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Services\\WinHealthSvc' -Recurse -Force -ErrorAction SilentlyContinue"
+  verification_command: "sc.exe query WinHealthSvc; Test-Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Services\\WinHealthSvc'"
+  expected_verification_result: "service query returns 'service does not exist'; registry key Test-Path returns False"
+  status: pending
+  executed_at: null
+  executed_by: null
+
+- id: ERAD-008
+  category: persistence
+  target_host: CS-WS-104
+  description: >-
+    Remove the WinHealthSvc service created via sc create (confirmed, SYSMON-002)
+  command_or_action: "sc.exe delete WinHealthSvc; Remove-Item -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Services\\WinHealthSvc' -Recurse -Force -ErrorAction SilentlyContinue"
+  verification_command: "sc.exe query WinHealthSvc"
+  expected_verification_result: "service does not exist"
+  status: pending
+  executed_at: null
+  executed_by: null
+
+- id: ERAD-009
+  category: persistence
+  target_host: CS-WS-107
+  description: Remove the WinHealthSvc service (pattern match with WS-101/WS-104; service-install event not independently captured for this host — see SYSMON-002 caveat)
+  command_or_action: "sc.exe delete WinHealthSvc; Remove-Item -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Services\\WinHealthSvc' -Recurse -Force -ErrorAction SilentlyContinue"
+  verification_command: "sc.exe query WinHealthSvc"
+  expected_verification_result: "service does not exist"
+  status: pending
+  executed_at: null
+  executed_by: null
+
+- id: ERAD-010
+  category: persistence
+  target_host: CS-WS-112
+  description: Remove the WinHealthSvc service (pattern match; same caveat as ERAD-009)
+  command_or_action: "sc.exe delete WinHealthSvc; Remove-Item -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Services\\WinHealthSvc' -Recurse -Force -ErrorAction SilentlyContinue"
+  verification_command: "sc.exe query WinHealthSvc"
+  expected_verification_result: "service does not exist"
+  status: pending
+  executed_at: null
+  executed_by: null
+
+- id: ERAD-011
+  category: persistence
+  target_host: FILE-SVR-01
+  description: Remove the WinHealthSvc service (pattern match; no independent service-install event captured for this host in sample data)
+  command_or_action: "sc.exe delete WinHealthSvc; Remove-Item -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Services\\WinHealthSvc' -Recurse -Force -ErrorAction SilentlyContinue"
+  verification_command: "sc.exe query WinHealthSvc"
+  expected_verification_result: "service does not exist"
+  status: pending
+  executed_at: null
+  executed_by: null
+
+- id: ERAD-012
+  category: persistence
+  target_host: SCHED-SVR-01
+  description: Remove the WinHealthSvc service (pattern match; SCHED-SVR-01 compromise is probable-certainty only, see SYSMON-008)
+  command_or_action: "sc.exe delete WinHealthSvc; Remove-Item -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Services\\WinHealthSvc' -Recurse -Force -ErrorAction SilentlyContinue"
+  verification_command: "sc.exe query WinHealthSvc"
+  expected_verification_result: "service does not exist"
+  status: pending
+  executed_at: null
+  executed_by: null
+
+- id: ERAD-013
+  category: persistence
+  target_host: ALL-6
+  description: >-
+    Sweep for additional persistence mechanisms (registry Run/RunOnce keys,
+    scheduled tasks) not directly evidenced in current artifacts. No Run-key or
+    scheduled-task persistence was found in the Sysmon sample — this is a
+    defensive verification, not removal of a confirmed finding.
+  command_or_action: >-
+    Get-ItemProperty 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Run';
+    Get-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run';
+    Get-ScheduledTask | Where-Object {$_.TaskPath -notlike '\Microsoft\Windows\*'}
+  verification_command: same as command_or_action, re-run post-sweep
+  expected_verification_result: "no unrecognized Run/RunOnce entries; no unrecognized scheduled tasks referencing svchost32.exe or ProgramData\\Microsoft"
+  status: pending
+  executed_at: null
+  executed_by: null
+
+- id: ERAD-014
+  category: staged_payload
+  target_host: CS-WS-101
+  description: Remove the undetonated ransomware staging script (SYSMON-007)
+  command_or_action: "Remove-Item 'C:\\Windows\\System32\\encryption_staging.ps1' -Force"
+  verification_command: "Test-Path 'C:\\Windows\\System32\\encryption_staging.ps1'"
+  expected_verification_result: "False"
+  status: pending
+  executed_at: null
+  executed_by: null
+
+- id: ERAD-015
+  category: staged_payload
+  target_host: CS-WS-104
+  description: Remove the undetonated ransomware staging script (SYSMON-007)
+  command_or_action: "Remove-Item 'C:\\Windows\\System32\\encryption_staging.ps1' -Force"
+  verification_command: "Test-Path 'C:\\Windows\\System32\\encryption_staging.ps1'"
+  expected_verification_result: "False"
+  status: pending
+  executed_at: null
+  executed_by: null
+
+- id: ERAD-016
+  category: staged_payload
+  target_host: CS-WS-107
+  description: Remove the undetonated ransomware staging script (SYSMON-007)
+  command_or_action: "Remove-Item 'C:\\Windows\\System32\\encryption_staging.ps1' -Force"
+  verification_command: "Test-Path 'C:\\Windows\\System32\\encryption_staging.ps1'"
+  expected_verification_result: "False"
+  status: pending
+  executed_at: null
+  executed_by: null
+
+- id: ERAD-017
+  category: staged_payload
+  target_host: CS-WS-112
+  description: Remove the undetonated ransomware staging script (SYSMON-007)
+  command_or_action: "Remove-Item 'C:\\Windows\\System32\\encryption_staging.ps1' -Force"
+  verification_command: "Test-Path 'C:\\Windows\\System32\\encryption_staging.ps1'"
+  expected_verification_result: "False"
+  status: pending
+  executed_at: null
+  executed_by: null
+
+- id: ERAD-018
+  category: staged_payload
+  target_host: ALL-6
+  description: >-
+    Remove the dropper binary itself (C:\ProgramData\Microsoft\svchost32.exe) on
+    every host where present, after beacon termination (ERAD-001–006)
+  command_or_action: "Remove-Item 'C:\\ProgramData\\Microsoft\\svchost32.exe' -Force"
+  verification_command: "Test-Path 'C:\\ProgramData\\Microsoft\\svchost32.exe'"
+  expected_verification_result: "False"
+  status: pending
+  executed_at: null
+  executed_by: null
+
+- id: ERAD-019
+  category: staged_payload
+  target_host: CS-WS-101
+  description: Remove the keylogger drop artifact (SYSMON-005)
+  command_or_action: "Remove-Item 'C:\\Windows\\Temp\\klog.tmp' -Force"
+  verification_command: "Test-Path 'C:\\Windows\\Temp\\klog.tmp'"
+  expected_verification_result: "False"
+  status: pending
+  executed_at: null
+  executed_by: null
+
+- id: ERAD-020
+  category: credential
+  target_host: ALL-6
+  description: >-
+    Confirm MEDDEFENSE\jdoe remains disabled, password reset, all sessions
+    terminated (action already taken in containment_execution.md, 21:25Z);
+    sweep for any additional accounts created during the 72h dwell window — no
+    account-creation events were found in the available Sysmon/file-server
+    artifacts, so this is a verification sweep, not a confirmed second finding
+  command_or_action: >-
+    Get-ADUser jdoe -Properties Enabled, PasswordLastSet, LastLogonDate;
+    Get-ADUser -Filter {whenCreated -ge '2026-04-17' -and whenCreated -le '2026-04-20'}
+  verification_command: same as command_or_action
+  expected_verification_result: "jdoe: Enabled=False, PasswordLastSet >= 2026-04-20T21:25Z; account-creation query returns no unrecognized accounts"
+  status: pending
+  executed_at: null
+  executed_by: null
+
+- id: ERAD-021
+  category: kerberos
+  target_host: ALL-6
+  description: >-
+    Purge cached Kerberos tickets for jdoe's compromised session on every
+    affected host (Kerberos was the confirmed auth protocol for the FILE-SVR-01
+    lateral logon, FS-003); not a krbtgt double-reset scenario — no evidence of
+    ticket forgery (golden/silver ticket), only credential reuse was observed
+  command_or_action: "klist purge -li 0x3e7; klist purge"
+  verification_command: "klist tickets"
+  expected_verification_result: "no cached TGT/service tickets remain for jdoe on any of the 6 hosts"
+  status: pending
+  executed_at: null
+  executed_by: null
+
+- id: ERAD-022
+  category: network
+  target_host: PERIMETER-FIREWALL
+  description: >-
+    Convert the temporary incident-response egress block (applied 20:52Z,
+    containment_execution.md) into a permanent firewall rule
+  command_or_action: "Add permanent deny rule: staging.office365-cdn.net, 45.152.66.114, any port, promote from temporary to standing ruleset"
+  verification_command: "show running-config | include 45.152.66.114"
+  expected_verification_result: "permanent deny rule present and active for 45.152.66.114 and staging.office365-cdn.net"
+  status: pending
+  executed_at: null
+  executed_by: null
+
+- id: ERAD-023
+  category: network
+  target_host: DNS-INTERNAL
+  description: >-
+    Sinkhole the squatted lookalike domain (staging.office365-cdn.net) at the
+    internal DNS resolver so any future resolution attempt fails closed
+  command_or_action: "Add DNS response policy zone (RPZ) entry: staging.office365-cdn.net -> NXDOMAIN or sinkhole IP"
+  verification_command: "nslookup staging.office365-cdn.net <internal-dns-server>"
+  expected_verification_result: "NXDOMAIN or sinkhole address returned, not 45.152.66.114 or any live resolution"
+  status: pending
+  executed_at: null
+  executed_by: null
+
+- id: ERAD-024
+  category: machine_account
+  target_host: CS-WS-101
+  description: >-
+    Rotate the Active Directory computer account password — SYSTEM-level
+    service installation (ERAD-007) means machine credentials may have been
+    exposed
+  command_or_action: "Reset-ComputerMachinePassword -Server <DC>"
+  verification_command: "Test-ComputerSecureChannel -Verbose"
+  expected_verification_result: "secure channel verified with new machine password; no authentication failures"
+  status: pending
+  executed_at: null
+  executed_by: null
+
+- id: ERAD-025
+  category: machine_account
+  target_host: CS-WS-104
+  description: Rotate the Active Directory computer account password
+  command_or_action: "Reset-ComputerMachinePassword -Server <DC>"
+  verification_command: "Test-ComputerSecureChannel -Verbose"
+  expected_verification_result: "secure channel verified with new machine password"
+  status: pending
+  executed_at: null
+  executed_by: null
+
+- id: ERAD-026
+  category: machine_account
+  target_host: CS-WS-107
+  description: Rotate the Active Directory computer account password
+  command_or_action: "Reset-ComputerMachinePassword -Server <DC>"
+  verification_command: "Test-ComputerSecureChannel -Verbose"
+  expected_verification_result: "secure channel verified with new machine password"
+  status: pending
+  executed_at: null
+  executed_by: null
+
+- id: ERAD-027
+  category: machine_account
+  target_host: CS-WS-112
+  description: Rotate the Active Directory computer account password
+  command_or_action: "Reset-ComputerMachinePassword -Server <DC>"
+  verification_command: "Test-ComputerSecureChannel -Verbose"
+  expected_verification_result: "secure channel verified with new machine password"
+  status: pending
+  executed_at: null
+  executed_by: null
+
+- id: ERAD-028
+  category: machine_account
+  target_host: FILE-SVR-01
+  description: >-
+    Rotate the Active Directory computer account password — highest priority
+    given this host's role and the confirmed clinical-data exfiltration
+    pathway through it
+  command_or_action: "Reset-ComputerMachinePassword -Server <DC>"
+  verification_command: "Test-ComputerSecureChannel -Verbose"
+  expected_verification_result: "secure channel verified with new machine password"
+  status: pending
+  executed_at: null
+  executed_by: null
+
+- id: ERAD-029
+  category: machine_account
+  target_host: SCHED-SVR-01
+  description: Rotate the Active Directory computer account password
+  command_or_action: "Reset-ComputerMachinePassword -Server <DC>"
+  verification_command: "Test-ComputerSecureChannel -Verbose"
+  expected_verification_result: "secure channel verified with new machine password"
+  status: pending
+  executed_at: null
+  executed_by: null
